@@ -401,7 +401,7 @@ window.pedCotarFrete = async function() {
   };
 
   try {
-    const r = await fetch(`${SUPA_URL}/functions/v1/cotar-frete`, {
+    const r = await fetch(`${SUPA_URL}/functions/v1/cotar-frete-index`, {
       method: 'POST', headers: { ...HEADERS, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
