@@ -122,8 +122,8 @@ window.pedBuscarCliente = async function() {
   const res = document.getElementById('ped-cliente-resultado');
   res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Buscando cliente...</div>';
 
-  // Busca cliente no ERP
-  const clientes = await supa('vw_dim_cliente', `cnpj_cpf=eq.${cnpjRaw}&select=*`).catch(()=>null);
+  // Busca cliente no ERP (campos: cnpj e cpf separados)
+  const clientes = await supa('vw_dim_cliente', `cnpj=eq.${cnpjRaw}&select=*`).catch(()=>null);
   const cliente = Array.isArray(clientes) ? clientes[0] : null;
 
   // Busca alertas financeiros em paralelo (só se encontrou o cliente)

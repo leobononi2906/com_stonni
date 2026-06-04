@@ -5,17 +5,21 @@
 // ── MEUS PEDIDOS ──
 async function renderMeusPedidos(el) {
   el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
-  const pedidos = await supa('ped_pedidos',
-    `id_representante=eq.${USUARIO.id_representante}&order=criado_em.desc&select=*`
-  );
-  _renderListaPedidos(el, pedidos||[], false);
+  const pedidos = await fetch(
+    `${SUPA_URL}/rest/v1/ped_pedidos?id_representante=eq.${USUARIO.id_representante}&order=criado_em.desc&select=*`,
+    { headers: HEADERS }
+  ).then(r=>r.json()).catch(()=>[]);
+  _renderListaPedidos(el, Array.isArray(pedidos) ? pedidos : [], false);
 }
 
 // ── GESTÃO DE PEDIDOS (gestor/admin) ──
 async function renderPedidos(el) {
   el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
-  const pedidos = await supa('ped_pedidos', 'order=criado_em.desc&select=*');
-  _renderListaPedidos(el, pedidos||[], true);
+  const pedidos = await fetch(
+    `${SUPA_URL}/rest/v1/ped_pedidos?order=criado_em.desc&select=*`,
+    { headers: HEADERS }
+  ).then(r=>r.json()).catch(()=>[]);
+  _renderListaPedidos(el, Array.isArray(pedidos) ? pedidos : [], true);
 }
 
 function _renderListaPedidos(el, pedidos, isGestor) {
