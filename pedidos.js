@@ -402,7 +402,7 @@ window.pedCotarFrete = async function() {
 
   try {
     const r = await fetch(`${SUPA_URL}/functions/v1/cotar-frete-index`, {
-      method: 'POST', headers: { ...HEADERS, 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
     const data = await r.json();
