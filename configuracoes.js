@@ -651,16 +651,15 @@ window.cfgSalvarProduto = async function() {
   // 2. Busca fotos no Bling pelo SKU desse produto específico
   btnSalvar.textContent = 'Buscando fotos no Bling...';
   try {
-    const skuLimpo = String(parseInt(referencia)); // remove zeros à esquerda
-    const r = await fetch(`${BLING_PROXY}?acao=produto&sku=${skuLimpo}`);
+    const skuLimpo = String(parseInt(referencia));
+    const r = await fetch(`${BLING_PROXY}?acao=fotos&sku=${skuLimpo}`);
     const data = await r.json();
-    const fotos = data?.data?.[0]?.imagens?.map(i => i.link || i.url).filter(Boolean) || [];
+    const fotos = data?.fotos || [];
 
     if (fotos.length > 0 && idNovo) {
       await supaPatch('ped_catalogo_produtos', `id=eq.${idNovo}`, { fotos });
     }
   } catch(e) {
-    // Falhou no Bling — produto salvo sem foto, pode recarregar depois
     console.warn('Bling não retornou fotos:', e);
   }
 
@@ -713,12 +712,15 @@ window.cfgRecarregarFotosBling = async function(id, sku) {
   msg.textContent = '🔍 Buscando fotos no Bling...';
   msg.style.color = 'var(--text-muted)';
   try {
-    const r = await fetch(`${BLING_PROXY}?acao=produto&sku=${sku}`);
+    const skuLimpo = String(parseInt(sku));
+    const r = await fetch(`${BLING_PROXY}?acao=fotos&sku=${skuLimpo}`);
     const data = await r.json();
-    const fotos = data?.data?.[0]?.imagens?.map(i => i.link || i.url).filter(Boolean) || [];
+    const fotos = data?.fotos || [];
     await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos });
-    msg.textContent = `✅ ${fotos.length} foto(s) atualizadas! Feche e reabra para ver.`;
-    msg.style.color = 'var(--green)';
+    msg.textContent = fotos.length
+      ? `✅ ${fotos.length} foto(s) atualizadas! Feche e reabra para ver.`
+      : '⚠️ Produto encontrado mas sem fotos no Bling.';
+    msg.style.color = fotos.length ? 'var(--green)' : 'var(--orange)';
   } catch(e) {
     msg.textContent = '❌ Erro ao buscar no Bling.';
     msg.style.color = 'var(--red)';
