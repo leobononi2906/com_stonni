@@ -411,32 +411,30 @@ window.pedCotarFrete = async function() {
     const freteGratis = parseFloat(window._pedConfig?.frete_gratis_acima||0);
     const isGratis = freteGratis > 0 && subtotal >= freteGratis;
 
-    document.getElementById('ped-frete-resultado').innerHTML = resultados.length ? `
-      <div style="font-size:12px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Escolha a transportadora</div>
-      ${resultados.map((r,i) => `
-        <label class="ped-frete-opcao ${i===0?'selected':''}">
-          <input type="radio" name="ped-frete-radio" value="${i}" ${i===0?'checked':''} onchange="pedSelecionarFrete(${i},'${r.transportadora}',${r.valor_frete},${r.prazo_dias})" style="accent-color:var(--blue-dark)">
-          <span style="flex:1">
-            <strong>${r.transportadora}</strong>
-            <span style="font-size:11px;color:var(--text-muted);margin-left:8px">${r.prazo_dias} dia(s)</span>
-          </span>
-          <span class="mono" style="font-weight:600;color:${isGratis?'var(--green)':'var(--blue-dark)'}">
-            ${isGratis ? 'GRÁTIS' : 'R$ ' + r.valor_frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}
-          </span>
-        </label>`).join('')}
-      <!-- Redespacho SP -->
-      <div style="margin-top:12px;padding:12px 14px;background:var(--blue-pale);border:1.5px solid var(--blue-mid);border-radius:var(--radius-sm)">
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-          <input type="checkbox" id="ped-redespacho-sp" style="accent-color:var(--blue-dark);width:16px;height:16px"
-            onchange="pedToggleRedespachSP(this.checked)">
-          <span style="flex:1">
-            <strong style="font-size:13px">🚚 Redespacho via SP</strong>
-            <span style="font-size:11px;color:var(--text-muted);margin-left:8px">Disponível para clientes com benefício de redespacho</span>
-          </span>
-          <span class="mono" style="font-weight:700;color:var(--green);font-size:13px">GRÁTIS</span>
-        </label>
-      </div>
-    ` : '<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Não foi possível cotar o frete. Informe manualmente.</div>';
+    const freteLinhas = resultados.map(function(r, i) {
+      const cor = isGratis ? 'var(--green)' : 'var(--blue-dark)';
+      const valorStr = isGratis ? 'GRÁTIS' : 'R$ ' + r.valor_frete.toLocaleString('pt-BR',{minimumFractionDigits:2});
+      const selected = i===0 ? 'selected' : '';
+      const checked  = i===0 ? 'checked' : '';
+      return '<label class="ped-frete-opcao ' + selected + '">' +
+        '<input type="radio" name="ped-frete-radio" value="' + i + '" ' + checked + ' onchange="pedSelecionarFrete(' + i + ',\'' + r.transportadora + '\',' + r.valor_frete + ',' + r.prazo_dias + ')" style="accent-color:var(--blue-dark)">' +
+        '<span style="flex:1"><strong>' + r.transportadora + '</strong>' +
+        '<span style="font-size:11px;color:var(--text-muted);margin-left:8px">' + r.prazo_dias + ' dia(s)</span></span>' +
+        '<span class="mono" style="font-weight:600;color:' + cor + '">' + valorStr + '</span>' +
+        '</label>';
+    }).join('');
+
+    const redespachHtml = '<div style="margin-top:12px;padding:12px 14px;background:var(--blue-pale);border:1.5px solid var(--blue-mid);border-radius:var(--radius-sm)">' +
+      '<label style="display:flex;align-items:center;gap:10px;cursor:pointer">' +
+      '<input type="checkbox" id="ped-redespacho-sp" style="accent-color:var(--blue-dark);width:16px;height:16px" onchange="pedToggleRedespachSP(this.checked)">' +
+      '<span style="flex:1"><strong style="font-size:13px">🚚 Redespacho via SP</strong>' +
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px">Disponível para clientes com benefício de redespacho</span></span>' +
+      '<span class="mono" style="font-weight:700;color:var(--green);font-size:13px">GRÁTIS</span>' +
+      '</label></div>';
+
+    document.getElementById('ped-frete-resultado').innerHTML = resultados.length
+      ? '<div style="font-size:12px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Escolha a transportadora</div>' + freteLinhas + redespachHtml
+      : '<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Não foi possível cotar o frete. Informe manualmente.</div>';
 
     // Seleciona o primeiro automaticamente
     if (resultados.length) {
