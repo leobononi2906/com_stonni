@@ -14,6 +14,7 @@ async function renderConfiguracoes(el) {
         <button class="cfg-tab" onclick="cfgAba('acoes',this)">🎯 Ações Comerciais</button>
         <button class="cfg-tab" onclick="cfgAba('catalogo',this)">🛍️ Catálogo</button>
         <button class="cfg-tab" onclick="cfgAba('representantes',this)">👥 Representantes</button>
+        <button class="cfg-tab" onclick="cfgAba('equipe',this)">🔐 Equipe</button>
       </div>
       <div id="cfg-body"></div>
     </div>
@@ -32,6 +33,7 @@ function cfgAba(aba, btn) {
     case 'acoes':           cfgCarregarAcoes(body); break;
     case 'catalogo':        cfgCarregarCatalogo(body); break;
     case 'representantes':  cfgCarregarRepresentantes(body); break;
+    case 'equipe':           cfgCarregarEquipe(body); break;
   }
 }
 
@@ -564,7 +566,28 @@ window.cfgExcluirAcao = async function(id) {
 //  ABA 4 — CATÁLOGO
 // ============================================================
 async function cfgCarregarCatalogo(el) {
-  const produtos = await supa('ped_catalogo_produtos', 'order=nome&select=*');
+  const [produtos, estoques] = await Promise.all([
+    supa('ped_catalogo_produtos', 'order=nome&select=*'),
+    supa('comp_produtos_consolidado', 'select=id_produto,estoque_total,situacao_estoque')
+  ]);
+  // Sincroniza esgotado com estoque real (<=1 = indisponível)
+  const estoqueMap = Object.fromEntries((estoques||[]).map(e=>[e.id_produto, e.estoque_total]));
+  const updates = [];
+  for (const p of (produtos||[])) {
+    const est = estoqueMap[p.id_produto_erp];
+    const deveEsgotar = est != null && est <= 1;
+    if (deveEsgotar !== p.esgotado) {
+      updates.push(fetch(`${SUPA_URL}/rest/v1/ped_catalogo_produtos?id=eq.${p.id}`, {
+        method: 'PATCH', headers: { ...HEADERS, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ esgotado: deveEsgotar })
+      }).catch(()=>{}));
+      p.esgotado = deveEsgotar;
+      p.estoque_total = est;
+    } else {
+      p.estoque_total = est;
+    }
+  }
+  if (updates.length) await Promise.all(updates);
   window._cfgProdutos = produtos || [];
 
   el.innerHTML = `
@@ -588,7 +611,7 @@ async function cfgCarregarCatalogo(el) {
       <table class="data-table">
         <thead><tr>
           <th style="width:80px">Foto</th><th>Produto</th><th>Referência</th>
-          <th>Grupo</th><th class="right">Preço Base</th><th>Status</th><th style="width:120px"></th>
+          <th>Grupo</th><th class="right">Preço Base</th><th>Estoque</th><th>Status</th><th style="width:120px"></th>
         </tr></thead>
         <tbody id="cat-tbody">${cfgRenderLinhasProduto(produtos||[])}</tbody>
       </table>
@@ -616,6 +639,7 @@ function cfgRenderLinhasProduto(lista) {
         <td class="mono" style="font-size:12px">${p.referencia||'—'}</td>
         <td style="font-size:12px;color:var(--text-secondary)">${p.grupo||'—'}</td>
         <td class="right mono" style="font-weight:600">R$ ${(p.preco_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+        <td style="font-size:12px;color:var(--text-muted)">${p.estoque_total != null ? `${p.estoque_total} un.` : '—'}</td>
         <td><span class="badge ${badgeMap[status]}">${labelMap[status]}</span></td>
         <td><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button></td>
       </tr>`;
@@ -776,7 +800,15 @@ window.cfgEditarProduto = async function(id) {
       ${!fotos.length ? '<div style="font-size:12px;color:var(--text-muted)">Sem fotos</div>' : ''}
     </div>
     <button class="btn btn-outline btn-sm" onclick="cfgSincronizarBling(${id},'${p.referencia}')" style="margin-bottom:4px">🔄 Sincronizar com Bling</button>
-    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Atualiza fotos + peso + dimensões automaticamente</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Atualiza fotos + peso + dimensões automaticamente</div>
+    <div style="display:flex;gap:16px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+        <input type="checkbox" id="ep-sync-fotos" ${p.sync_fotos!==false?'checked':''} style="accent-color:var(--blue-dark)"> Sincronizar fotos
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+        <input type="checkbox" id="ep-sync-medidas" ${p.sync_medidas!==false?'checked':''} style="accent-color:var(--blue-dark)"> Sincronizar medidas
+      </label>
+    </div>
     <div id="ep-reload-msg" style="font-size:12px;margin-bottom:12px"></div>
     <div class="form-row form-row-2">
       <div class="form-field"><label>Nome</label><input type="text" id="ep-nome" class="cfg-input" value="${p.nome||''}"></div>
@@ -824,11 +856,13 @@ window.cfgEditarProduto = async function(id) {
 window.cfgSincronizarBling = async function(id, sku) {
   const msg = document.getElementById('ep-reload-msg');
   msg.textContent = '🔍 Sincronizando com Bling...'; msg.style.color = 'var(--text-muted)';
+  const syncFotos   = document.getElementById('ep-sync-fotos')?.checked !== false;
+  const syncMedidas = document.getElementById('ep-sync-medidas')?.checked !== false;
   try {
     const skuLimpo = String(parseInt(sku));
     const [rFotos, rDim] = await Promise.all([
-      fetch(`${BLING_PROXY}?acao=fotos&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})),
-      fetch(`${BLING_PROXY}?acao=dimensoes&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({}))
+      syncFotos   ? fetch(`${BLING_PROXY}?acao=fotos&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})) : Promise.resolve({}),
+      syncMedidas ? fetch(`${BLING_PROXY}?acao=dimensoes&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})) : Promise.resolve({})
     ]);
     const patch = {};
     const fotos = rFotos?.fotos || [];
@@ -864,6 +898,8 @@ window.cfgSincronizarBling = async function(id, sku) {
 
 window.cfgAtualizarProduto = async function(id) {
   const patch = {
+    sync_fotos:     document.getElementById('ep-sync-fotos')?.checked !== false,
+    sync_medidas:   document.getElementById('ep-sync-medidas')?.checked !== false,
     nome:           document.getElementById('ep-nome').value.trim(),
     referencia:     document.getElementById('ep-ref').value.trim(),
     aplicacao:      document.getElementById('ep-aplicacao').value.trim(),
@@ -1009,6 +1045,69 @@ window.cfgAtualizarRepresentante = async function(id) {
   });
   fecharDrawer(); cfgAba('representantes', null);
 };
+
+// ============================================================
+//  ABA 6 — EQUIPE (Gestores)
+// ============================================================
+async function cfgCarregarEquipe(el) {
+  el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+
+  // Busca usuários via Supabase Auth API (service role necessário)
+  // Como estamos no frontend, listamos apenas os que têm perfil gestor no user_metadata
+  // A gestão real é feita no Supabase Dashboard — aqui só exibimos instrução e permissões
+  el.innerHTML = `
+    <div class="cfg-section">
+      <div class="section-header">
+        <span class="section-title">Equipe — Gestores e Admins</span>
+      </div>
+
+      <div class="alert alert-info" style="margin-bottom:20px">
+        <span class="alert-icon">ℹ️</span>
+        <div>
+          <strong>Como cadastrar um gestor:</strong><br>
+          1. Acesse <strong>Supabase Dashboard → Authentication → Users → Add user</strong><br>
+          2. Informe e-mail e senha<br>
+          3. No campo <strong>User Metadata</strong> coloque: <code style="font-size:11px">{"nome": "Nome do Gestor", "perfil": "gestor"}</code><br>
+          4. O usuário já terá acesso ao painel de gestão do Portal Stonni
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="table-card-title">Perfis e permissões</span>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Perfil</th><th>User Metadata</th><th>Acesso</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-faturado">admin</span></td>
+              <td><code style="font-size:11px">{"nome": "Leo", "admin": true}</code></td>
+              <td style="font-size:12px;color:var(--text-secondary)">Tudo — catálogo, pedidos, configurações, representantes, equipe</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-aprovado">gestor</span></td>
+              <td><code style="font-size:11px">{"nome": "Maria", "perfil": "gestor"}</code></td>
+              <td style="font-size:12px;color:var(--text-secondary)">Catálogo, pedidos (aprovar/reprovar/faturar), configurações</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-enviado">representante</span></td>
+              <td><code style="font-size:11px">{"nome": "Carlos", "perfil": "representante"}</code></td>
+              <td style="font-size:12px;color:var(--text-secondary)">Catálogo, novo pedido, meus pedidos (somente leitura)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-warning" style="margin-top:16px">
+        <span class="alert-icon">⚠️</span>
+        <div>
+          <strong>Importante:</strong> Nunca coloque gestores do Portal Stonni como <strong>Admin do Supabase</strong> — isso daria acesso a todos os outros sistemas do Grupo Bononi.
+          O controle de acesso é feito pelo campo <code>perfil</code> no User Metadata, isolado por sistema.
+        </div>
+      </div>
+    </div>
+  `;
+}
 
 // ============================================================
 //  CSS DO MÓDULO

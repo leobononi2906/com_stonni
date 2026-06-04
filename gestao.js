@@ -148,32 +148,49 @@ window.gPedAbrir = async function(id) {
   const uploadHtml = isGestor && ['APROVADO','FATURADO'].includes(pedido.status) ? `
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-top:16px">
       <div style="font-size:13px;font-weight:600;margin-bottom:12px">📎 Documentos</div>
-      <div class="form-row form-row-2">
-        <div class="form-field">
-          <label>Número da NF</label>
-          <input type="text" id="doc-nf-num" class="cfg-input" value="${pedido.nf_numero||''}" placeholder="Ex: 12345">
-        </div>
-        <div class="form-field">
-          <label>URL da NF</label>
-          <input type="text" id="doc-nf-url" class="cfg-input" value="${pedido.nf_url||''}" placeholder="https://...">
-        </div>
-      </div>
       <div class="form-field">
-        <label>URL do Boleto</label>
-        <input type="text" id="doc-boleto-url" class="cfg-input" value="${pedido.boleto_url||''}" placeholder="https://...">
+        <label>Número da NF</label>
+        <input type="text" id="doc-nf-num" class="cfg-input" value="${pedido.nf_numero||''}" placeholder="Ex: 12345" style="max-width:200px">
       </div>
-      <div style="display:flex;gap:10px;margin-top:8px">
-        <button class="btn btn-primary" onclick="gPedSalvarDocs(${id})">💾 Salvar documentos</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px">
+        <div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px">📄 Nota Fiscal (PDF)</div>
+          ${pedido.nf_url ? `<div style="font-size:11px;color:var(--green);margin-bottom:6px">✅ Arquivo enviado</div>
+            <div style="display:flex;gap:6px">
+              <a href="${pedido.nf_url}" target="_blank" class="btn btn-outline btn-sm">↓ Baixar</a>
+              <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="gPedExcluirDoc(${id},'nf')">✕ Excluir</button>
+            </div>` : ''}
+          <div style="margin-top:8px">
+            <input type="file" id="doc-nf-file" accept=".pdf,image/*" style="font-size:12px;width:100%"
+              onchange="gPedUploadDoc(${id},'nf',this)">
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px">🏦 Boleto (PDF)</div>
+          ${pedido.boleto_url ? `<div style="font-size:11px;color:var(--green);margin-bottom:6px">✅ Arquivo enviado</div>
+            <div style="display:flex;gap:6px">
+              <a href="${pedido.boleto_url}" target="_blank" class="btn btn-outline btn-sm">↓ Baixar</a>
+              <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="gPedExcluirDoc(${id},'boleto')">✕ Excluir</button>
+            </div>` : ''}
+          <div style="margin-top:8px">
+            <input type="file" id="doc-boleto-file" accept=".pdf,image/*" style="font-size:12px;width:100%"
+              onchange="gPedUploadDoc(${id},'boleto',this)">
+          </div>
+        </div>
+      </div>
+      <div id="doc-upload-msg" style="font-size:12px;margin-top:10px"></div>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="btn btn-primary" onclick="gPedSalvarDocs(${id})">💾 Salvar número NF</button>
         ${pedido.nf_url||pedido.boleto_url ? `<button class="btn btn-success" onclick="gPedFaturar(${id})">🧾 Marcar como Faturado</button>` : ''}
       </div>
     </div>` : '';
 
-  // Download NF/Boleto (representante)
+  // Download NF/Boleto (representante — só leitura)
   const downloadHtml = !isGestor && (pedido.nf_url || pedido.boleto_url) ? `
     <div style="background:var(--green-bg);border:1px solid var(--green);border-radius:var(--radius-sm);padding:16px;margin-top:16px">
       <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:10px">📎 Documentos disponíveis</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        ${pedido.nf_url ? `<a href="${pedido.nf_url}" target="_blank" class="btn btn-success">🧾 Baixar NF ${pedido.nf_numero?`(${pedido.nf_numero})`:''}</a>` : ''}
+        ${pedido.nf_url ? `<a href="${pedido.nf_url}" target="_blank" class="btn btn-success">🧾 Baixar NF ${pedido.nf_numero?'('+pedido.nf_numero+')':''}</a>` : ''}
         ${pedido.boleto_url ? `<a href="${pedido.boleto_url}" target="_blank" class="btn btn-outline">📄 Baixar Boleto</a>` : ''}
       </div>
     </div>` : '';
@@ -263,3 +280,61 @@ window.gPedFaturar = async function(id) {
   fecharDrawer();
   renderPedidos(document.getElementById('page-content'));
 };
+
+// ── Upload de documentos no Storage ──
+window.gPedUploadDoc = async function(idPedido, tipo, input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const msg = document.getElementById('doc-upload-msg');
+  msg.textContent = `⏳ Enviando ${tipo === 'nf' ? 'NF' : 'Boleto'}...`;
+  msg.style.color = 'var(--text-muted)';
+
+  const ext = file.name.split('.').pop();
+  const path = `pedidos/${idPedido}/${tipo}.${ext}`;
+
+  try {
+    // Upload no Storage
+    const formData = new FormData();
+    formData.append('', file);
+    const upRes = await fetch(
+      `${SUPA_URL}/storage/v1/object/pedidos-docs/${path}`,
+      { method: 'POST', headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }, body: file }
+    );
+    if (!upRes.ok) {
+      // Tenta UPSERT se já existe
+      const upRes2 = await fetch(
+        `${SUPA_URL}/storage/v1/object/pedidos-docs/${path}`,
+        { method: 'PUT', headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'x-upsert': 'true' }, body: file }
+      );
+      if (!upRes2.ok) throw new Error('Falha no upload');
+    }
+
+    // Gera URL assinada (1 ano)
+    const signRes = await fetch(
+      `${SUPA_URL}/storage/v1/object/sign/pedidos-docs/${path}`,
+      { method: 'POST', headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expiresIn: 31536000 }) }
+    );
+    const signData = await signRes.json();
+    const url = `${SUPA_URL}/storage/v1${signData.signedURL}`;
+
+    // Salva URL no pedido
+    const campo = tipo === 'nf' ? 'nf_url' : 'boleto_url';
+    await supaPatch('ped_pedidos', `id=eq.${idPedido}`, { [campo]: url });
+
+    msg.textContent = `✅ ${tipo === 'nf' ? 'NF' : 'Boleto'} enviado com sucesso!`;
+    msg.style.color = 'var(--green)';
+    setTimeout(() => gPedAbrir(idPedido), 1000);
+  } catch(e) {
+    msg.textContent = `❌ Erro ao enviar: ${e.message}`;
+    msg.style.color = 'var(--red)';
+  }
+};
+
+window.gPedExcluirDoc = async function(idPedido, tipo) {
+  if (!confirm(`Excluir o arquivo de ${tipo === 'nf' ? 'NF' : 'Boleto'}?`)) return;
+  const campo = tipo === 'nf' ? 'nf_url' : 'boleto_url';
+  await supaPatch('ped_pedidos', `id=eq.${idPedido}`, { [campo]: null });
+  gPedAbrir(idPedido);
+};
+

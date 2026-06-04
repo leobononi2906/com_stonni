@@ -421,9 +421,21 @@ window.pedCotarFrete = async function() {
             <span style="font-size:11px;color:var(--text-muted);margin-left:8px">${r.prazo_dias} dia(s)</span>
           </span>
           <span class="mono" style="font-weight:600;color:${isGratis?'var(--green)':'var(--blue-dark)'}">
-            ${isGratis ? 'GRÁTIS' : `R$ ${r.valor_frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}`}
+            ${isGratis ? 'GRÁTIS' : \`R$ \${r.valor_frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}\`}
           </span>
         </label>`).join('')}
+      <!-- Redespacho SP -->
+      <div style="margin-top:12px;padding:12px 14px;background:var(--blue-pale);border:1.5px solid var(--blue-mid);border-radius:var(--radius-sm)">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <input type="checkbox" id="ped-redespacho-sp" style="accent-color:var(--blue-dark);width:16px;height:16px"
+            onchange="pedToggleRedespachSP(this.checked)">
+          <span style="flex:1">
+            <strong style="font-size:13px">🚚 Redespacho via SP</strong>
+            <span style="font-size:11px;color:var(--text-muted);margin-left:8px">Disponível para clientes com benefício de redespacho</span>
+          </span>
+          <span class="mono" style="font-weight:700;color:var(--green);font-size:13px">GRÁTIS</span>
+        </label>
+      </div>
     ` : '<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Não foi possível cotar o frete. Informe manualmente.</div>';
 
     // Seleciona o primeiro automaticamente
@@ -436,6 +448,19 @@ window.pedCotarFrete = async function() {
   }
 
   btn.textContent = '🚚 Recotar frete'; btn.disabled = false;
+};
+
+window.pedToggleRedespachSP = function(checked) {
+  if (checked) {
+    // Desmarca transportadoras e usa redespacho grátis
+    document.querySelectorAll('input[name="ped-frete-radio"]').forEach(r => { r.checked = false; });
+    document.querySelectorAll('.ped-frete-opcao').forEach(el => el.classList.remove('selected'));
+    _pedidoAtual.frete = { transportadora: 'Redespacho SP', valor_escolhido: 0, prazo_frete_dias: null };
+    pedAtualizarTotais();
+  } else {
+    _pedidoAtual.frete = null;
+    pedAtualizarTotais();
+  }
 };
 
 window.pedSelecionarFrete = function(idx, transportadora, valor, prazo) {
