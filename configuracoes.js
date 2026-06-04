@@ -14,7 +14,6 @@ async function renderConfiguracoes(el) {
         <button class="cfg-tab" onclick="cfgAba('acoes',this)">🎯 Ações Comerciais</button>
         <button class="cfg-tab" onclick="cfgAba('catalogo',this)">🛍️ Catálogo</button>
         <button class="cfg-tab" onclick="cfgAba('representantes',this)">👥 Representantes</button>
-        <button class="cfg-tab" onclick="cfgAba('equipe',this)">🔐 Equipe</button>
       </div>
       <div id="cfg-body"></div>
     </div>
@@ -33,7 +32,6 @@ function cfgAba(aba, btn) {
     case 'acoes':           cfgCarregarAcoes(body); break;
     case 'catalogo':        cfgCarregarCatalogo(body); break;
     case 'representantes':  cfgCarregarRepresentantes(body); break;
-    case 'equipe':           cfgCarregarEquipe(body); break;
   }
 }
 
@@ -925,48 +923,193 @@ window.cfgAtualizarProduto = async function(id) {
 };
 
 // ============================================================
-//  ABA 5 — REPRESENTANTES
+//  ABA 5 — REPRESENTANTES + GESTORES
 // ============================================================
 async function cfgCarregarRepresentantes(el) {
-  const [reps, tabelas] = await Promise.all([
+  el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+  const [reps, gestores, tabelas] = await Promise.all([
     supa('ped_representantes', 'order=nome&select=*'),
-    supa('ped_tabelas_preco',  'order=nome&select=id,nome,markup_global')
+    supa('ped_gestores', 'order=nome&select=*'),
+    supa('ped_tabelas_preco', 'order=nome&select=id,nome,markup_global')
   ]);
   window._cfgTabelas = tabelas || [];
 
   el.innerHTML = `
-    <div class="section-header">
-      <span class="section-title">${(reps||[]).length} representante(s)</span>
-      <button class="btn btn-primary" onclick="cfgNovoRepresentante()">+ Novo representante</button>
+    <!-- GESTORES -->
+    <div class="cfg-section">
+      <div class="section-header" style="margin-bottom:14px">
+        <span class="section-title">🔐 Gestores (${(gestores||[]).length})</span>
+        <button class="btn btn-primary" onclick="cfgNovoGestor()">+ Novo gestor</button>
+      </div>
+      <div class="alert alert-info" style="margin-bottom:12px">
+        <span class="alert-icon">ℹ️</span>
+        Crie o usuário no <strong>Supabase Auth</strong> primeiro com <code>{"perfil": "gestor"}</code> no User Metadata, depois cadastre aqui definindo as permissões.
+      </div>
+      <div class="table-card">
+        <table class="data-table">
+          <thead><tr>
+            <th>Nome</th><th>E-mail</th><th>Perfil</th>
+            <th>Aprovar</th><th>Reprovar</th><th>Faturar</th><th>Catálogo</th><th>Config</th>
+            <th>Status</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${!(gestores||[]).length
+              ? `<tr><td colspan="10"><div class="empty-state"><div class="empty-state-icon">🔐</div><h3>Nenhum gestor</h3><p>Cadastre o primeiro gestor.</p></div></td></tr>`
+              : (gestores||[]).map(g => `
+                <tr>
+                  <td><strong>${g.nome}</strong></td>
+                  <td style="font-size:12px;color:var(--text-secondary)">${g.email}</td>
+                  <td><span class="badge ${g.perfil==='admin'?'badge-faturado':'badge-aprovado'}">${g.perfil}</span></td>
+                  <td style="text-align:center">${g.pode_aprovar ? '✅' : '—'}</td>
+                  <td style="text-align:center">${g.pode_reprovar ? '✅' : '—'}</td>
+                  <td style="text-align:center">${g.pode_faturar ? '✅' : '—'}</td>
+                  <td style="text-align:center">${g.pode_catalogo ? '✅' : '—'}</td>
+                  <td style="text-align:center">${g.pode_config ? '✅' : '—'}</td>
+                  <td><span class="badge ${g.ativo?'badge-aprovado':'badge-cancelado'}">${g.ativo?'Ativo':'Inativo'}</span></td>
+                  <td><button class="btn btn-outline btn-sm" onclick="cfgEditarGestor(${g.id})">Editar</button></td>
+                </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="table-card">
-      <table class="data-table">
-        <thead><tr>
-          <th>Nome</th><th>E-mail</th><th>Região</th><th>Tabela de preço</th><th>Comissão</th><th>Status</th><th></th>
-        </tr></thead>
-        <tbody>
-          ${!(reps||[]).length
-            ? `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">👥</div><h3>Nenhum representante</h3><p>Cadastre o primeiro representante.</p></div></td></tr>`
-            : (reps||[]).map(r => {
-                const t = (tabelas||[]).find(t => t.id === r.id_tabela_preco);
-                const markup = t?.markup_global;
-                const markupStr = markup != null && markup !== 0
-                  ? ` <span style="font-size:10px;color:${markup>0?'var(--orange)':'var(--blue-mid)'}">(${markup>0?'+':''}${markup}%)</span>` : '';
-                return `<tr>
-                  <td><strong>${r.nome}</strong></td>
-                  <td style="font-size:12px;color:var(--text-secondary)">${r.email||'—'}</td>
-                  <td style="font-size:12px">${r.regiao||'—'}</td>
-                  <td style="font-size:12px">${t?.nome||'Padrão'}${markupStr}</td>
-                  <td class="mono" style="font-size:12px">${r.comissao_perc||0}%</td>
-                  <td><span class="badge ${r.ativo?'badge-aprovado':'badge-cancelado'}">${r.ativo?'Ativo':'Inativo'}</span></td>
-                  <td><button class="btn btn-outline btn-sm" onclick="cfgEditarRepresentante(${r.id})">Editar</button></td>
-                </tr>`;
-              }).join('')}
-        </tbody>
-      </table>
+
+    <!-- REPRESENTANTES -->
+    <div class="cfg-section" style="margin-top:28px">
+      <div class="section-header" style="margin-bottom:14px">
+        <span class="section-title">👥 Representantes (${(reps||[]).length})</span>
+        <button class="btn btn-primary" onclick="cfgNovoRepresentante()">+ Novo representante</button>
+      </div>
+      <div class="alert alert-info" style="margin-bottom:12px">
+        <span class="alert-icon">ℹ️</span>
+        Crie o usuário no <strong>Supabase Auth</strong> com <code>{"perfil": "representante"}</code> no User Metadata, depois cadastre aqui com tabela de preço e região.
+      </div>
+      <div class="table-card">
+        <table class="data-table">
+          <thead><tr>
+            <th>Nome</th><th>E-mail</th><th>Região</th><th>Tabela de preço</th><th>Comissão</th><th>Status</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${!(reps||[]).length
+              ? `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">👥</div><h3>Nenhum representante</h3><p>Cadastre o primeiro representante.</p></div></td></tr>`
+              : (reps||[]).map(r => {
+                  const t = (tabelas||[]).find(t => t.id === r.id_tabela_preco);
+                  const markup = t?.markup_global;
+                  const markupStr = markup != null && markup !== 0
+                    ? \` <span style="font-size:10px;color:\${markup>0?'var(--orange)':'var(--blue-mid)'}">(\${markup>0?'+':''}\${markup}%)</span>\` : '';
+                  return \`<tr>
+                    <td><strong>\${r.nome}</strong></td>
+                    <td style="font-size:12px;color:var(--text-secondary)">\${r.email||'—'}</td>
+                    <td style="font-size:12px">\${r.regiao||'—'}</td>
+                    <td style="font-size:12px">\${t?.nome||'Padrão'}\${markupStr}</td>
+                    <td class="mono" style="font-size:12px">\${r.comissao_perc||0}%</td>
+                    <td><span class="badge \${r.ativo?'badge-aprovado':'badge-cancelado'}">\${r.ativo?'Ativo':'Inativo'}</span></td>
+                    <td><button class="btn btn-outline btn-sm" onclick="cfgEditarRepresentante(\${r.id})">Editar</button></td>
+                  </tr>\`;
+                }).join('')}
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
 }
+
+// ── Formulário Gestor ──
+function cfgFormGestor(g = {}) {
+  return \`
+    <div class="form-row form-row-2">
+      <div class="form-field"><label>Nome completo</label><input type="text" id="gs-nome" class="cfg-input" value="\${g.nome||''}"></div>
+      <div class="form-field"><label>E-mail (igual ao Supabase Auth)</label><input type="email" id="gs-email" class="cfg-input" value="\${g.email||''}"></div>
+    </div>
+    <div class="form-field">
+      <label>Perfil</label>
+      <select id="gs-perfil" class="cfg-input">
+        <option value="gestor" \${g.perfil!=='admin'?'selected':''}>Gestor</option>
+        <option value="admin" \${g.perfil==='admin'?'selected':''}>Admin</option>
+      </select>
+    </div>
+    <div style="margin-top:14px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Permissões</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="gs-aprovar" \${g.pode_aprovar!==false?'checked':''} style="accent-color:var(--blue-dark)">
+          Aprovar pedidos
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="gs-reprovar" \${g.pode_reprovar!==false?'checked':''} style="accent-color:var(--blue-dark)">
+          Reprovar pedidos
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="gs-faturar" \${g.pode_faturar!==false?'checked':''} style="accent-color:var(--blue-dark)">
+          Faturar pedidos (upload NF/boleto)
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="gs-catalogo" \${g.pode_catalogo!==false?'checked':''} style="accent-color:var(--blue-dark)">
+          Gerenciar catálogo
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="gs-config" \${g.pode_config===true?'checked':''} style="accent-color:var(--blue-dark)">
+          Acessar configurações
+        </label>
+      </div>
+    </div>
+    <div class="form-field" style="margin-top:12px">
+      <label>Status</label>
+      <select id="gs-ativo" class="cfg-input">
+        <option value="true" \${g.ativo!==false?'selected':''}>Ativo</option>
+        <option value="false" \${g.ativo===false?'selected':''}>Inativo</option>
+      </select>
+    </div>
+  \`;
+}
+
+window.cfgNovoGestor = function() {
+  abrirDrawer('Novo Gestor', 'Defina nome, e-mail e permissões', cfgFormGestor(), \`
+    <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
+    <button class="btn btn-primary" onclick="cfgSalvarGestor()">Cadastrar</button>
+  \`);
+};
+
+window.cfgSalvarGestor = async function() {
+  const nome  = document.getElementById('gs-nome').value.trim();
+  const email = document.getElementById('gs-email').value.trim();
+  if (!nome || !email) { alert('Nome e e-mail obrigatórios'); return; }
+  await supaInsert('ped_gestores', {
+    nome, email,
+    perfil:        document.getElementById('gs-perfil').value,
+    pode_aprovar:  document.getElementById('gs-aprovar').checked,
+    pode_reprovar: document.getElementById('gs-reprovar').checked,
+    pode_faturar:  document.getElementById('gs-faturar').checked,
+    pode_catalogo: document.getElementById('gs-catalogo').checked,
+    pode_config:   document.getElementById('gs-config').checked,
+    ativo:         document.getElementById('gs-ativo').value === 'true'
+  });
+  fecharDrawer(); cfgAba('representantes', null);
+};
+
+window.cfgEditarGestor = async function(id) {
+  const res = await supa('ped_gestores', \`id=eq.\${id}\`);
+  const g = res?.[0]; if (!g) return;
+  abrirDrawer('Editar Gestor', g.nome, cfgFormGestor(g), \`
+    <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
+    <button class="btn btn-primary" onclick="cfgAtualizarGestor(\${id})">Salvar</button>
+  \`);
+};
+
+window.cfgAtualizarGestor = async function(id) {
+  await supaPatch('ped_gestores', \`id=eq.\${id}\`, {
+    nome:          document.getElementById('gs-nome').value.trim(),
+    email:         document.getElementById('gs-email').value.trim(),
+    perfil:        document.getElementById('gs-perfil').value,
+    pode_aprovar:  document.getElementById('gs-aprovar').checked,
+    pode_reprovar: document.getElementById('gs-reprovar').checked,
+    pode_faturar:  document.getElementById('gs-faturar').checked,
+    pode_catalogo: document.getElementById('gs-catalogo').checked,
+    pode_config:   document.getElementById('gs-config').checked,
+    ativo:         document.getElementById('gs-ativo').value === 'true'
+  });
+  fecharDrawer(); cfgAba('representantes', null);
+};
+
 
 function cfgFormRepresentante(r = {}) {
   const tabelas = window._cfgTabelas || [];
@@ -1045,69 +1188,6 @@ window.cfgAtualizarRepresentante = async function(id) {
   });
   fecharDrawer(); cfgAba('representantes', null);
 };
-
-// ============================================================
-//  ABA 6 — EQUIPE (Gestores)
-// ============================================================
-async function cfgCarregarEquipe(el) {
-  el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
-
-  // Busca usuários via Supabase Auth API (service role necessário)
-  // Como estamos no frontend, listamos apenas os que têm perfil gestor no user_metadata
-  // A gestão real é feita no Supabase Dashboard — aqui só exibimos instrução e permissões
-  el.innerHTML = `
-    <div class="cfg-section">
-      <div class="section-header">
-        <span class="section-title">Equipe — Gestores e Admins</span>
-      </div>
-
-      <div class="alert alert-info" style="margin-bottom:20px">
-        <span class="alert-icon">ℹ️</span>
-        <div>
-          <strong>Como cadastrar um gestor:</strong><br>
-          1. Acesse <strong>Supabase Dashboard → Authentication → Users → Add user</strong><br>
-          2. Informe e-mail e senha<br>
-          3. No campo <strong>User Metadata</strong> coloque: <code style="font-size:11px">{"nome": "Nome do Gestor", "perfil": "gestor"}</code><br>
-          4. O usuário já terá acesso ao painel de gestão do Portal Stonni
-        </div>
-      </div>
-
-      <div class="table-card">
-        <div class="table-card-header">
-          <span class="table-card-title">Perfis e permissões</span>
-        </div>
-        <table class="data-table">
-          <thead><tr><th>Perfil</th><th>User Metadata</th><th>Acesso</th></tr></thead>
-          <tbody>
-            <tr>
-              <td><span class="badge badge-faturado">admin</span></td>
-              <td><code style="font-size:11px">{"nome": "Leo", "admin": true}</code></td>
-              <td style="font-size:12px;color:var(--text-secondary)">Tudo — catálogo, pedidos, configurações, representantes, equipe</td>
-            </tr>
-            <tr>
-              <td><span class="badge badge-aprovado">gestor</span></td>
-              <td><code style="font-size:11px">{"nome": "Maria", "perfil": "gestor"}</code></td>
-              <td style="font-size:12px;color:var(--text-secondary)">Catálogo, pedidos (aprovar/reprovar/faturar), configurações</td>
-            </tr>
-            <tr>
-              <td><span class="badge badge-enviado">representante</span></td>
-              <td><code style="font-size:11px">{"nome": "Carlos", "perfil": "representante"}</code></td>
-              <td style="font-size:12px;color:var(--text-secondary)">Catálogo, novo pedido, meus pedidos (somente leitura)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="alert alert-warning" style="margin-top:16px">
-        <span class="alert-icon">⚠️</span>
-        <div>
-          <strong>Importante:</strong> Nunca coloque gestores do Portal Stonni como <strong>Admin do Supabase</strong> — isso daria acesso a todos os outros sistemas do Grupo Bononi.
-          O controle de acesso é feito pelo campo <code>perfil</code> no User Metadata, isolado por sistema.
-        </div>
-      </div>
-    </div>
-  `;
-}
 
 // ============================================================
 //  CSS DO MÓDULO
