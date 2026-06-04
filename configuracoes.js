@@ -487,32 +487,56 @@ window.cfgFiltrarCatalogo = function() {
 };
 
 window.cfgAdicionarProduto = function() {
-  abrirDrawer('Adicionar Produto ao Catálogo', 'Digite o SKU do ERP — dados do Bling serão carregados automaticamente', `
-    <div class="alert alert-info"><span class="alert-icon">ℹ️</span>O SKU é o código do produto no Firebird (ex: 18744). As fotos serão buscadas automaticamente no Bling.</div>
+  abrirDrawer('Adicionar Produto ao Catálogo', 'Digite o SKU do ERP para buscar os dados', `
+    <div class="alert alert-info">
+      <span class="alert-icon">ℹ️</span>
+      Digite o código do produto no ERP (Firebird). Os dados virão da tabela de preços da Bononi SC automaticamente. As fotos do Bling serão buscadas após salvar.
+    </div>
 
     <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:20px">
       <div class="form-field" style="flex:1;margin:0">
         <label>SKU / Código ERP</label>
-        <input type="text" id="np-sku" class="cfg-input" placeholder="Ex: 18744">
+        <input type="text" id="np-sku" class="cfg-input" placeholder="Ex: 18744"
+               onkeydown="if(event.key==='Enter') cfgBuscarERP()">
       </div>
-      <button class="btn btn-outline" onclick="cfgBuscarBling()" style="flex-shrink:0">🔍 Buscar no Bling</button>
+      <button class="btn btn-primary" onclick="cfgBuscarERP()" style="flex-shrink:0">🔍 Buscar</button>
     </div>
 
-    <div id="np-bling-resultado"></div>
+    <div id="np-erp-resultado"></div>
 
     <div id="np-form-produto" style="display:none">
       <div class="form-row form-row-2">
         <div class="form-field"><label>Nome do produto</label><input type="text" id="np-nome" class="cfg-input"></div>
-        <div class="form-field"><label>Referência</label><input type="text" id="np-ref" class="cfg-input"></div>
+        <div class="form-field"><label>Referência (SKU)</label><input type="text" id="np-ref" class="cfg-input"></div>
       </div>
-      <div class="form-field"><label>Aplicação (veículos/modelos)</label><input type="text" id="np-aplicacao" class="cfg-input" placeholder="Ex: Gol G4, Fox 2003-2012"></div>
+      <div class="form-field">
+        <label>Aplicação (veículos/modelos)</label>
+        <input type="text" id="np-aplicacao" class="cfg-input" placeholder="Ex: Scania R440, Volvo FH 2020">
+      </div>
       <div class="form-row form-row-2">
-        <div class="form-field"><label>Grupo</label><input type="text" id="np-grupo" class="cfg-input"></div>
-        <div class="form-field"><label>Subgrupo</label><input type="text" id="np-subgrupo" class="cfg-input"></div>
+        <div class="form-field">
+          <label>Grupo</label>
+          <input type="text" id="np-grupo" class="cfg-input" readonly style="opacity:.7">
+        </div>
+        <div class="form-field">
+          <label>Subgrupo</label>
+          <input type="text" id="np-subgrupo" class="cfg-input" readonly style="opacity:.7">
+        </div>
       </div>
-      <div class="form-field"><label>Preço base (R$)</label><input type="number" id="np-preco" class="cfg-input" min="0" step="0.01"></div>
-      <div class="form-field"><label>Descrição</label><textarea id="np-desc" class="cfg-input" rows="3"></textarea></div>
-      <div style="display:flex;gap:16px;margin-top:4px">
+      <div class="form-row form-row-2">
+        <div class="form-field">
+          <label>Preço base — preco_aux2 Bononi SC (R$)</label>
+          <input type="number" id="np-preco" class="cfg-input" min="0" step="0.01">
+        </div>
+        <div class="form-field">
+          <label>Estoque Bononi SC (informativo)</label>
+          <input type="text" id="np-estoque" class="cfg-input" readonly style="opacity:.7">
+        </div>
+      </div>
+      <div class="form-field"><label>Descrição</label><textarea id="np-desc" class="cfg-input" rows="2"></textarea></div>
+      <input type="hidden" id="np-id-grupo">
+      <input type="hidden" id="np-id-subgrupo">
+      <div style="display:flex;gap:16px;margin-top:8px">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
           <input type="checkbox" id="np-ativo" checked style="accent-color:var(--blue-dark)"> Ativo no catálogo
         </label>
@@ -520,64 +544,75 @@ window.cfgAdicionarProduto = function() {
           <input type="checkbox" id="np-esgotado" style="accent-color:var(--red)"> Esgotado
         </label>
       </div>
-      <div id="np-fotos-preview" style="margin-top:16px"></div>
+      <div class="alert alert-info" style="margin-top:14px">
+        <span class="alert-icon">📷</span>
+        As fotos serão buscadas automaticamente no Bling após salvar o produto.
+      </div>
     </div>
   `, `
     <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
-    <button class="btn btn-primary" id="np-btn-salvar" style="display:none" onclick="cfgSalvarProduto()">Salvar produto</button>
+    <button class="btn btn-primary" id="np-btn-salvar" style="display:none" onclick="cfgSalvarProduto()">Salvar e buscar fotos</button>
   `);
 };
 
-window.cfgBuscarBling = async function() {
+window.cfgBuscarERP = async function() {
   const sku = document.getElementById('np-sku').value.trim();
   if (!sku) { alert('Digite o SKU primeiro'); return; }
 
-  const res = document.getElementById('np-bling-resultado');
-  res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Buscando no Bling...</div>';
+  const res = document.getElementById('np-erp-resultado');
+  res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Buscando no ERP...</div>';
 
-  try {
-    const r = await fetch(`${BLING_PROXY}?acao=produto&sku=${sku}`);
-    const data = await r.json();
-    const produtos = data?.data || [];
+  // Busca na vw_fb_produtos_compras — empresa 8 (Bononi SC), pelo id_produto
+  const skuInt = parseInt(sku);
+  const rows = await supa(
+    'vw_fb_produtos_compras',
+    `id_produto=eq.${skuInt}&id_empresa=eq.8&select=id_produto,referencia,nome,complemento,id_grupo,grupo,id_subgrupo,subgrupo,preco_aux2,estoque_fisico,situacao`
+  );
 
-    if (!produtos.length) {
-      res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Produto não encontrado no Bling para o SKU <strong>${sku}</strong>. Você pode preencher manualmente.</div>`;
-      document.getElementById('np-form-produto').style.display = 'block';
-      document.getElementById('np-btn-salvar').style.display = 'inline-flex';
-      document.getElementById('np-ref').value = sku;
-      return;
-    }
+  const p = rows?.[0];
 
-    const p = produtos[0];
-    const fotos = p.imagens?.map(i => i.link || i.url).filter(Boolean) || [];
-
-    // Preenche o form
-    document.getElementById('np-nome').value = p.nome || '';
-    document.getElementById('np-ref').value  = p.codigo || sku;
-    document.getElementById('np-preco').value = p.preco || '';
-    document.getElementById('np-desc').value  = p.descricaoCurta || '';
-
-    // Armazena fotos para salvar
-    window._npFotos = fotos;
-
-    // Preview das fotos
-    const fotosHtml = fotos.length
-      ? `<div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Fotos encontradas no Bling (${fotos.length})</div>
-         <div style="display:flex;gap:8px;flex-wrap:wrap">${fotos.slice(0,6).map(f => `<img src="${f}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">`).join('')}</div>`
-      : `<div style="font-size:12px;color:var(--text-muted)">Nenhuma foto encontrada no Bling.</div>`;
-
-    document.getElementById('np-fotos-preview').innerHTML = fotosHtml;
-
-    res.innerHTML = `<div class="alert alert-success"><span class="alert-icon">✅</span>Produto encontrado: <strong>${p.nome}</strong>. Verifique os dados abaixo e salve.</div>`;
+  if (!p) {
+    res.innerHTML = `
+      <div class="alert alert-warning">
+        <span class="alert-icon">⚠️</span>
+        Produto <strong>${sku}</strong> não encontrado no ERP para a Bononi SC.
+        Verifique o código e tente novamente, ou preencha os dados manualmente.
+      </div>`;
+    // Permite preencher manual mesmo assim
+    document.getElementById('np-ref').value = sku;
     document.getElementById('np-form-produto').style.display = 'block';
     document.getElementById('np-btn-salvar').style.display = 'inline-flex';
-
-  } catch(e) {
-    res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Erro ao consultar o Bling. Preencha os dados manualmente.</div>`;
-    document.getElementById('np-form-produto').style.display = 'block';
-    document.getElementById('np-btn-salvar').style.display = 'inline-flex';
-    window._npFotos = [];
+    return;
   }
+
+  // Preenche o form com dados do ERP
+  document.getElementById('np-nome').value       = p.nome?.trim() || '';
+  document.getElementById('np-ref').value        = p.referencia?.trim() || sku;
+  document.getElementById('np-grupo').value      = p.grupo || '';
+  document.getElementById('np-subgrupo').value   = p.subgrupo || '';
+  document.getElementById('np-id-grupo').value   = p.id_grupo || '';
+  document.getElementById('np-id-subgrupo').value= p.id_subgrupo || '';
+  document.getElementById('np-preco').value      = p.preco_aux2 > 0 ? Number(p.preco_aux2).toFixed(2) : '';
+  document.getElementById('np-estoque').value    = `${p.estoque_fisico ?? 0} un.`;
+  document.getElementById('np-desc').value       = p.complemento?.trim() || '';
+
+  // Sinaliza esgotado se estoque <= 0
+  if ((p.estoque_fisico ?? 0) <= 0) {
+    document.getElementById('np-esgotado').checked = true;
+  }
+
+  res.innerHTML = `
+    <div class="alert alert-success">
+      <span class="alert-icon">✅</span>
+      <div>
+        <strong>${p.nome?.trim()}</strong><br>
+        <span style="font-size:12px">Preço atacado (preco_aux2): <strong>R$ ${Number(p.preco_aux2||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>
+        · Estoque SC: <strong>${p.estoque_fisico ?? 0} un.</strong></span>
+      </div>
+    </div>`;
+
+  document.getElementById('np-form-produto').style.display = 'block';
+  document.getElementById('np-btn-salvar').style.display = 'inline-flex';
 };
 
 window.cfgSalvarProduto = async function() {
@@ -586,22 +621,49 @@ window.cfgSalvarProduto = async function() {
   if (!nome) { alert('Nome do produto obrigatório'); return; }
   if (!sku)  { alert('SKU obrigatório'); return; }
 
+  const btnSalvar = document.getElementById('np-btn-salvar');
+  btnSalvar.textContent = 'Salvando...';
+  btnSalvar.disabled = true;
+
+  const referencia = document.getElementById('np-ref').value.trim() || sku;
+
   const body = {
     id_produto_erp: parseInt(sku),
-    referencia:     document.getElementById('np-ref').value.trim() || sku,
+    referencia,
     nome,
     descricao:      document.getElementById('np-desc').value.trim(),
     aplicacao:      document.getElementById('np-aplicacao').value.trim(),
+    id_grupo:       parseInt(document.getElementById('np-id-grupo').value) || null,
     grupo:          document.getElementById('np-grupo').value.trim(),
+    id_subgrupo:    parseInt(document.getElementById('np-id-subgrupo').value) || null,
     subgrupo:       document.getElementById('np-subgrupo').value.trim(),
     preco_base:     parseFloat(document.getElementById('np-preco').value) || 0,
     ativo:          document.getElementById('np-ativo').checked,
     esgotado:       document.getElementById('np-esgotado').checked,
-    fotos:          window._npFotos || [],
+    fotos:          [],
     especificacoes: {}
   };
 
-  await supaInsert('ped_catalogo_produtos', body);
+  // 1. Salva o produto
+  const inserted = await supaInsert('ped_catalogo_produtos', body);
+  const idNovo = inserted?.[0]?.id;
+
+  // 2. Busca fotos no Bling pelo SKU desse produto específico
+  btnSalvar.textContent = 'Buscando fotos no Bling...';
+  try {
+    const skuLimpo = String(parseInt(referencia)); // remove zeros à esquerda
+    const r = await fetch(`${BLING_PROXY}?acao=produto&sku=${skuLimpo}`);
+    const data = await r.json();
+    const fotos = data?.data?.[0]?.imagens?.map(i => i.link || i.url).filter(Boolean) || [];
+
+    if (fotos.length > 0 && idNovo) {
+      await supaPatch('ped_catalogo_produtos', `id=eq.${idNovo}`, { fotos });
+    }
+  } catch(e) {
+    // Falhou no Bling — produto salvo sem foto, pode recarregar depois
+    console.warn('Bling não retornou fotos:', e);
+  }
+
   fecharDrawer();
   cfgAba('catalogo', null);
 };
