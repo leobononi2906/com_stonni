@@ -122,8 +122,9 @@ window.pedBuscarCliente = async function() {
   const res = document.getElementById('ped-cliente-resultado');
   res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Buscando cliente...</div>';
 
-  // Busca cliente no ERP (campos: cnpj e cpf separados)
-  const clientes = await supa('vw_dim_cliente', `cnpj=eq.${cnpjRaw}&select=*`).catch(()=>null);
+  // CNPJ no ERP vem formatado ex: "49.724.128/0001-97"
+  const cnpjFmt = cnpjRaw.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  const clientes = await supa('vw_dim_cliente', `cnpj=eq.${cnpjFmt}&select=*`).catch(()=>null);
   const cliente = Array.isArray(clientes) ? clientes[0] : null;
 
   // Busca alertas financeiros em paralelo (só se encontrou o cliente)
