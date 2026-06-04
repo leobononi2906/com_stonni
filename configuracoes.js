@@ -734,14 +734,35 @@ window.cfgSalvarProduto = async function() {
   };
   const inserted = await supaInsert('ped_catalogo_produtos', body);
   const idNovo = inserted?.[0]?.id;
-  btn.textContent = 'Buscando fotos no Bling...';
+  btn.textContent = 'Sincronizando com Bling...';
   try {
     const skuLimpo = String(parseInt(referencia));
-    const r = await fetch(`${BLING_PROXY}?acao=fotos&sku=${skuLimpo}`);
-    const data = await r.json();
-    const fotos = data?.fotos || [];
-    if (fotos.length > 0 && idNovo) await supaPatch('ped_catalogo_produtos', `id=eq.${idNovo}`, { fotos });
-  } catch(e) { console.warn('Bling fotos:', e); }
+    const [rFotos, rDim] = await Promise.all([
+      fetch(`${BLING_PROXY}?acao=fotos&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})),
+      fetch(`${BLING_PROXY}?acao=dimensoes&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({}))
+    ]);
+    const patch = {};
+    if ((rFotos?.fotos||[]).length > 0) patch.fotos = rFotos.fotos;
+    if (rDim?.peso_kg)        patch.peso_kg        = rDim.peso_kg;
+    if (rDim?.altura_cm)      patch.altura_cm      = rDim.altura_cm;
+    if (rDim?.largura_cm)     patch.largura_cm     = rDim.largura_cm;
+    if (rDim?.comprimento_cm) patch.comprimento_cm = rDim.comprimento_cm;
+    if (Object.keys(patch).length > 0 && idNovo) {
+      await supaPatch('ped_catalogo_produtos', `id=eq.${idNovo}`, patch);
+      // Sincroniza também em frt_produtos_dimensoes
+      if (rDim?.peso_kg) {
+        await fetch(`${SUPA_URL}/rest/v1/frt_produtos_dimensoes`, {
+          method: 'POST',
+          headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify({
+            id_produto: parseInt(sku), descricao: nome, referencia,
+            peso_kg: rDim.peso_kg, altura_cm: rDim.altura_cm,
+            largura_cm: rDim.largura_cm, comprimento_cm: rDim.comprimento_cm, ativo: true
+          })
+        }).catch(()=>{});
+      }
+    }
+  } catch(e) { console.warn('Bling sync:', e); }
   fecharDrawer(); cfgAba('catalogo', null);
 };
 
@@ -754,7 +775,8 @@ window.cfgEditarProduto = async function(id) {
       ${fotos.slice(0,4).map(f => `<img src="${f}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">`).join('')}
       ${!fotos.length ? '<div style="font-size:12px;color:var(--text-muted)">Sem fotos</div>' : ''}
     </div>
-    <button class="btn btn-outline btn-sm" onclick="cfgRecarregarFotosBling(${id},'${p.referencia}')" style="margin-bottom:16px">🔄 Recarregar fotos do Bling</button>
+    <button class="btn btn-outline btn-sm" onclick="cfgSincronizarBling(${id},'${p.referencia}')" style="margin-bottom:4px">🔄 Sincronizar com Bling</button>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Atualiza fotos + peso + dimensões automaticamente</div>
     <div id="ep-reload-msg" style="font-size:12px;margin-bottom:12px"></div>
     <div class="form-row form-row-2">
       <div class="form-field"><label>Nome</label><input type="text" id="ep-nome" class="cfg-input" value="${p.nome||''}"></div>
@@ -767,7 +789,29 @@ window.cfgEditarProduto = async function(id) {
     </div>
     <div class="form-field"><label>Preço base (R$)</label><input type="number" id="ep-preco" class="cfg-input" value="${p.preco_base||0}" step="0.01"></div>
     <div class="form-field"><label>Descrição</label><textarea id="ep-desc" class="cfg-input" rows="2">${p.descricao||''}</textarea></div>
-    <div style="display:flex;gap:16px;margin-top:8px">
+    <!-- Dimensões para frete (sincronizadas do Bling) -->
+    <div style="margin-top:14px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">📦 Dimensões para frete</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-field" style="margin:0">
+          <label>Peso (kg)</label>
+          <input type="number" id="ep-peso" class="cfg-input" value="${p.peso_kg||''}" step="0.001" placeholder="Ex: 19">
+        </div>
+        <div class="form-field" style="margin:0">
+          <label>Altura (cm)</label>
+          <input type="number" id="ep-altura" class="cfg-input" value="${p.altura_cm||''}" step="0.1" placeholder="Ex: 55">
+        </div>
+        <div class="form-field" style="margin:0">
+          <label>Largura (cm)</label>
+          <input type="number" id="ep-largura" class="cfg-input" value="${p.largura_cm||''}" step="0.1" placeholder="Ex: 34">
+        </div>
+        <div class="form-field" style="margin:0">
+          <label>Comprimento (cm)</label>
+          <input type="number" id="ep-comprimento" class="cfg-input" value="${p.comprimento_cm||''}" step="0.1" placeholder="Ex: 53">
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:12px">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="ep-ativo" ${p.ativo?'checked':''} style="accent-color:var(--blue-dark)"> Ativo</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="ep-esgotado" ${p.esgotado?'checked':''} style="accent-color:var(--red)"> Esgotado</label>
     </div>
@@ -777,33 +821,70 @@ window.cfgEditarProduto = async function(id) {
   `);
 };
 
-window.cfgRecarregarFotosBling = async function(id, sku) {
+window.cfgSincronizarBling = async function(id, sku) {
   const msg = document.getElementById('ep-reload-msg');
-  msg.textContent = '🔍 Buscando fotos no Bling...'; msg.style.color = 'var(--text-muted)';
+  msg.textContent = '🔍 Sincronizando com Bling...'; msg.style.color = 'var(--text-muted)';
   try {
     const skuLimpo = String(parseInt(sku));
-    const r = await fetch(`${BLING_PROXY}?acao=fotos&sku=${skuLimpo}`);
-    const data = await r.json();
-    const fotos = data?.fotos || [];
-    await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos });
-    msg.textContent = fotos.length ? `✅ ${fotos.length} foto(s) atualizadas!` : '⚠️ Sem fotos no Bling para este produto.';
-    msg.style.color = fotos.length ? 'var(--green)' : 'var(--orange)';
-  } catch(e) { msg.textContent = '❌ Erro ao buscar no Bling.'; msg.style.color = 'var(--red)'; }
+    const [rFotos, rDim] = await Promise.all([
+      fetch(`${BLING_PROXY}?acao=fotos&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})),
+      fetch(`${BLING_PROXY}?acao=dimensoes&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({}))
+    ]);
+    const patch = {};
+    const fotos = rFotos?.fotos || [];
+    if (fotos.length > 0) patch.fotos = fotos;
+    if (rDim?.peso_kg)        { patch.peso_kg = rDim.peso_kg;               document.getElementById('ep-peso')?.setAttribute('value', rDim.peso_kg); document.getElementById('ep-peso').value = rDim.peso_kg; }
+    if (rDim?.altura_cm)      { patch.altura_cm = rDim.altura_cm;           document.getElementById('ep-altura').value = rDim.altura_cm; }
+    if (rDim?.largura_cm)     { patch.largura_cm = rDim.largura_cm;         document.getElementById('ep-largura').value = rDim.largura_cm; }
+    if (rDim?.comprimento_cm) { patch.comprimento_cm = rDim.comprimento_cm; document.getElementById('ep-comprimento').value = rDim.comprimento_cm; }
+    if (Object.keys(patch).length > 0) await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, patch);
+    // Sincroniza frt_produtos_dimensoes
+    if (rDim?.peso_kg) {
+      const prodRes = await supa('ped_catalogo_produtos', `id=eq.${id}&select=id_produto_erp,nome,referencia`);
+      const prod = prodRes?.[0];
+      if (prod) {
+        await fetch(`${SUPA_URL}/rest/v1/frt_produtos_dimensoes`, {
+          method: 'POST',
+          headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify({
+            id_produto: prod.id_produto_erp, descricao: prod.nome, referencia: prod.referencia,
+            peso_kg: rDim.peso_kg, altura_cm: rDim.altura_cm,
+            largura_cm: rDim.largura_cm, comprimento_cm: rDim.comprimento_cm, ativo: true
+          })
+        }).catch(()=>{});
+      }
+    }
+    const msgs = [];
+    if (fotos.length) msgs.push(`${fotos.length} foto(s)`);
+    if (rDim?.peso_kg) msgs.push(`dimensões (${rDim.peso_kg}kg, ${rDim.altura_cm}x${rDim.largura_cm}x${rDim.comprimento_cm}cm)`);
+    msg.textContent = msgs.length ? `✅ Sincronizado: ${msgs.join(' · ')}` : '⚠️ Sem dados no Bling para este produto.';
+    msg.style.color = msgs.length ? 'var(--green)' : 'var(--orange)';
+  } catch(e) { msg.textContent = '❌ Erro ao sincronizar com Bling.'; msg.style.color = 'var(--red)'; }
 };
 
 window.cfgAtualizarProduto = async function(id) {
-  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, {
-    nome:       document.getElementById('ep-nome').value.trim(),
-    referencia: document.getElementById('ep-ref').value.trim(),
-    aplicacao:  document.getElementById('ep-aplicacao').value.trim(),
-    grupo:      document.getElementById('ep-grupo').value.trim(),
-    subgrupo:   document.getElementById('ep-subgrupo').value.trim(),
-    preco_base: parseFloat(document.getElementById('ep-preco').value) || 0,
-    descricao:  document.getElementById('ep-desc').value.trim(),
-    ativo:      document.getElementById('ep-ativo').checked,
-    esgotado:   document.getElementById('ep-esgotado').checked,
-    atualizado_em: new Date().toISOString()
-  });
+  const patch = {
+    nome:           document.getElementById('ep-nome').value.trim(),
+    referencia:     document.getElementById('ep-ref').value.trim(),
+    aplicacao:      document.getElementById('ep-aplicacao').value.trim(),
+    grupo:          document.getElementById('ep-grupo').value.trim(),
+    subgrupo:       document.getElementById('ep-subgrupo').value.trim(),
+    preco_base:     parseFloat(document.getElementById('ep-preco').value) || 0,
+    descricao:      document.getElementById('ep-desc').value.trim(),
+    ativo:          document.getElementById('ep-ativo').checked,
+    esgotado:       document.getElementById('ep-esgotado').checked,
+    atualizado_em:  new Date().toISOString()
+  };
+  // Dimensões (se preenchidas)
+  const peso = parseFloat(document.getElementById('ep-peso')?.value);
+  const altura = parseFloat(document.getElementById('ep-altura')?.value);
+  const largura = parseFloat(document.getElementById('ep-largura')?.value);
+  const comprimento = parseFloat(document.getElementById('ep-comprimento')?.value);
+  if (peso)        patch.peso_kg        = peso;
+  if (altura)      patch.altura_cm      = altura;
+  if (largura)     patch.largura_cm     = largura;
+  if (comprimento) patch.comprimento_cm = comprimento;
+  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, patch);
   fecharDrawer(); cfgAba('catalogo', null);
 };
 

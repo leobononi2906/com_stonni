@@ -128,7 +128,7 @@ window.pedBuscarCliente = async function() {
   const cliente = Array.isArray(clientes) ? clientes[0] : null;
 
   // Busca alertas financeiros em paralelo (só se encontrou o cliente)
-  // cob_titulos_com_cliente: id_contato = id_cliente do ERP, só títulos em aberto (saldo_real > 0)
+  // cob_titulos_com_cliente: id_contato = id_cliente do ERP
   const [titulos, ultimaCompra] = await Promise.all([
     cliente?.id_cliente
       ? supa('cob_titulos_com_cliente', `id_contato=eq.${cliente.id_cliente}&select=saldo_real,dt_vencimento`).catch(()=>[])
@@ -176,6 +176,16 @@ window.pedBuscarCliente = async function() {
       </div>
       ${alertasHtml.length ? `<div style="margin-top:12px">${alertasHtml.join('')}<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:8px"><input type="checkbox" id="ped-ciente" style="accent-color:var(--blue-dark)"> Estou ciente das pendências e desejo continuar</label></div>` : ''}
       ${!alertasHtml.length ? `<div class="alert alert-success" style="margin-top:10px"><span class="alert-icon">✅</span>Cliente sem pendências financeiras.</div>` : ''}
+      ${!_pedidoAtual.cliente.cep ? `
+        <div style="margin-top:12px;padding:12px;background:var(--yellow-bg,#fffbea);border:1px solid var(--yellow,#f59e0b);border-radius:var(--radius-sm)">
+          <div style="font-size:12px;font-weight:600;color:var(--yellow,#b45309);margin-bottom:6px">⚠️ CEP não encontrado no cadastro — informe para cotar frete</div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="ped-cep-manual" class="ped-input" placeholder="00000-000" maxlength="9"
+              oninput="this.value=this.value.replace(/\D/g,'').replace(/(\d{5})(\d)/,'$1-$2').slice(0,9)"
+              style="max-width:140px">
+            <button class="btn btn-outline btn-sm" onclick="pedSalvarCepManual()">Confirmar CEP</button>
+          </div>
+        </div>` : `<div style="font-size:12px;color:var(--text-muted);margin-top:8px">📍 CEP: ${_pedidoAtual.cliente.cep.replace(/(\d{5})(\d{3})/,'$1-$2')} · ${_pedidoAtual.cliente.cidade}/${_pedidoAtual.cliente.uf}</div>`}
     </div>
     <div style="margin-top:14px;text-align:right">
       <button class="btn btn-primary" onclick="pedConfirmarCliente()">Continuar →</button>
@@ -187,6 +197,17 @@ window.pedLimparCliente = function() {
   _pedidoAtual.cliente = null;
   document.getElementById('ped-cnpj').value = '';
   document.getElementById('ped-cliente-resultado').innerHTML = '';
+};
+
+window.pedSalvarCepManual = function() {
+  const cep = (document.getElementById('ped-cep-manual')?.value||'').replace(/\D/g,'');
+  if (cep.length !== 8) { alert('CEP inválido'); return; }
+  if (_pedidoAtual.cliente) {
+    _pedidoAtual.cliente.cep = cep;
+    // Atualiza display
+    const aviso = document.querySelector('#ped-cliente-resultado .ped-cep-aviso');
+    if (aviso) aviso.innerHTML = `<div style="font-size:12px;color:var(--text-muted);margin-top:8px">📍 CEP: ${cep.replace(/(\d{5})(\d{3})/,'$1-$2')} (informado manualmente)</div>`;
+  }
 };
 
 window.pedConfirmarCliente = function() {
@@ -337,7 +358,12 @@ window.pedAdicionarProdutoId = function(id) {
       preco_unitario: p.preco_base,
       desconto_perc: acaoAtiva?.tipo==='desconto' ? acaoAtiva.valor : 0,
       preco_final: preco, quantidade: 1,
-      regras_aplicadas: acaoAtiva ? [acaoAtiva.nome] : []
+      regras_aplicadas: acaoAtiva ? [acaoAtiva.nome] : [],
+      // Dimensões para cálculo de frete
+      peso_kg: p.peso_kg || null,
+      altura_cm: p.altura_cm || null,
+      largura_cm: p.largura_cm || null,
+      comprimento_cm: p.comprimento_cm || null,
     });
   }
   fecharDrawer();
@@ -353,12 +379,25 @@ window.pedCotarFrete = async function() {
   btn.textContent = '⏳ Cotando...'; btn.disabled = true;
 
   const subtotal = _pedidoAtual.itens.reduce((s,i)=>s+(i.preco_final*i.quantidade),0);
+
+  // Monta pacotes com dimensões reais do produto (cadastradas no catálogo via Bling)
+  const pacotes = _pedidoAtual.itens.map(i => ({
+    quantidade: i.quantidade,
+    peso_kg:        parseFloat(i.peso_kg)        || 5,
+    altura_cm:      parseFloat(i.altura_cm)      || 30,
+    largura_cm:     parseFloat(i.largura_cm)     || 30,
+    comprimento_cm: parseFloat(i.comprimento_cm) || 30,
+  }));
+
+  // id_local: empresa 8 (SC) = local 2, demais = local 1 (PR)
+  const idLocal = parseInt(window._pedConfig?.empresa_padrao_pedido||7) === 8 ? 2 : 1;
+
   const payload = {
-    id_local: parseInt(window._pedConfig?.empresa_padrao_pedido||7) === 8 ? 2 : 1,
-    cep_destino: cep,
+    id_local: idLocal,
+    cep_destino: cep.replace(/\D/g,''),
     cnpj_destinatario: _pedidoAtual.cliente.cnpj,
     valor_nf: subtotal,
-    pacotes: _pedidoAtual.itens.map(i => ({ quantidade: i.quantidade, peso_kg: 1, altura_cm: 20, largura_cm: 30, comprimento_cm: 40 }))
+    pacotes,
   };
 
   try {
