@@ -421,7 +421,7 @@ window.pedCotarFrete = async function() {
             <span style="font-size:11px;color:var(--text-muted);margin-left:8px">${r.prazo_dias} dia(s)</span>
           </span>
           <span class="mono" style="font-weight:600;color:${isGratis?'var(--green)':'var(--blue-dark)'}">
-            ${isGratis ? 'GRÁTIS' : \`R$ \${r.valor_frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}\`}
+            ${isGratis ? 'GRÁTIS' : `R$ \${r.valor_frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}`}
           </span>
         </label>`).join('')}
       <!-- Redespacho SP -->

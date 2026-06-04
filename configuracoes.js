@@ -995,8 +995,8 @@ async function cfgCarregarRepresentantes(el) {
                   const t = (tabelas||[]).find(t => t.id === r.id_tabela_preco);
                   const markup = t?.markup_global;
                   const markupStr = markup != null && markup !== 0
-                    ? \` <span style="font-size:10px;color:\${markup>0?'var(--orange)':'var(--blue-mid)'}">(\${markup>0?'+':''}\${markup}%)</span>\` : '';
-                  return \`<tr>
+                    ? ` <span style="font-size:10px;color:\${markup>0?'var(--orange)':'var(--blue-mid)'}">(\${markup>0?'+':''}\${markup}%)</span>` : '';
+                  return `<tr>
                     <td><strong>\${r.nome}</strong></td>
                     <td style="font-size:12px;color:var(--text-secondary)">\${r.email||'—'}</td>
                     <td style="font-size:12px">\${r.regiao||'—'}</td>
@@ -1004,7 +1004,7 @@ async function cfgCarregarRepresentantes(el) {
                     <td class="mono" style="font-size:12px">\${r.comissao_perc||0}%</td>
                     <td><span class="badge \${r.ativo?'badge-aprovado':'badge-cancelado'}">\${r.ativo?'Ativo':'Inativo'}</span></td>
                     <td><button class="btn btn-outline btn-sm" onclick="cfgEditarRepresentante(\${r.id})">Editar</button></td>
-                  </tr>\`;
+                  </tr>`;
                 }).join('')}
           </tbody>
         </table>
@@ -1015,7 +1015,7 @@ async function cfgCarregarRepresentantes(el) {
 
 // ── Formulário Gestor ──
 function cfgFormGestor(g = {}) {
-  return \`
+  return `
     <div class="form-row form-row-2">
       <div class="form-field"><label>Nome completo</label><input type="text" id="gs-nome" class="cfg-input" value="\${g.nome||''}"></div>
       <div class="form-field"><label>E-mail (igual ao Supabase Auth)</label><input type="email" id="gs-email" class="cfg-input" value="\${g.email||''}"></div>
@@ -1059,14 +1059,14 @@ function cfgFormGestor(g = {}) {
         <option value="false" \${g.ativo===false?'selected':''}>Inativo</option>
       </select>
     </div>
-  \`;
+  `;
 }
 
 window.cfgNovoGestor = function() {
-  abrirDrawer('Novo Gestor', 'Defina nome, e-mail e permissões', cfgFormGestor(), \`
+  abrirDrawer('Novo Gestor', 'Defina nome, e-mail e permissões', cfgFormGestor(), `
     <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
     <button class="btn btn-primary" onclick="cfgSalvarGestor()">Cadastrar</button>
-  \`);
+  `);
 };
 
 window.cfgSalvarGestor = async function() {
@@ -1087,16 +1087,16 @@ window.cfgSalvarGestor = async function() {
 };
 
 window.cfgEditarGestor = async function(id) {
-  const res = await supa('ped_gestores', \`id=eq.\${id}\`);
+  const res = await supa('ped_gestores', `id=eq.\${id}`);
   const g = res?.[0]; if (!g) return;
-  abrirDrawer('Editar Gestor', g.nome, cfgFormGestor(g), \`
+  abrirDrawer('Editar Gestor', g.nome, cfgFormGestor(g), `
     <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
     <button class="btn btn-primary" onclick="cfgAtualizarGestor(\${id})">Salvar</button>
-  \`);
+  `);
 };
 
 window.cfgAtualizarGestor = async function(id) {
-  await supaPatch('ped_gestores', \`id=eq.\${id}\`, {
+  await supaPatch('ped_gestores', `id=eq.\${id}`, {
     nome:          document.getElementById('gs-nome').value.trim(),
     email:         document.getElementById('gs-email').value.trim(),
     perfil:        document.getElementById('gs-perfil').value,
