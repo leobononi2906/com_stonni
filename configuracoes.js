@@ -955,19 +955,7 @@ async function cfgCarregarRepresentantes(el) {
           <tbody>
             ${!(gestores||[]).length
               ? `<tr><td colspan="10"><div class="empty-state"><div class="empty-state-icon">🔐</div><h3>Nenhum gestor</h3><p>Cadastre o primeiro gestor.</p></div></td></tr>`
-              : (gestores||[]).map(g => `
-                <tr>
-                  <td><strong>${g.nome}</strong></td>
-                  <td style="font-size:12px;color:var(--text-secondary)">${g.email}</td>
-                  <td><span class="badge ${g.perfil==='admin'?'badge-faturado':'badge-aprovado'}">${g.perfil}</span></td>
-                  <td style="text-align:center">${g.pode_aprovar ? '✅' : '—'}</td>
-                  <td style="text-align:center">${g.pode_reprovar ? '✅' : '—'}</td>
-                  <td style="text-align:center">${g.pode_faturar ? '✅' : '—'}</td>
-                  <td style="text-align:center">${g.pode_catalogo ? '✅' : '—'}</td>
-                  <td style="text-align:center">${g.pode_config ? '✅' : '—'}</td>
-                  <td><span class="badge ${g.ativo?'badge-aprovado':'badge-cancelado'}">${g.ativo?'Ativo':'Inativo'}</span></td>
-                  <td><button class="btn btn-outline btn-sm" onclick="cfgEditarGestor(${g.id})">Editar</button></td>
-                </tr>`).join('')}
+              : cfgRenderLinhasGestor(gestores)}
           </tbody>
         </table>
       </div>
@@ -1000,59 +988,37 @@ async function cfgCarregarRepresentantes(el) {
 }
 
 // ── Formulário Gestor ──
-function cfgFormGestor(g = {}) {
-  return `
-    <div class="form-row form-row-2">
-      <div class="form-field"><label>Nome completo</label><input type="text" id="gs-nome" class="cfg-input" value="\${g.nome||''}"></div>
-      <div class="form-field"><label>E-mail (igual ao Supabase Auth)</label><input type="email" id="gs-email" class="cfg-input" value="\${g.email||''}"></div>
-    </div>
-    <div class="form-field">
-      <label>Perfil</label>
-      <select id="gs-perfil" class="cfg-input">
-        <option value="gestor" \${g.perfil!=='admin'?'selected':''}>Gestor</option>
-        <option value="admin" \${g.perfil==='admin'?'selected':''}>Admin</option>
-      </select>
-    </div>
-    <div style="margin-top:14px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
-      <div style="font-size:12px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Permissões</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-          <input type="checkbox" id="gs-aprovar" \${g.pode_aprovar!==false?'checked':''} style="accent-color:var(--blue-dark)">
-          Aprovar pedidos
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-          <input type="checkbox" id="gs-reprovar" \${g.pode_reprovar!==false?'checked':''} style="accent-color:var(--blue-dark)">
-          Reprovar pedidos
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-          <input type="checkbox" id="gs-faturar" \${g.pode_faturar!==false?'checked':''} style="accent-color:var(--blue-dark)">
-          Faturar pedidos (upload NF/boleto)
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-          <input type="checkbox" id="gs-catalogo" \${g.pode_catalogo!==false?'checked':''} style="accent-color:var(--blue-dark)">
-          Gerenciar catálogo
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-          <input type="checkbox" id="gs-config" \${g.pode_config===true?'checked':''} style="accent-color:var(--blue-dark)">
-          Acessar configurações
-        </label>
-      </div>
-    </div>
-    <div class="form-field" style="margin-top:12px">
-      <label>Status</label>
-      <select id="gs-ativo" class="cfg-input">
-        <option value="true" \${g.ativo!==false?'selected':''}>Ativo</option>
-        <option value="false" \${g.ativo===false?'selected':''}>Inativo</option>
-      </select>
-    </div>
-  `;
+function cfgFormGestor(g) {
+  g = g || {};
+  var chk = function(val) { return val !== false ? 'checked' : ''; };
+  var sel = function(val, match) { return val === match ? 'selected' : ''; };
+  return '<div class="form-row form-row-2">' +
+    '<div class="form-field"><label>Nome completo</label><input type="text" id="gs-nome" class="cfg-input" value="' + (g.nome||'') + '"></div>' +
+    '<div class="form-field"><label>E-mail (igual ao Supabase Auth)</label><input type="email" id="gs-email" class="cfg-input" value="' + (g.email||'') + '"></div>' +
+    '</div>' +
+    '<div class="form-field"><label>Perfil</label><select id="gs-perfil" class="cfg-input">' +
+    '<option value="gestor" ' + sel(g.perfil,'gestor') + '>Gestor</option>' +
+    '<option value="admin" ' + sel(g.perfil,'admin') + '>Admin</option>' +
+    '</select></div>' +
+    '<div style="margin-top:14px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">' +
+    '<div style="font-size:12px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Permissões</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="gs-aprovar" ' + chk(g.pode_aprovar) + ' style="accent-color:var(--blue-dark)"> Aprovar pedidos</label>' +
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="gs-reprovar" ' + chk(g.pode_reprovar) + ' style="accent-color:var(--blue-dark)"> Reprovar pedidos</label>' +
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="gs-faturar" ' + chk(g.pode_faturar) + ' style="accent-color:var(--blue-dark)"> Faturar pedidos (NF/boleto)</label>' +
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="gs-catalogo" ' + chk(g.pode_catalogo) + ' style="accent-color:var(--blue-dark)"> Gerenciar catálogo</label>' +
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="gs-config" ' + (g.pode_config===true?'checked':'') + ' style="accent-color:var(--blue-dark)"> Acessar configurações</label>' +
+    '</div></div>' +
+    '<div class="form-field" style="margin-top:12px"><label>Status</label><select id="gs-ativo" class="cfg-input">' +
+    '<option value="true" ' + (g.ativo!==false?'selected':'') + '>Ativo</option>' +
+    '<option value="false" ' + (g.ativo===false?'selected':'') + '>Inativo</option>' +
+    '</select></div>';
 }
 
 window.cfgNovoGestor = function() {
-  abrirDrawer('Novo Gestor', 'Defina nome, e-mail e permissões', cfgFormGestor(), `
-    <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
-    <button class="btn btn-primary" onclick="cfgSalvarGestor()">Cadastrar</button>
-  `);
+  var footer = '<button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>' +
+    '<button class="btn btn-primary" onclick="cfgSalvarGestor()">Cadastrar</button>';
+  abrirDrawer('Novo Gestor', 'Defina nome, e-mail e permissões', cfgFormGestor(), footer);
 };
 
 window.cfgSalvarGestor = async function() {
@@ -1073,16 +1039,15 @@ window.cfgSalvarGestor = async function() {
 };
 
 window.cfgEditarGestor = async function(id) {
-  const res = await supa('ped_gestores', `id=eq.\${id}`);
+  const res = await supa('ped_gestores', 'id=eq.'+id);
   const g = res?.[0]; if (!g) return;
-  abrirDrawer('Editar Gestor', g.nome, cfgFormGestor(g), `
-    <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
-    <button class="btn btn-primary" onclick="cfgAtualizarGestor(\${id})">Salvar</button>
-  `);
+  var footer = '<button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>' +
+    '<button class="btn btn-primary" onclick="cfgAtualizarGestor('+id+')">Salvar</button>';
+  abrirDrawer('Editar Gestor', g.nome, cfgFormGestor(g), footer);
 };
 
 window.cfgAtualizarGestor = async function(id) {
-  await supaPatch('ped_gestores', `id=eq.\${id}`, {
+  await supaPatch('ped_gestores', 'id=eq.'+id, {
     nome:          document.getElementById('gs-nome').value.trim(),
     email:         document.getElementById('gs-email').value.trim(),
     perfil:        document.getElementById('gs-perfil').value,
@@ -1193,6 +1158,28 @@ function cfgRenderLinhasRep(reps, tabelas) {
       '<td class="mono" style="font-size:12px">' + (r.comissao_perc||0) + '%</td>' +
       '<td><span class="badge ' + statusBadge + '">' + statusLabel + '</span></td>' +
       '<td><button class="btn btn-outline btn-sm" onclick="cfgEditarRepresentante(' + r.id + ')">Editar</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+
+function cfgRenderLinhasGestor(gestores) {
+  return (gestores||[]).map(function(g) {
+    var perfBadge = g.perfil === 'admin' ? 'badge-faturado' : 'badge-aprovado';
+    var statusBadge = g.ativo ? 'badge-aprovado' : 'badge-cancelado';
+    var statusLabel = g.ativo ? 'Ativo' : 'Inativo';
+    var chk = function(v) { return v ? '✅' : '—'; };
+    return '<tr>' +
+      '<td><strong>' + g.nome + '</strong></td>' +
+      '<td style="font-size:12px;color:var(--text-secondary)">' + g.email + '</td>' +
+      '<td><span class="badge ' + perfBadge + '">' + g.perfil.toUpperCase() + '</span></td>' +
+      '<td style="text-align:center">' + chk(g.pode_aprovar) + '</td>' +
+      '<td style="text-align:center">' + chk(g.pode_reprovar) + '</td>' +
+      '<td style="text-align:center">' + chk(g.pode_faturar) + '</td>' +
+      '<td style="text-align:center">' + chk(g.pode_catalogo) + '</td>' +
+      '<td style="text-align:center">' + chk(g.pode_config) + '</td>' +
+      '<td><span class="badge ' + statusBadge + '">' + statusLabel + '</span></td>' +
+      '<td><button class="btn btn-outline btn-sm" onclick="cfgEditarGestor(' + g.id + ')">Editar</button></td>' +
       '</tr>';
   }).join('');
 }
