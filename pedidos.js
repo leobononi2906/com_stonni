@@ -279,24 +279,27 @@ window.pedRenderCarrinho = function() {
 };
 
 window.pedAtualizarTotais = function() {
-  const subtotal = _pedidoAtual.itens.reduce((s,i)=>s+(i.preco_final*i.quantidade),0);
+  const subtotal  = _pedidoAtual.itens.reduce((s,i) => s + (i.preco_final * i.quantidade), 0);
+  const valorIPI  = _pedidoAtual.itens.reduce((s,i) => s + (i.preco_final * i.quantidade * (parseFloat(i.ipi_perc)||0) / 100), 0);
+  const temIPI    = valorIPI > 0;
   const valorMinimo = parseFloat(window._pedConfig?.pedido_valor_minimo||0);
   const freteGratis = parseFloat(window._pedConfig?.frete_gratis_acima||0);
-  const freteVal = _pedidoAtual.frete?.valor_escolhido || 0;
-  const total = subtotal + freteVal;
+  const freteVal  = _pedidoAtual.frete?.valor_escolhido || 0;
+  const total     = subtotal + valorIPI + freteVal;
 
-  document.getElementById('ped-totais-body').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Subtotal produtos</span><span class="mono font-weight:600">R$ ${subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
-      ${freteVal > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Frete (${_pedidoAtual.frete?.transportadora||''})</span><span class="mono">R$ ${freteVal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>` : ''}
-      ${freteGratis > 0 && subtotal >= freteGratis ? `<div class="alert alert-success" style="padding:8px 12px"><span class="alert-icon">🎉</span>Frete grátis acima de R$ ${freteGratis.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : ''}
-      <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
-        <span>Total</span>
-        <span class="mono" style="color:var(--blue-dark)">R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-      </div>
-      ${subtotal < valorMinimo ? `<div class="alert alert-warning" style="padding:8px 12px"><span class="alert-icon">⚠️</span>Pedido mínimo: R$ ${valorMinimo.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : ''}
-    </div>
-  `;
+  // Salva no estado para usar no envio
+  _pedidoAtual.valor_ipi = valorIPI;
+
+  var linhas = '<div style="display:flex;flex-direction:column;gap:8px">';
+  linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Subtotal produtos</span><span class="mono" style="font-weight:600">R$ ' + subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
+  if (temIPI) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">IPI</span><span class="mono" style="color:var(--orange)">R$ ' + valorIPI.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
+  if (freteVal > 0) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Frete (' + (_pedidoAtual.frete?.transportadora||'') + ')</span><span class="mono">R$ ' + freteVal.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
+  if (freteGratis > 0 && subtotal >= freteGratis) linhas += '<div class="alert alert-success" style="padding:8px 12px"><span class="alert-icon">🎉</span>Frete grátis acima de R$ ' + freteGratis.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</div>';
+  linhas += '<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;border-top:1px solid var(--border);padding-top:8px;margin-top:4px"><span>Total</span><span class="mono" style="color:var(--blue-dark)">R$ ' + total.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
+  if (subtotal < valorMinimo) linhas += '<div class="alert alert-warning" style="padding:8px 12px"><span class="alert-icon">⚠️</span>Pedido mínimo: R$ ' + valorMinimo.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</div>';
+  linhas += '</div>';
+
+  document.getElementById('ped-totais-body').innerHTML = linhas;
 };
 
 window.pedAlterarQtd = function(idx, delta) {
@@ -364,6 +367,8 @@ window.pedAdicionarProdutoId = function(id) {
       altura_cm: p.altura_cm || null,
       largura_cm: p.largura_cm || null,
       comprimento_cm: p.comprimento_cm || null,
+      // IPI
+      ipi_perc: parseFloat(p.ipi_perc) || 0,
     });
   }
   fecharDrawer();
@@ -507,6 +512,7 @@ window.pedEnviar = async function() {
     prazo_frete_dias:   _pedidoAtual.frete?.prazo_frete_dias || null,
     obs:                _pedidoAtual.obs,
     valor_produtos:     subtotal,
+    valor_ipi:          _pedidoAtual.valor_ipi || 0,
     valor_desconto:     0,
     valor_total:        total,
     status:             'ENVIADO'
@@ -519,12 +525,15 @@ window.pedEnviar = async function() {
 
   // Salva itens
   for (const item of _pedidoAtual.itens) {
+    const valorIpiItem = item.preco_final * item.quantidade * (parseFloat(item.ipi_perc)||0) / 100;
     await supaInsert('ped_pedido_itens', {
       id_pedido: idPedido, id_produto: item.id_produto, id_produto_erp: item.id_produto_erp,
       referencia: item.referencia, nome_produto: item.nome,
       quantidade: item.quantidade, preco_unitario: item.preco_unitario,
       desconto_perc: item.desconto_perc, preco_final: item.preco_final,
       total_item: item.preco_final * item.quantidade,
+      ipi_perc: item.ipi_perc || 0,
+      valor_ipi: valorIpiItem,
       regras_aplicadas: item.regras_aplicadas || []
     });
   }

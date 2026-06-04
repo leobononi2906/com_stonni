@@ -817,7 +817,10 @@ window.cfgEditarProduto = async function(id) {
       <div class="form-field"><label>Grupo</label><input type="text" id="ep-grupo" class="cfg-input" value="${p.grupo||''}"></div>
       <div class="form-field"><label>Subgrupo</label><input type="text" id="ep-subgrupo" class="cfg-input" value="${p.subgrupo||''}"></div>
     </div>
-    <div class="form-field"><label>Preço base (R$)</label><input type="number" id="ep-preco" class="cfg-input" value="${p.preco_base||0}" step="0.01"></div>
+    <div class="form-row form-row-2">
+      <div class="form-field"><label>Preço base (R$)</label><input type="number" id="ep-preco" class="cfg-input" value="${p.preco_base||0}" step="0.01"></div>
+      <div class="form-field"><label>IPI (%)</label><input type="number" id="ep-ipi" class="cfg-input" value="${p.ipi_perc||0}" step="0.01" min="0" max="100" placeholder="0"></div>
+    </div>
     <div class="form-field"><label>Descrição</label><textarea id="ep-desc" class="cfg-input" rows="2">${p.descricao||''}</textarea></div>
     <!-- Dimensões para frete (sincronizadas do Bling) -->
     <div style="margin-top:14px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
@@ -918,6 +921,7 @@ window.cfgAtualizarProduto = async function(id) {
   if (altura)      patch.altura_cm      = altura;
   if (largura)     patch.largura_cm     = largura;
   if (comprimento) patch.comprimento_cm = comprimento;
+  patch.ipi_perc = parseFloat(document.getElementById('ep-ipi')?.value) || 0;
   await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, patch);
   fecharDrawer(); cfgAba('catalogo', null);
 };
