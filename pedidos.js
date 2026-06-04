@@ -123,15 +123,17 @@ window.pedBuscarCliente = async function() {
   res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Buscando cliente...</div>';
 
   // Busca cliente no ERP
-  const clientes = await supa('vw_dim_cliente', `cnpj_cpf=eq.${cnpjRaw}&select=*&limit=1`).catch(()=>null)
-    || await supa('vw_dim_cliente', `select=*&limit=9999`).then(r=>(r||[]).filter(c=>(c.cnpj||'').replace(/\D/g,'')==cnpjRaw)).catch(()=>[]);
+  const clientes = await supa('vw_dim_cliente', `cnpj_cpf=eq.${cnpjRaw}&select=*`).catch(()=>null);
+  const cliente = Array.isArray(clientes) ? clientes[0] : null;
 
-  const cliente = Array.isArray(clientes) ? clientes[0] : clientes;
-
-  // Busca alertas financeiros em paralelo
+  // Busca alertas financeiros em paralelo (só se encontrou o cliente)
   const [titulos, ultimaCompra] = await Promise.all([
-    supa('vw_fin_cr', `id_cliente=eq.${cliente?.id_cliente}&select=saldo_real,vencimento&limit=9999`).catch(()=>[]),
-    supa('vw_comercial_docs_faturados', `id_cliente=eq.${cliente?.id_cliente}&order=data_faturamento.desc&select=data_faturamento&limit=1`).catch(()=>[])
+    cliente?.id_cliente
+      ? supa('vw_fin_cr', `id_cliente=eq.${cliente.id_cliente}&select=saldo_real,vencimento`).catch(()=>[])
+      : Promise.resolve([]),
+    cliente?.id_cliente
+      ? supa('vw_comercial_docs_faturados', `id_cliente=eq.${cliente.id_cliente}&order=data_faturamento.desc&select=data_faturamento`).catch(()=>[])
+      : Promise.resolve([])
   ]);
 
   const totalAberto = (titulos||[]).filter(t => t.saldo_real > 0).reduce((s,t)=>s+parseFloat(t.saldo_real||0),0);
