@@ -421,7 +421,7 @@ window.pedCotarFrete = async function() {
             <span style="font-size:11px;color:var(--text-muted);margin-left:8px">${r.prazo_dias} dia(s)</span>
           </span>
           <span class="mono" style="font-weight:600;color:${isGratis?'var(--green)':'var(--blue-dark)'}">
-            ${isGratis ? 'GRÁTIS' : `R$ \${r.valor_frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}`}
+            ${isGratis ? 'GRÁTIS' : 'R$ ' + r.valor_frete.toLocaleString('pt-BR',{minimumFractionDigits:2})}
           </span>
         </label>`).join('')}
       <!-- Redespacho SP -->
@@ -485,7 +485,7 @@ window.pedEnviar = async function() {
   const ano = new Date().getFullYear();
 
   // Gera código sequencial
-  const ultPed = await supa('ped_pedidos', `order=id.desc&select=codigo&limit=1`);
+  const ultPed = await supa('ped_pedidos', 'order=id.desc&select=codigo');
   const ultNum = parseInt(ultPed?.[0]?.codigo?.split('-')?.[2]||'0') + 1;
   const codigo = `PED-${ano}-${String(ultNum).padStart(5,'0')}`;
 
