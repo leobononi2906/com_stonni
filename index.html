@@ -596,7 +596,7 @@ function renderPagina(id, params) {
     case 'meus-pedidos':   renderMeusPedidos(el, params); break;
     case 'pedidos':        renderPedidos(el, params); break;
     case 'configuracoes':  renderConfiguracoes(el, params); break;
-    case 'representantes': renderRepresentantes(el, params); break;
+    case 'representantes': renderConfiguracoes(el, params); break;
     default: el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🚧</div><h3>Em construção</h3><p>Módulo "${id}" em desenvolvimento.</p></div>`;
   }
 }
@@ -718,5 +718,8 @@ function renderRepresentantes(el, params) {
 </script>
 
 <script src="configuracoes.js"></script>
+<script src="catalogo.js"></script>
+<script src="pedidos.js"></script>
+<script src="gestao.js"></script>
 </body>
 </html>
