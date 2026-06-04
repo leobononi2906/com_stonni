@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stonni — Portal do Representante</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN SYSTEM BONONI / STONNI
+   ============================================================ */
+:root {
+  --bg: #F0F3F8;
+  --surface: #FFFFFF;
+  --surface2: #F7F9FC;
+  --border: #E2E8F2;
+  --blue-dark: #1A3A8F;
+  --blue-mid: #0077CC;
+  --blue-light: #00AAEE;
+  --blue-pale: #E8F4FD;
+  --text-primary: #0F1D35;
+  --text-secondary: #5A6A85;
+  --text-muted: #9AA5B8;
+  --green: #0F9D6E;    --green-bg: #E8F8F3;
+  --red: #D93025;      --red-bg: #FEF0EF;
+  --orange: #E07B00;   --orange-bg: #FEF5E7;
+  --yellow: #B45309;   --yellow-bg: #FFFBEB;
+  --shadow-sm: 0 1px 3px rgba(15,29,53,0.06), 0 1px 2px rgba(15,29,53,0.04);
+  --shadow-md: 0 4px 16px rgba(15,29,53,0.08), 0 2px 4px rgba(15,29,53,0.04);
+  --shadow-lg: 0 12px 40px rgba(15,29,53,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --sidebar-w: 240px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-primary); font-size: 14px; }
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+#login-screen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #0F1D35 0%, #1A3A8F 50%, #0077CC 100%);
+  z-index: 1000;
+}
+#login-screen.hidden { display: none; }
+
+.login-box {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow-lg);
+}
+.login-logo {
+  display: flex; flex-direction: column; align-items: center; margin-bottom: 32px;
+}
+.login-logo-mark {
+  width: 56px; height: 56px; border-radius: 14px;
+  background: var(--blue-dark);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -1px;
+  margin-bottom: 12px;
+}
+.login-logo h1 { font-size: 22px; font-weight: 700; color: var(--blue-dark); letter-spacing: -0.5px; }
+.login-logo p { font-size: 12px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 1px; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input {
+  width: 100%; height: 42px; padding: 0 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-primary);
+  background: var(--surface2); outline: none; transition: border-color 0.15s;
+}
+.form-group input:focus { border-color: var(--blue-mid); background: #fff; }
+
+.btn-login {
+  width: 100%; height: 44px; background: var(--blue-dark); color: #fff;
+  border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s;
+  margin-top: 8px;
+}
+.btn-login:hover { background: var(--blue-mid); }
+.login-error { font-size: 12px; color: var(--red); text-align: center; margin-top: 10px; min-height: 16px; }
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+#app { display: none; }
+#app.visible { display: block; }
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w); background: var(--blue-dark);
+  position: fixed; left: 0; top: 0; bottom: 0;
+  display: flex; flex-direction: column; z-index: 100;
+  transition: transform 0.3s ease;
+}
+.sidebar-logo {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo-inner {
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-logo-mark {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--blue-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.sidebar-logo-text { flex: 1; overflow: hidden; }
+.sidebar-logo-text h2 { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+.sidebar-logo-text span { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+.nav-group-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.8px;
+  color: rgba(255,255,255,0.3); text-transform: uppercase;
+  padding: 12px 20px 6px; margin-top: 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 20px; cursor: pointer;
+  color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 500;
+  transition: all 0.15s; border-radius: 0; position: relative;
+  text-decoration: none;
+}
+.nav-item:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.06); }
+.nav-item.active { color: var(--blue-light); background: rgba(0,170,238,0.15); }
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--blue-light); border-radius: 0 2px 2px 0;
+}
+.nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; font-size: 10px; font-weight: 700;
+  padding: 1px 6px; border-radius: 10px;
+  background: var(--red); color: #fff;
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.user-info { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.user-name { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8); }
+.user-role { font-size: 10px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.5px; }
+.btn-logout {
+  margin-top: 12px; width: 100%; padding: 8px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm); color: rgba(255,255,255,0.5);
+  font-size: 12px; font-family: 'DM Sans', sans-serif; cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-logout:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); }
+
+/* MAIN */
+.main {
+  position: fixed; left: var(--sidebar-w); right: 0; top: 0; bottom: 0;
+  overflow-y: auto; display: flex; flex-direction: column;
+}
+
+/* TOPBAR */
+.topbar {
+  height: 60px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; flex-shrink: 0; position: sticky; top: 0; z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-left {}
+.topbar-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.topbar-breadcrumb { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+/* CONTENT */
+.content { padding: 20px 24px 32px; flex: 1; }
+
+/* ============================================================
+   COMPONENTES COMUNS
+   ============================================================ */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow-sm);
+}
+.card-label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.card-value { font-size: 26px; font-weight: 700; font-family: 'DM Mono', monospace; letter-spacing: -0.5px; }
+.card-value.green { color: var(--green); }
+.card-value.red   { color: var(--red); }
+.card-value.blue  { color: var(--blue-mid); }
+.card-value.orange{ color: var(--orange); }
+.card-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.cards-grid { display: grid; gap: 14px; }
+.cards-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.cards-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.cards-grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
+.table-card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.table-card-title { font-size: 13px; font-weight: 600; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { padding: 10px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); background: var(--surface2); border-bottom: 1px solid var(--border); }
+.data-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--surface2); }
+.data-table td.right { text-align: right; }
+.data-table td.mono { font-family: 'DM Mono', monospace; font-size: 12.5px; }
+.data-table tr.clickable { cursor: pointer; }
+
+.badge { display: inline-flex; align-items: center; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+.badge-rascunho  { background: var(--surface2);    color: var(--text-muted); }
+.badge-enviado   { background: var(--blue-pale);   color: var(--blue-mid); }
+.badge-aprovado  { background: var(--green-bg);    color: var(--green); }
+.badge-reprovado { background: var(--red-bg);      color: var(--red); }
+.badge-faturado  { background: #F3E8FF;             color: #7C3AED; }
+.badge-cancelado { background: var(--surface2);    color: var(--text-muted); }
+.badge-esgotado  { background: var(--red-bg);      color: var(--red); }
+.badge-disponivel{ background: var(--green-bg);    color: var(--green); }
+
+.btn { height: 34px; padding: 0 14px; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+.btn-primary { background: var(--blue-dark); color: #fff; }
+.btn-primary:hover { background: var(--blue-mid); }
+.btn-success { background: var(--green); color: #fff; }
+.btn-success:hover { filter: brightness(1.1); }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { filter: brightness(1.1); }
+.btn-outline { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+.btn-outline:hover { background: var(--surface2); }
+.btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+.btn-lg { height: 42px; padding: 0 20px; font-size: 14px; }
+
+.toggle-group { display: flex; gap: 4px; }
+.toggle-btn { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; font-size: 12px; font-weight: 500; color: var(--text-secondary); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+.toggle-btn.active { background: var(--blue-dark); border-color: var(--blue-dark); color: #fff; }
+
+.form-field { margin-bottom: 16px; }
+.form-field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-field input, .form-field select, .form-field textarea {
+  width: 100%; height: 38px; padding: 0 12px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-primary);
+  background: var(--surface2); outline: none; transition: border-color 0.15s;
+}
+.form-field textarea { height: auto; padding: 10px 12px; resize: vertical; }
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--blue-mid); background: #fff; }
+.form-row { display: grid; gap: 14px; }
+.form-row-2 { grid-template-columns: 1fr 1fr; }
+.form-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+/* Alerta financeiro */
+.alert { padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 10px; }
+.alert-warning { background: var(--orange-bg); border: 1px solid #F5C07A; color: var(--orange); }
+.alert-danger   { background: var(--red-bg);    border: 1px solid #F5A8A3; color: var(--red); }
+.alert-info     { background: var(--blue-pale); border: 1px solid #9DCFEF; color: var(--blue-mid); }
+.alert-success  { background: var(--green-bg);  border: 1px solid #9FD9C5; color: var(--green); }
+.alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+/* Drawer */
+.drawer-overlay { position: fixed; inset: 0; background: rgba(15,29,53,0.4); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+.drawer { position: fixed; top: 0; right: -700px; width: 680px; max-width: 100vw; height: 100vh; background: var(--surface); box-shadow: var(--shadow-lg); z-index: 201; transition: right 0.3s cubic-bezier(0.4,0,0.2,1); display: flex; flex-direction: column; }
+.drawer.open { right: 0; }
+.drawer-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; }
+.drawer-title { font-size: 16px; font-weight: 700; }
+.drawer-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.drawer-close { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 20px; line-height: 1; padding: 0; }
+.drawer-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 24px; flex-shrink: 0; }
+.drawer-tab { padding: 10px 16px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
+.drawer-tab.active { color: var(--blue-mid); border-bottom-color: var(--blue-mid); }
+.drawer-body { flex: 1; overflow-y: auto; padding: 24px; }
+.drawer-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0; }
+
+/* Loading */
+.loading-overlay { display: flex; align-items: center; justify-content: center; padding: 60px; }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--blue-mid); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Empty state */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; color: var(--text-muted); text-align: center; }
+.empty-state-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+.empty-state h3 { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; max-width: 300px; line-height: 1.5; }
+
+/* Page section */
+.page-section { margin-bottom: 24px; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.section-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+.mobile-topbar {
+  display: none; height: 56px; background: var(--blue-dark);
+  align-items: center; justify-content: space-between;
+  padding: 0 16px; position: sticky; top: 0; z-index: 100;
+}
+.mobile-menu-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 4px; }
+.mobile-logo { font-size: 16px; font-weight: 700; color: #fff; }
+.sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .sidebar-backdrop.open { display: block; }
+  .main { left: 0 !important; }
+  .mobile-topbar { display: flex; }
+  .topbar { display: none; }
+  .content { padding: 16px; }
+  .cards-grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .cards-grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .form-row-2, .form-row-3 { grid-template-columns: 1fr; }
+  .drawer { width: 100%; right: -100%; }
+  .data-table { font-size: 12px; }
+  .data-table th, .data-table td { padding: 8px 12px; }
+}
+
+/* ============================================================
+   PÁGINAS — placeholder (conteúdo gerado por JS)
+   ============================================================ */
+.page { display: none; }
+.page.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     LOGIN
+     ============================================================ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="logo.png" alt="Stonni" style="width:180px; margin-bottom:16px; border-radius:8px;">
+      <p>Portal do Representante</p>
+    </div>
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-senha" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login" onclick="fazerLogin()">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     APP SHELL
+     ============================================================ -->
+<div id="app">
+
+  <!-- Sidebar backdrop (mobile) -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="fecharSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="Stonni" style="width:130px;border-radius:6px;display:block;margin-bottom:6px;"><div style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;">Portal do Representante</div>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <!-- Preenchido por JS conforme perfil -->
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div>
+          <div class="user-name" id="user-name">Carregando...</div>
+          <div class="user-role" id="user-role">representante</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="fazerLogout()">Sair da conta</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main" id="main">
+
+    <!-- Mobile topbar -->
+    <div class="mobile-topbar">
+      <button class="mobile-menu-btn" onclick="abrirSidebar()">☰</button>
+      <img src="logo.png" alt="Stonni" style="height:28px;border-radius:4px;">
+      <span style="width:30px"></span>
+    </div>
+
+    <!-- Desktop topbar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Carregando...</div>
+        <div class="topbar-breadcrumb" id="topbar-breadcrumb">Stonni · Portal</div>
+      </div>
+      <div class="topbar-right" id="topbar-right"></div>
+    </div>
+
+    <!-- Conteúdo das páginas -->
+    <div class="content" id="page-content">
+      <div class="loading-overlay"><div class="spinner"></div></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ============================================================
+     DRAWER GLOBAL
+     ============================================================ -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="fecharDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div>
+      <div class="drawer-title" id="drawer-title">Detalhes</div>
+      <div class="drawer-sub" id="drawer-sub"></div>
+    </div>
+    <button class="drawer-close" onclick="fecharDrawer()">✕</button>
+  </div>
+  <div id="drawer-tabs-container"></div>
+  <div class="drawer-body" id="drawer-body"></div>
+  <div class="drawer-footer" id="drawer-footer"></div>
+</div>
+
+<script>
+// ============================================================
+//  SUPABASE CONFIG
+// ============================================================
+const SUPA_URL = 'https://vishxwdxqiygbxmtpfoy.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpc2h4d2R4cWl5Z2J4bXRwZm95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0Njg2MjIsImV4cCI6MjA4ODA0NDYyMn0.J647m3ieDHahNQYBWMRESl0aPFXsT_zt_7ZcDvyB-SA';
+const BLING_FN = `${SUPA_URL}/functions/v1/bling-proxy`;
+
+let HEADERS = {
+  'apikey': SUPA_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+let USUARIO = null; // { id, email, nome, perfil: 'representante'|'gestor'|'admin', id_representante }
+
+// ============================================================
+//  AUTH
+// ============================================================
+async function fazerLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const erroEl = document.getElementById('login-error');
+  erroEl.textContent = '';
+
+  if (!email || !senha) { erroEl.textContent = 'Preencha e-mail e senha.'; return; }
+
+  try {
+    const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: senha })
+    });
+    const data = await res.json();
+    if (!data.access_token) {
+      erroEl.textContent = 'E-mail ou senha incorretos.';
+      return;
+    }
+
+    // Atualiza headers com token do usuário
+    HEADERS['Authorization'] = `Bearer ${data.access_token}`;
+
+    const meta = data.user?.user_metadata ?? {};
+    USUARIO = {
+      id: data.user.id,
+      email: data.user.email,
+      nome: meta.nome || email.split('@')[0],
+      perfil: meta.admin ? 'admin' : (meta.perfil || 'representante'),
+      token: data.access_token
+    };
+
+    // Busca dados do representante (se não for gestor/admin)
+    if (USUARIO.perfil === 'representante') {
+      const repRes = await fetch(`${SUPA_URL}/rest/v1/ped_representantes?user_id=eq.${USUARIO.id}&select=*&limit=1`, { headers: HEADERS });
+      const reps = await repRes.json();
+      if (reps.length > 0) {
+        USUARIO.id_representante = reps[0].id;
+        USUARIO.nome = reps[0].nome || USUARIO.nome;
+        USUARIO.id_tabela_preco = reps[0].id_tabela_preco;
+      }
+    }
+
+    localStorage.setItem('stonni_token', data.access_token);
+    localStorage.setItem('stonni_usuario', JSON.stringify(USUARIO));
+
+    iniciarApp();
+  } catch (e) {
+    erroEl.textContent = 'Erro de conexão. Tente novamente.';
+  }
+}
+
+function fazerLogout() {
+  localStorage.removeItem('stonni_token');
+  localStorage.removeItem('stonni_usuario');
+  USUARIO = null;
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').classList.remove('hidden');
+}
+
+// ============================================================
+//  NAV — menus por perfil
+// ============================================================
+const NAV_REPRESENTANTE = [
+  { grupo: 'PRINCIPAL', itens: [
+    { id: 'catalogo',      icon: '🛍️', label: 'Catálogo',       breadcrumb: 'Portal · Catálogo' },
+    { id: 'novo-pedido',   icon: '➕', label: 'Novo Pedido',     breadcrumb: 'Portal · Novo Pedido' },
+    { id: 'meus-pedidos',  icon: '📋', label: 'Meus Pedidos',    breadcrumb: 'Portal · Meus Pedidos' },
+  ]},
+];
+
+const NAV_GESTOR = [
+  { grupo: 'OPERACIONAL', itens: [
+    { id: 'catalogo',      icon: '🛍️', label: 'Catálogo',         breadcrumb: 'Gestão · Catálogo' },
+    { id: 'novo-pedido',   icon: '➕', label: 'Novo Pedido',       breadcrumb: 'Gestão · Novo Pedido' },
+    { id: 'pedidos',       icon: '📦', label: 'Pedidos',           breadcrumb: 'Gestão · Pedidos' },
+  ]},
+  { grupo: 'ADMINISTRAÇÃO', itens: [
+    { id: 'configuracoes', icon: '⚙️', label: 'Configurações',     breadcrumb: 'Gestão · Configurações' },
+  ]},
+];
+
+const NAV_ADMIN = [
+  { grupo: 'OPERACIONAL', itens: [
+    { id: 'catalogo',      icon: '🛍️', label: 'Catálogo',          breadcrumb: 'Admin · Catálogo' },
+    { id: 'novo-pedido',   icon: '➕', label: 'Novo Pedido',        breadcrumb: 'Admin · Novo Pedido' },
+    { id: 'pedidos',       icon: '📦', label: 'Pedidos',            breadcrumb: 'Admin · Pedidos' },
+  ]},
+  { grupo: 'ADMINISTRAÇÃO', itens: [
+    { id: 'configuracoes', icon: '⚙️', label: 'Configurações',      breadcrumb: 'Admin · Configurações' },
+    { id: 'representantes',icon: '👥', label: 'Representantes',     breadcrumb: 'Admin · Representantes' },
+  ]},
+];
+
+let paginaAtual = '';
+
+function getNav() {
+  if (USUARIO.perfil === 'admin') return NAV_ADMIN;
+  if (USUARIO.perfil === 'gestor') return NAV_GESTOR;
+  return NAV_REPRESENTANTE;
+}
+
+function renderNav() {
+  const nav = getNav();
+  const el = document.getElementById('sidebar-nav');
+  el.innerHTML = nav.map(grupo => `
+    <div class="nav-group-label">${grupo.grupo}</div>
+    ${grupo.itens.map(item => `
+      <div class="nav-item" id="nav-${item.id}" onclick="irPara('${item.id}')" data-breadcrumb="${item.breadcrumb}">
+        <span class="nav-icon">${item.icon}</span>
+        <span>${item.label}</span>
+      </div>
+    `).join('')}
+  `).join('');
+}
+
+function irPara(paginaId, params = {}) {
+  // Remove active de todos
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const navEl = document.getElementById(`nav-${paginaId}`);
+  if (navEl) {
+    navEl.classList.add('active');
+    const breadcrumb = navEl.dataset.breadcrumb || '';
+    const labelEl = navEl.querySelector('span:last-child');
+    document.getElementById('topbar-title').textContent = labelEl?.textContent || paginaId;
+    document.getElementById('topbar-breadcrumb').textContent = breadcrumb;
+  }
+  paginaAtual = paginaId;
+  fecharSidebar();
+  renderPagina(paginaId, params);
+}
+
+// ============================================================
+//  ROUTER — delega para módulos JS
+// ============================================================
+function renderPagina(id, params) {
+  const el = document.getElementById('page-content');
+  el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+
+  switch (id) {
+    case 'catalogo':       renderCatalogo(el, params); break;
+    case 'novo-pedido':    renderNovoPedido(el, params); break;
+    case 'meus-pedidos':   renderMeusPedidos(el, params); break;
+    case 'pedidos':        renderPedidos(el, params); break;
+    case 'configuracoes':  renderConfiguracoes(el, params); break;
+    case 'representantes': renderRepresentantes(el, params); break;
+    default: el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🚧</div><h3>Em construção</h3><p>Módulo "${id}" em desenvolvimento.</p></div>`;
+  }
+}
+
+// ============================================================
+//  DRAWER HELPERS
+// ============================================================
+function abrirDrawer(titulo, sub, bodyHtml, footerHtml = '', tabsHtml = '') {
+  document.getElementById('drawer-title').textContent = titulo;
+  document.getElementById('drawer-sub').textContent = sub || '';
+  document.getElementById('drawer-body').innerHTML = bodyHtml;
+  document.getElementById('drawer-footer').innerHTML = footerHtml;
+  document.getElementById('drawer-tabs-container').innerHTML = tabsHtml;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+}
+function fecharDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+}
+
+// ============================================================
+//  MOBILE SIDEBAR
+// ============================================================
+function abrirSidebar() {
+  document.getElementById('sidebar').classList.add('mobile-open');
+  document.getElementById('sidebar-backdrop').classList.add('open');
+}
+function fecharSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebar-backdrop').classList.remove('open');
+}
+
+// ============================================================
+//  HELPERS GERAIS
+// ============================================================
+function fmt(v) { return Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtData(d) { if (!d) return '—'; return new Date(d + 'T00:00:00').toLocaleDateString('pt-BR'); }
+function fmtCNPJ(v) { const n = (v||'').replace(/\D/g,''); return n.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5'); }
+
+async function supa(tabela, query = '') {
+  const res = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${query}&limit=9999`, { headers: HEADERS });
+  return res.json();
+}
+async function supaInsert(tabela, body) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/${tabela}`, { method: 'POST', headers: HEADERS, body: JSON.stringify(body) });
+  return res.json();
+}
+async function supaPatch(tabela, filtro, body) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${filtro}`, { method: 'PATCH', headers: HEADERS, body: JSON.stringify(body) });
+  return res.json();
+}
+
+// ============================================================
+//  INICIALIZAR APP
+// ============================================================
+function iniciarApp() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+
+  // Preenche dados do usuário na sidebar
+  document.getElementById('user-name').textContent = USUARIO.nome;
+  document.getElementById('user-role').textContent = USUARIO.perfil;
+  document.getElementById('user-avatar').textContent = USUARIO.nome[0].toUpperCase();
+
+  renderNav();
+
+  // Página inicial conforme perfil
+  const paginaInicial = (USUARIO.perfil === 'representante') ? 'catalogo' : 'pedidos';
+  irPara(paginaInicial);
+}
+
+// ============================================================
+//  AUTO LOGIN (token salvo)
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  const token = localStorage.getItem('stonni_token');
+  const usuarioStr = localStorage.getItem('stonni_usuario');
+  if (token && usuarioStr) {
+    try {
+      USUARIO = JSON.parse(usuarioStr);
+      HEADERS['Authorization'] = `Bearer ${token}`;
+      iniciarApp();
+    } catch (e) {
+      localStorage.clear();
+    }
+  }
+});
+
+// Enter no login
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !document.getElementById('login-screen').classList.contains('hidden')) {
+    fazerLogin();
+  }
+});
+
+// ============================================================
+//  MÓDULOS (stubs — serão preenchidos nos próximos arquivos)
+// ============================================================
+
+function renderCatalogo(el, params) {
+  el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🛍️</div><h3>Catálogo</h3><p>Módulo em construção.</p></div>`;
+}
+function renderNovoPedido(el, params) {
+  el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">➕</div><h3>Novo Pedido</h3><p>Módulo em construção.</p></div>`;
+}
+function renderMeusPedidos(el, params) {
+  el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📋</div><h3>Meus Pedidos</h3><p>Módulo em construção.</p></div>`;
+}
+function renderPedidos(el, params) {
+  el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📦</div><h3>Gestão de Pedidos</h3><p>Módulo em construção.</p></div>`;
+}
+function renderConfiguracoes(el, params) {
+  el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚙️</div><h3>Configurações</h3><p>Módulo em construção.</p></div>`;
+}
+function renderRepresentantes(el, params) {
+  el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">👥</div><h3>Representantes</h3><p>Módulo em construção.</p></div>`;
+}
+</script>
+
+</body>
+</html>
