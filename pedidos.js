@@ -128,17 +128,18 @@ window.pedBuscarCliente = async function() {
   const cliente = Array.isArray(clientes) ? clientes[0] : null;
 
   // Busca alertas financeiros em paralelo (só se encontrou o cliente)
+  // cob_titulos_com_cliente: id_contato = id_cliente do ERP, só títulos em aberto (saldo_real > 0)
   const [titulos, ultimaCompra] = await Promise.all([
     cliente?.id_cliente
-      ? supa('vw_fin_cr', `id_cliente=eq.${cliente.id_cliente}&select=saldo_real,vencimento`).catch(()=>[])
+      ? supa('cob_titulos_com_cliente', `id_contato=eq.${cliente.id_cliente}&select=saldo_real,dt_vencimento`).catch(()=>[])
       : Promise.resolve([]),
     cliente?.id_cliente
       ? supa('vw_comercial_docs_faturados', `id_cliente=eq.${cliente.id_cliente}&order=data_faturamento.desc&select=data_faturamento`).catch(()=>[])
       : Promise.resolve([])
   ]);
 
-  const totalAberto = (titulos||[]).filter(t => t.saldo_real > 0).reduce((s,t)=>s+parseFloat(t.saldo_real||0),0);
-  const qtdAberto   = (titulos||[]).filter(t => t.saldo_real > 0).length;
+  const totalAberto = (titulos||[]).filter(t => (t.saldo_real||0) > 0).reduce((s,t)=>s+parseFloat(t.saldo_real||0),0);
+  const qtdAberto   = (titulos||[]).filter(t => (t.saldo_real||0) > 0).length;
   const diasSemCompra = ultimaCompra?.[0]?.data_faturamento
     ? Math.floor((new Date()-new Date(ultimaCompra[0].data_faturamento))/(1000*60*60*24))
     : null;
