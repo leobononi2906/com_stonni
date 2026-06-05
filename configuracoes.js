@@ -636,7 +636,7 @@ async function cfgCarregarCatalogo(el) {
       <table class="data-table">
         <thead><tr>
           <th style="width:64px">Foto</th><th>Produto</th><th>Referência</th>
-          <th>Grupo</th><th class="right">Preço</th><th>Estoque</th><th>Status</th><th style="width:80px"></th>
+          <th>Grupo</th><th class="right">Preço</th><th>Estoque</th><th style="text-align:center;width:70px">Medidas</th><th>Status</th><th style="width:80px"></th>
         </tr></thead>
         <tbody id="cat-tbody">${cfgRenderLinhasProduto(produtos||[])}</tbody>
       </table>
@@ -646,9 +646,9 @@ async function cfgCarregarCatalogo(el) {
 }
 
 function cfgRenderLinhasProduto(lista) {
-  if (!lista.length) return `<tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon">🛍️</div><h3>Catálogo vazio</h3><p>Adicione produtos pelo SKU do ERP.</p></div></td></tr>`;
+  if (!lista.length) return `<tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon">🛍️</div><h3>Catálogo vazio</h3><p>Adicione produtos pelo SKU do ERP.</p></div></td></tr>`;
   return lista.map(p => {
-    const foto = p.fotos?.[0] || null;
+    const foto = p.foto_miniatura || p.fotos?.[0] || null;
     const status = !p.ativo ? 'inativo' : p.esgotado ? 'esgotado' : 'disponivel';
     const badgeMap = { inativo:'badge-cancelado', esgotado:'badge-esgotado', disponivel:'badge-disponivel' };
     const labelMap = { inativo:'Inativo', esgotado:'Esgotado', disponivel:'Disponível' };
@@ -659,6 +659,7 @@ function cfgRenderLinhasProduto(lista) {
       <td style="font-size:12px;color:var(--text-secondary)">${p.grupo||'—'}</td>
       <td class="right mono" style="font-weight:600">R$ ${(p.preco_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
       <td style="font-size:12px;color:var(--text-muted)">${p.estoque_total != null ? `${p.estoque_total} un.` : '—'}</td>
+      <td style="text-align:center">${p.peso_kg ? `<span title="Peso: ${p.peso_kg}kg · ${p.largura_cm||'?'}×${p.altura_cm||'?'}×${p.comprimento_cm||'?'}cm" style="font-size:16px;cursor:default">✅</span>` : `<span title="Medidas não cadastradas" style="font-size:16px;cursor:default;opacity:.35">⬜</span>`}</td>
       <td><span class="badge ${badgeMap[status]}">${labelMap[status]}</span></td>
       <td><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button></td>
     </tr>`;
