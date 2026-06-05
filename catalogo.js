@@ -116,7 +116,7 @@ window.catFiltrar = function() {
   }
 
   grid.innerHTML = lista.map(p => {
-    const foto = p.foto_miniatura || p.fotos?.[0] || null;
+    const foto = p.fotos?.[0] || null;
     const { preco, precoOriginal, acaoAtiva } = catPrecoFinal(p);
 
     return `
