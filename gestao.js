@@ -202,8 +202,17 @@ window.gPedAbrir = async function(id) {
       <div class="drawer-tab" onclick="gPedTab('historico',this)">Histórico</div>
     </div>`;
 
+  // Botão PDF — visível para todos os perfis, qualquer status
+  const btnPdfHtml = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button class="btn btn-outline btn-sm" onclick="pedGerarPDF(${id})" style="display:flex;align-items:center;gap:6px">
+        🖨️ Gerar PDF
+      </button>
+    </div>`;
+
   const bodyHtml = `
     <div id="gped-tab-itens">
+      ${btnPdfHtml}
       ${alertasHtml.join('')}
       <table class="data-table" style="margin-bottom:16px">
         <thead><tr><th>Produto</th><th class="right">Qtd</th><th class="right">Preço unit.</th><th class="right">Total</th></tr></thead>
@@ -337,4 +346,3 @@ window.gPedExcluirDoc = async function(idPedido, tipo) {
   await supaPatch('ped_pedidos', `id=eq.${idPedido}`, { [campo]: null });
   gPedAbrir(idPedido);
 };
-
