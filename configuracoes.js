@@ -305,6 +305,7 @@ function cfgCondicaoLabel(rg) {
   if (rg.tipo === 'quantidade')   return `≥ ${rg.qtd_minima} peças do mesmo produto`;
   if (rg.tipo === 'valor_pedido') return `Pedido ≥ R$ ${(rg.valor_minimo||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
   if (rg.tipo === 'grupo')        return `Grupo ID ${rg.id_grupo}${rg.id_subgrupo ? ` / Sub ${rg.id_subgrupo}` : ''}`;
+  if (rg.tipo === 'qtd_grupo')    return `≥ ${rg.qtd_minima} peças do grupo ${rg.nome_grupo || '—'}`;
   if (rg.tipo === 'global')       return 'Todos os produtos';
   return '—';
 }
@@ -358,6 +359,7 @@ function cfgNovaRegra(idTabela) {
       <label>Tipo de regra</label>
       <select id="rg-tipo" class="cfg-input" onchange="cfgAtualizarCamposRegra()">
         <option value="quantidade">Por quantidade do produto</option>
+        <option value="qtd_grupo">Por quantidade do grupo/subgrupo</option>
         <option value="valor_pedido">Por valor total do pedido</option>
         <option value="grupo">Por grupo/subgrupo</option>
         <option value="global">Global (todos os produtos)</option>
@@ -380,6 +382,10 @@ window.cfgAtualizarCamposRegra = function() {
   if (!el) return;
   if (tipo === 'quantidade')   el.innerHTML = `<div class="form-field"><label>Quantidade mínima (peças do mesmo produto)</label><input type="number" id="rg-qtd" class="cfg-input" min="1" placeholder="Ex: 10"></div>`;
   else if (tipo === 'valor_pedido') el.innerHTML = `<div class="form-field"><label>Valor mínimo do pedido (R$)</label><input type="number" id="rg-valor" class="cfg-input" min="0" step="0.01" placeholder="Ex: 3000"></div>`;
+  else if (tipo === 'qtd_grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo do produto</label><select id="rg-nome-grupo" class="cfg-input"><option value="">Selecione...</option><option value="AUTO VIDROS">AUTO VIDROS</option>
+<option value="STONNI AR CONDICIONADO">STONNI AR CONDICIONADO</option>
+<option value="STONNI DIVERSOS">STONNI DIVERSOS</option>
+<option value="STONNI GELADEIRAS">STONNI GELADEIRAS</option></select></div><div class="form-field"><label>Quantidade mínima (peças do grupo)</label><input type="number" id="rg-qtd-grupo" class="cfg-input" min="1" placeholder="Ex: 3"></div></div>`;
   else if (tipo === 'grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>ID grupo</label><input type="number" id="rg-grupo" class="cfg-input" placeholder="ID no ERP"></div><div class="form-field"><label>ID subgrupo (opcional)</label><input type="number" id="rg-subgrupo" class="cfg-input"></div></div>`;
   else el.innerHTML = `<div class="alert alert-info"><span class="alert-icon">ℹ️</span>Aplica em todos os produtos de todas as ordens.</div>`;
 };
@@ -392,6 +398,7 @@ async function cfgSalvarRegra() {
   if (tipo === 'quantidade')   body.qtd_minima  = parseFloat(document.getElementById('rg-qtd')?.value) || null;
   if (tipo === 'valor_pedido') body.valor_minimo = parseFloat(document.getElementById('rg-valor')?.value) || null;
   if (tipo === 'grupo') { body.id_grupo = parseInt(document.getElementById('rg-grupo')?.value)||null; body.id_subgrupo = parseInt(document.getElementById('rg-subgrupo')?.value)||null; }
+  if (tipo === 'qtd_grupo') { body.nome_grupo = document.getElementById('rg-nome-grupo')?.value||null; body.qtd_minima = parseFloat(document.getElementById('rg-qtd-grupo')?.value)||null; }
   await supaInsert('ped_tabela_regras', body);
   fecharDrawer(); cfgAba('precos', null);
 }
@@ -403,6 +410,7 @@ window.cfgEditarRegra = async function(id) {
     ${rg.tipo==='quantidade'   ? `<div class="form-field"><label>Quantidade mínima</label><input type="number" id="rg-edit-qtd" class="cfg-input" value="${rg.qtd_minima||''}"></div>` : ''}
     ${rg.tipo==='valor_pedido' ? `<div class="form-field"><label>Valor mínimo (R$)</label><input type="number" id="rg-edit-valor" class="cfg-input" value="${rg.valor_minimo||''}"></div>` : ''}
     ${rg.tipo==='grupo' ? `<div class="cfg-grid-2"><div class="form-field"><label>ID grupo</label><input type="number" id="rg-edit-grupo" class="cfg-input" value="${rg.id_grupo||''}"></div><div class="form-field"><label>ID subgrupo</label><input type="number" id="rg-edit-subgrupo" class="cfg-input" value="${rg.id_subgrupo||''}"></div></div>` : ''}
+    ${rg.tipo==='qtd_grupo' ? `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><input type="text" id="rg-edit-nome-grupo" class="cfg-input" value="${rg.nome_grupo||''}"></div><div class="form-field"><label>Quantidade mínima</label><input type="number" id="rg-edit-qtd-grupo" class="cfg-input" value="${rg.qtd_minima||''}"></div></div>` : ''}
     <div class="form-field"><label>Desconto (%)</label><input type="number" id="rg-edit-desconto" class="cfg-input" value="${rg.desconto_perc}" step="0.1"></div>
     <div class="form-field"><label>Descrição</label><input type="text" id="rg-edit-desc" class="cfg-input" value="${rg.descricao||''}"></div>
     <div class="form-field"><label>Status</label><select id="rg-edit-ativa" class="cfg-input"><option value="true" ${rg.ativa?'selected':''}>Ativa</option><option value="false" ${!rg.ativa?'selected':''}>Inativa</option></select></div>
@@ -414,6 +422,7 @@ window.cfgEditarRegra = async function(id) {
 window.cfgAtualizarRegra = async function(id, tipo) {
   const body = { desconto_perc: parseFloat(document.getElementById('rg-edit-desconto').value), descricao: document.getElementById('rg-edit-desc').value.trim(), ativa: document.getElementById('rg-edit-ativa').value==='true' };
   if (tipo==='quantidade')   body.qtd_minima  = parseFloat(document.getElementById('rg-edit-qtd')?.value)||null;
+  if (tipo==='qtd_grupo') { body.nome_grupo = document.getElementById('rg-edit-nome-grupo')?.value||null; body.qtd_minima = parseFloat(document.getElementById('rg-edit-qtd-grupo')?.value)||null; }
   if (tipo==='valor_pedido') body.valor_minimo = parseFloat(document.getElementById('rg-edit-valor')?.value)||null;
   if (tipo==='grupo') { body.id_grupo=parseInt(document.getElementById('rg-edit-grupo')?.value)||null; body.id_subgrupo=parseInt(document.getElementById('rg-edit-subgrupo')?.value)||null; }
   await supaPatch('ped_tabela_regras', `id=eq.${id}`, body);
