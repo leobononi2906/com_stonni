@@ -14,12 +14,55 @@ let _pedidoAtual = {
 
 async function renderNovoPedido(el, params = {}) {
   // Carrega configs necessárias
-  const [configs, tabelas] = await Promise.all([
+  const [configs, tabelas, pedRegras] = await Promise.all([
     supa('ped_configuracoes', 'select=chave,valor'),
-    supa('ped_tabelas_preco', `id=eq.${USUARIO.id_tabela_preco||1}&select=*`)
+    supa('ped_tabelas_preco', `id=eq.${USUARIO.id_tabela_preco||1}&select=*`),
+    supa('ped_tabela_regras', `id_tabela=eq.${USUARIO.id_tabela_preco||1}&ativa=eq.true&select=*`)
   ]);
 
-  window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
+  // ── Aplica regras de desconto da tabela de preço ──
+window.aplicarRegrasDesconto = function(itens, regras) {
+  if (!regras || !regras.length || !itens || !itens.length) return itens;
+  const regrasAtivas = regras.filter(r => r.ativa !== false);
+  return itens.map(item => {
+    let melhorDesconto = item.desconto_perc || 0;
+    let regraAplicada  = item.regras_aplicadas?.length ? item.regras_aplicadas : [];
+    for (const rg of regrasAtivas) {
+      let desconto = 0;
+      if (rg.tipo === 'quantidade' && rg.qtd_minima) {
+        if (item.quantidade >= rg.qtd_minima) desconto = Number(rg.desconto_perc);
+      }
+      if (rg.tipo === 'qtd_grupo' && rg.nome_grupo && rg.qtd_minima) {
+        const nomeGrupoRg = (rg.nome_grupo || '').toLowerCase().trim();
+        const grupoItem   = (item.grupo || '').toLowerCase().trim();
+        const match = grupoItem && (grupoItem.includes(nomeGrupoRg) || nomeGrupoRg.includes(grupoItem));
+        if (match) {
+          const qtdGrupo = itens.filter(x => {
+            const g = (x.grupo || '').toLowerCase().trim();
+            return g && (g.includes(nomeGrupoRg) || nomeGrupoRg.includes(g));
+          }).reduce((acc, x) => acc + (x.quantidade || 0), 0);
+          if (qtdGrupo >= rg.qtd_minima) desconto = Number(rg.desconto_perc);
+        }
+      }
+      if (rg.tipo === 'valor_pedido' && rg.valor_minimo) {
+        const totalPedido = itens.reduce((acc, x) => acc + (x.preco_unitario * x.quantidade), 0);
+        if (totalPedido >= rg.valor_minimo) desconto = Number(rg.desconto_perc);
+      }
+      if (rg.tipo === 'global') desconto = Number(rg.desconto_perc);
+      if (desconto > melhorDesconto) {
+        melhorDesconto = desconto;
+        regraAplicada  = [rg.descricao || rg.tipo];
+      }
+    }
+    if (melhorDesconto > 0) {
+      const precoFinal = parseFloat((item.preco_unitario * (1 - melhorDesconto / 100)).toFixed(2));
+      return { ...item, desconto_perc: melhorDesconto, preco_final: precoFinal, regras_aplicadas: regraAplicada };
+    }
+    return item;
+  });
+};
+
+window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
   window._pedTabela = tabelas?.[0] || { markup_global: 0 };
   const prazos = JSON.parse(window._pedConfig.prazos_pagamento || '["28 DDL","35 DDL","42 DDL"]');
 
@@ -357,7 +400,7 @@ window.pedAdicionarProdutoId = function(id) {
   else {
     _pedidoAtual.itens.push({
       id_produto: p.id, id_produto_erp: p.id_produto_erp,
-      referencia: p.referencia, nome: p.nome,
+      referencia: p.referencia, nome: p.nome, grupo: p.grupo || null,
       preco_unitario: p.preco_base,
       desconto_perc: acaoAtiva?.tipo==='desconto' ? acaoAtiva.valor : 0,
       preco_final: preco, quantidade: 1,
@@ -370,6 +413,10 @@ window.pedAdicionarProdutoId = function(id) {
       // IPI
       ipi_perc: parseFloat(p.ipi_perc) || 0,
     });
+    // Re-aplica regras de desconto em todo o carrinho
+    if (window._pedRegras?.length) {
+      _pedidoAtual.itens = window.aplicarRegrasDesconto(_pedidoAtual.itens, window._pedRegras);
+    }
   }
   fecharDrawer();
   pedRenderCarrinho();
