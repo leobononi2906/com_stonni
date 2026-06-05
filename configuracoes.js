@@ -648,7 +648,7 @@ async function cfgCarregarCatalogo(el) {
 function cfgRenderLinhasProduto(lista) {
   if (!lista.length) return `<tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon">🛍️</div><h3>Catálogo vazio</h3><p>Adicione produtos pelo SKU do ERP.</p></div></td></tr>`;
   return lista.map(p => {
-    const foto = p.foto_miniatura || p.fotos?.[0] || null;
+    const foto = p.fotos?.[0] || null;
     const status = !p.ativo ? 'inativo' : p.esgotado ? 'esgotado' : 'disponivel';
     const badgeMap = { inativo:'badge-cancelado', esgotado:'badge-esgotado', disponivel:'badge-disponivel' };
     const labelMap = { inativo:'Inativo', esgotado:'Esgotado', disponivel:'Disponível' };
