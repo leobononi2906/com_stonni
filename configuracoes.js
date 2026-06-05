@@ -487,6 +487,7 @@ async function cfgCarregarAcoes(el) {
       <span class="section-title">${(acoes||[]).length} ação(ões) cadastrada(s)</span>
       <button class="btn btn-primary" onclick="cfgNovaAcao()">+ Nova ação</button>
     </div>
+    <div id="sync-todos-progress" style="display:none;margin-top:10px"></div>
     <div class="table-card hide-mobile" style="margin-top:14px">
       <table class="data-table">
         <thead><tr><th>Nome</th><th>Tipo</th><th>Escopo</th><th>Valor</th><th>Validade</th><th>Status</th><th></th></tr></thead>
@@ -623,8 +624,10 @@ async function cfgCarregarCatalogo(el) {
           <option value="inativo">Inativos</option>
         </select>
       </div>
+      <button class="btn btn-outline" onclick="cfgSincronizarTodos()" style="flex-shrink:0" id="btn-sync-todos">🔄 Sincronizar todos</button>
       <button class="btn btn-primary" onclick="cfgAdicionarProduto()" style="flex-shrink:0">+ Produto</button>
     </div>
+    <div id="sync-todos-progress" style="display:none;margin-top:10px"></div>
     <div class="table-card hide-mobile" style="margin-top:14px">
       <div class="table-card-header">
         <span class="table-card-title">Produtos no catálogo</span>
@@ -697,6 +700,52 @@ window.cfgFiltrarCatalogo = function() {
   const cards = document.getElementById('cat-cards');
   if (tbody) tbody.innerHTML = cfgRenderLinhasProduto(lista);
   if (cards) cards.innerHTML = cfgRenderCardsProduto(lista);
+};
+
+
+window.cfgSincronizarTodos = async function() {
+  const produtos = window._cfgProdutos || [];
+  const comSyncFotos = produtos.filter(p => p.sync_fotos !== false && p.ativo);
+  if (!comSyncFotos.length) { alert('Nenhum produto ativo com sincronização de fotos habilitada.'); return; }
+  if (!confirm(`Sincronizar fotos de ${comSyncFotos.length} produto(s) com o Bling?\n\nIsso pode levar alguns minutos.`)) return;
+
+  const btn = document.getElementById('btn-sync-todos');
+  const prog = document.getElementById('sync-todos-progress');
+  btn.disabled = true;
+  prog.style.display = 'block';
+
+  let ok = 0, erro = 0;
+  for (let i = 0; i < comSyncFotos.length; i++) {
+    const p = comSyncFotos[i];
+    prog.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:600">🔄 Sincronizando fotos...</span>
+        <span style="font-size:12px;color:var(--text-muted)">${i+1} / ${comSyncFotos.length}</span>
+      </div>
+      <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden">
+        <div style="background:var(--blue-mid);height:100%;width:${Math.round((i/comSyncFotos.length)*100)}%;transition:width .3s"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Produto: ${p.nome} (${p.referencia})</div>
+      <div style="font-size:11px;margin-top:2px">✅ ${ok} ok &nbsp; ❌ ${erro} erro(s)</div>
+    </div>`;
+    try {
+      const skuLimpo = String(parseInt(p.referencia));
+      const r = await fetch(`${BLING_PROXY}?acao=fotos-cache&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({}));
+      const patch = {};
+      if ((r?.fotos||[]).length > 0) patch.fotos = r.fotos;
+      if (r?.foto_miniatura) patch.foto_miniatura = r.foto_miniatura;
+      if (Object.keys(patch).length > 0) await supaPatch('ped_catalogo_produtos', `id=eq.${p.id}`, patch);
+      ok++;
+    } catch(_) { erro++; }
+    // Pequena pausa para não sobrecarregar a edge function
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  prog.innerHTML = `<div style="background:var(--green-bg);border:1px solid var(--green);border-radius:var(--radius-sm);padding:12px 16px;font-size:13px">
+    ✅ Sincronização concluída — ${ok} produto(s) atualizados${erro ? ` · ${erro} com erro` : ''}.
+    <button class="btn btn-outline btn-sm" style="margin-left:12px" onclick="cfgAba('catalogo',null)">Recarregar</button>
+  </div>`;
+  btn.disabled = false;
 };
 
 window.cfgAdicionarProduto = function() {
