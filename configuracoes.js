@@ -661,7 +661,7 @@ function cfgRenderLinhasProduto(lista) {
       <td style="font-size:12px;color:var(--text-muted)">${p.estoque_total != null ? `${p.estoque_total} un.` : '—'}</td>
       <td style="text-align:center">${p.peso_kg ? `<span title="Peso: ${p.peso_kg}kg · ${p.largura_cm||'?'}×${p.altura_cm||'?'}×${p.comprimento_cm||'?'}cm" style="font-size:16px;cursor:default">✅</span>` : `<span title="Medidas não cadastradas" style="font-size:16px;cursor:default;opacity:.35">⬜</span>`}</td>
       <td><span class="badge ${badgeMap[status]}">${labelMap[status]}</span></td>
-      <td><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button></td>
+      <td style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id},'${p.nome.replace(/'/g,'\\'')}')" title="Excluir produto">✕</button></td>
     </tr>`;
   }).join('');
 }
@@ -684,10 +684,20 @@ function cfgRenderCardsProduto(lista) {
           ${p.estoque_total != null ? `<span style="font-size:11px;color:var(--text-muted)">${p.estoque_total} un.</span>` : ''}
         </div>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})" style="flex-shrink:0">Editar</button>
+      <div style="display:flex;gap:6px;flex-shrink:0"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id},'${p.nome.replace(/'/g,'\\'')}')" title="Excluir">✕</button></div>
     </div>`;
   }).join('');
 }
+
+window.cfgExcluirProduto = async function(id, nome) {
+  if (!confirm(`Excluir "${nome}" do catálogo?\n\nEsta ação não pode ser desfeita.`)) return;
+  await fetch(`${SUPA_URL}/rest/v1/ped_catalogo_produtos?id=eq.${id}`, {
+    method: 'DELETE', headers: HEADERS
+  });
+  fecharDrawer();
+  cfgAba('catalogo', null);
+};
+
 
 window.cfgFiltrarCatalogo = function() {
   const busca  = document.getElementById('cat-busca').value.toLowerCase();
@@ -893,6 +903,7 @@ window.cfgEditarProduto = async function(id) {
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="ep-esgotado" ${p.esgotado?'checked':''} style="accent-color:var(--red)"> Esgotado</label>
     </div>
   `, `
+    <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red);margin-right:auto" onclick="cfgExcluirProduto(${id},'${p.nome.replace(/'/g,'\\'')}')" >🗑️ Excluir</button>
     <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
     <button class="btn btn-primary" onclick="cfgAtualizarProduto(${id})">Salvar</button>
   `);
