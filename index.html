@@ -449,8 +449,42 @@ let HEADERS = {
 let USUARIO = null; // { id, email, nome, perfil: 'representante'|'gestor'|'admin', id_representante }
 
 // ============================================================
-//  AUTH
+//  AUTH — integrado com Hub Bononi (Supabase Auth compartilhado)
 // ============================================================
+
+// Verifica acesso ao módulo 'atacado' via user_metadata
+function temAcessoStonni(meta) {
+  return meta.admin === true || (Array.isArray(meta.modulos) && meta.modulos.includes('atacado'));
+}
+
+async function carregarUsuario(user, token) {
+  const meta = user.user_metadata ?? {};
+  HEADERS['Authorization'] = `Bearer ${token}`;
+
+  USUARIO = {
+    id: user.id,
+    email: user.email,
+    nome: meta.nome || user.email.split('@')[0],
+    perfil: meta.admin ? 'admin' : (meta.perfil || 'representante'),
+    token
+  };
+
+  // Busca dados do representante se for perfil representante
+  if (USUARIO.perfil === 'representante') {
+    try {
+      const repRes = await fetch(`${SUPA_URL}/rest/v1/ped_representantes?user_id=eq.${USUARIO.id}&select=*&limit=1`, { headers: HEADERS });
+      const reps = await repRes.json();
+      if (Array.isArray(reps) && reps.length > 0) {
+        USUARIO.id_representante = reps[0].id;
+        USUARIO.nome = reps[0].nome || USUARIO.nome;
+        USUARIO.id_tabela_preco = reps[0].id_tabela_preco;
+      }
+    } catch(e) {}
+  }
+
+  iniciarApp();
+}
+
 async function fazerLogin() {
   const email = document.getElementById('login-email').value.trim();
   const senha = document.getElementById('login-senha').value;
@@ -471,42 +505,27 @@ async function fazerLogin() {
       return;
     }
 
-    // Atualiza headers com token do usuário
-    HEADERS['Authorization'] = `Bearer ${data.access_token}`;
-
     const meta = data.user?.user_metadata ?? {};
-    USUARIO = {
-      id: data.user.id,
-      email: data.user.email,
-      nome: meta.nome || email.split('@')[0],
-      perfil: meta.admin ? 'admin' : (meta.perfil || 'representante'),
-      token: data.access_token
-    };
-
-    // Busca dados do representante (se não for gestor/admin)
-    if (USUARIO.perfil === 'representante') {
-      const repRes = await fetch(`${SUPA_URL}/rest/v1/ped_representantes?user_id=eq.${USUARIO.id}&select=*&limit=1`, { headers: HEADERS });
-      const reps = await repRes.json();
-      if (reps.length > 0) {
-        USUARIO.id_representante = reps[0].id;
-        USUARIO.nome = reps[0].nome || USUARIO.nome;
-        USUARIO.id_tabela_preco = reps[0].id_tabela_preco;
-      }
+    if (!temAcessoStonni(meta)) {
+      erroEl.textContent = 'Sem acesso a este sistema. Contate o administrador.';
+      return;
     }
 
-    localStorage.setItem('stonni_token', data.access_token);
-    localStorage.setItem('stonni_usuario', JSON.stringify(USUARIO));
-
-    iniciarApp();
+    await carregarUsuario(data.user, data.access_token);
   } catch (e) {
     erroEl.textContent = 'Erro de conexão. Tente novamente.';
   }
 }
 
-function fazerLogout() {
-  localStorage.removeItem('stonni_token');
-  localStorage.removeItem('stonni_usuario');
+async function fazerLogout() {
+  try {
+    await fetch(`${SUPA_URL}/auth/v1/logout`, {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': HEADERS['Authorization'] || '' }
+    });
+  } catch(e) {}
   USUARIO = null;
+  HEADERS['Authorization'] = '';
   document.getElementById('app').classList.remove('visible');
   document.getElementById('login-screen').classList.remove('hidden');
 }
@@ -669,20 +688,32 @@ function iniciarApp() {
 }
 
 // ============================================================
-//  AUTO LOGIN (token salvo)
+//  AUTO LOGIN — usa sessão do Supabase Auth (compartilhada com Hub)
 // ============================================================
-window.addEventListener('DOMContentLoaded', () => {
-  const token = localStorage.getItem('stonni_token');
-  const usuarioStr = localStorage.getItem('stonni_usuario');
-  if (token && usuarioStr) {
-    try {
-      USUARIO = JSON.parse(usuarioStr);
-      HEADERS['Authorization'] = `Bearer ${token}`;
-      iniciarApp();
-    } catch (e) {
-      localStorage.clear();
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    // Tenta sessão ativa do Supabase (funciona se logou pelo hub ou aqui antes)
+    const res = await fetch(`${SUPA_URL}/auth/v1/user`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (localStorage.getItem('sb-vishxwdxqiygbxmtpfoy-auth-token') ? JSON.parse(localStorage.getItem('sb-vishxwdxqiygbxmtpfoy-auth-token')).access_token : '') }
+    });
+    if (res.ok) {
+      const userData = await res.json();
+      const sbToken = JSON.parse(localStorage.getItem('sb-vishxwdxqiygbxmtpfoy-auth-token') || '{}');
+      const token = sbToken.access_token;
+      if (token && userData.id) {
+        const meta = userData.user_metadata ?? {};
+        if (temAcessoStonni(meta)) {
+          await carregarUsuario(userData, token);
+          return;
+        }
+      }
     }
-  }
+  } catch(e) {}
+
+  // Fallback: limpa dados antigos e mostra login
+  localStorage.removeItem('stonni_token');
+  localStorage.removeItem('stonni_usuario');
+  document.getElementById('login-screen').classList.remove('hidden');
 });
 
 // Enter no login
