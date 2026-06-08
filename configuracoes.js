@@ -1081,33 +1081,34 @@ window.cfgNovoGestor = function() {
     <button class="btn btn-primary" onclick="cfgSalvarGestor()">Cadastrar</button>
   `);
 };
+// Cria ou atualiza usuário no Auth via edge function admin-users
+async function adminCriarUsuario(email, nome, perfil) {
+  // Pega o access token da sessão atual do usuário logado
+  const sessionStr = Object.entries(localStorage)
+    .find(([k]) => k.includes('supabase') && k.includes('auth'))?.[1];
+  const session = sessionStr ? JSON.parse(sessionStr) : null;
+  const accessToken = session?.access_token || SUPA_KEY;
+
+  const res = await fetch(`${SUPA_URL}/functions/v1/admin-users`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ acao: 'criar', email, nome, perfil })
+  }).then(r=>r.json()).catch(e => ({ erro: e.message }));
+  return res;
+}
+
 window.cfgSalvarGestor = async function() {
   const nome   = document.getElementById('gs-nome').value.trim();
   const email  = document.getElementById('gs-email').value.trim();
   const perfil = document.getElementById('gs-perfil').value;
   if (!nome || !email) { alert('Nome e e-mail obrigatórios'); return; }
 
-  // Cria usuário no Auth com metadata correto
-  const authRes = await fetch(`${SUPA_URL}/auth/v1/admin/users`, {
-    method: 'POST',
-    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, email_confirm: true, user_metadata: { nome, perfil } })
-  }).then(r=>r.json()).catch(()=>({}));
-
-  if (authRes.error) {
-    // Usuário já existe — só atualiza metadata
-    const listRes = await fetch(`${SUPA_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}`, {
-      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
-    }).then(r=>r.json()).catch(()=>({}));
-    const uid = listRes?.users?.[0]?.id;
-    if (uid) {
-      await fetch(`${SUPA_URL}/auth/v1/admin/users/${uid}`, {
-        method: 'PUT',
-        headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_metadata: { nome, perfil } })
-      });
-    }
-  }
+  // Cria usuário no Auth via edge function (usa service role key no servidor)
+  await adminCriarUsuario(email, nome, perfil);
 
   await supaInsert('ped_gestores', { nome, email, perfil, pode_aprovar: document.getElementById('gs-aprovar').checked, pode_reprovar: document.getElementById('gs-reprovar').checked, pode_faturar: document.getElementById('gs-faturar').checked, pode_catalogo: document.getElementById('gs-catalogo').checked, pode_config: document.getElementById('gs-config').checked, ativo: document.getElementById('gs-ativo').value === 'true' });
   alert(`Gestor cadastrado! Um e-mail de confirmação foi enviado para ${email}.`);
@@ -1171,29 +1172,8 @@ async function cfgSalvarRepresentante() {
   const email = document.getElementById('rp-email').value.trim();
   if (!nome) { alert('Nome obrigatório'); return; }
 
-  // Cria usuário no Auth com perfil: representante
-  if (email) {
-    const authRes = await fetch(`${SUPA_URL}/auth/v1/admin/users`, {
-      method: 'POST',
-      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, email_confirm: true, user_metadata: { nome, perfil: 'representante' } })
-    }).then(r=>r.json()).catch(()=>({}));
-
-    if (authRes.error) {
-      // Usuário já existe — garante metadata correto
-      const listRes = await fetch(`${SUPA_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}`, {
-        headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
-      }).then(r=>r.json()).catch(()=>({}));
-      const uid = listRes?.users?.[0]?.id;
-      if (uid) {
-        await fetch(`${SUPA_URL}/auth/v1/admin/users/${uid}`, {
-          method: 'PUT',
-          headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_metadata: { nome, perfil: 'representante' } })
-        });
-      }
-    }
-  }
+  // Cria usuário no Auth via edge function
+  if (email) await adminCriarUsuario(email, nome, 'representante');
 
   await supaInsert('ped_representantes', { nome, email, regiao: document.getElementById('rp-regiao').value.trim(), comissao_perc: parseFloat(document.getElementById('rp-comissao').value)||0, id_tabela_preco: parseInt(document.getElementById('rp-tabela').value)||1, id_vendedor_erp: parseInt(document.getElementById('rp-erp').value)||null, ativo: document.getElementById('rp-ativo').value==='true' });
   if (email) alert(`Representante cadastrado! Um e-mail de confirmação foi enviado para ${email}.`);
