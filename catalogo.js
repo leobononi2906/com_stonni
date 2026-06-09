@@ -6,10 +6,11 @@
 async function renderCatalogo(el) {
   el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
 
-  const [produtos, acoes, tags, configs] = await Promise.all([
+  const [produtos, acoes, tags, cfgRows] = await Promise.all([
     supa('ped_catalogo_produtos', 'ativo=eq.true&order=subgrupo,nome&select=*'),
     supa('ped_acoes_comerciais',  `ativa=eq.true&select=*`),
     supa('ped_catalogo_tags',     'ativo=eq.true&order=nome&select=*'),
+    supa('ped_configuracoes',     'chave=like.catalogo_*&select=chave,valor'),
     supa('ped_configuracoes',     'chave=like.catalogo_*&select=chave,valor')
   ]);
 
@@ -22,6 +23,7 @@ async function renderCatalogo(el) {
   window._catAcoes    = acoes || [];
   window._catTabela   = tabela;
   window._catTags     = tags || [];
+  window._catConfigs  = Object.fromEntries((cfgRows||[]).map(c=>[c.chave,c.valor]));
   window._catConfigs  = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
 
   // Grupos disponíveis
@@ -45,6 +47,9 @@ async function renderCatalogo(el) {
           <option value="esg">Apenas esgotados</option>
         </select>
       </div>
+      <button class="btn btn-outline btn-sm" onclick="catAbrirGerador()" style="display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0">
+        📄 Gerar Catálogo
+      </button>
       <div class="cat-info">
         <span id="cat-count" style="font-size:12px;color:var(--text-muted)"></span>
         <span class="badge badge-b" style="font-size:11px">${tabela.nome}${tabela.markup_global?` ${tabela.markup_global>0?'+':''}${tabela.markup_global}%`:''}</span>
@@ -109,8 +114,8 @@ window.catFiltrar = function() {
     p.grupo?.toLowerCase().includes(busca)
   );
   if (grupo)        lista = lista.filter(p => p.id_grupo == grupo);
-  const tag = document.getElementById('cat-tag')?.value||'';
-  if (tag) lista = lista.filter(p => (p.tags||[]).includes(tag));
+  const tagFiltro = document.getElementById('cat-tag')?.value||'';
+  if (tagFiltro) lista = lista.filter(p => (p.tags||[]).includes(tagFiltro));
   if (disp==='disp') lista = lista.filter(p => !p.esgotado);
   if (disp==='esg')  lista = lista.filter(p => p.esgotado);
 
