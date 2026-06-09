@@ -21,6 +21,18 @@ async function renderNovoPedido(el, params = {}) {
   ]);
 
   // ── Aplica regras de desconto da tabela de preço ──
+
+window.pedMostrarIncentivo = function(msg) {
+  const anterior = document.getElementById('ped-incentivo-toast');
+  if (anterior) anterior.remove();
+  const toast = document.createElement('div');
+  toast.id = 'ped-incentivo-toast';
+  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1A3A8F;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);display:flex;align-items:center;gap:10px;max-width:90vw;text-align:center';
+  toast.innerHTML = '<span>🎁 ' + msg + '</span><button onclick="this.parentElement.remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;margin-left:4px">✕</button>';
+  document.body.appendChild(toast);
+  setTimeout(function() { if (toast.parentElement) toast.remove(); }, 6000);
+};
+
 window.aplicarRegrasDesconto = function(itens, regras) {
   if (!regras || !regras.length || !itens || !itens.length) return itens;
   const regrasAtivas = regras.filter(r => r.ativa !== false);
@@ -417,6 +429,40 @@ window.pedAdicionarProdutoId = function(id) {
     if (window._pedRegras?.length) {
       _pedidoAtual.itens = window.aplicarRegrasDesconto(_pedidoAtual.itens, window._pedRegras);
     }
+
+    // Verifica regras proximas de ativar (incentivo de desconto)
+    if (window._pedRegras && window._pedRegras.length) {
+      var avisos = [];
+      for (var ri = 0; ri < window._pedRegras.length; ri++) {
+        var rg = window._pedRegras[ri];
+        if (rg.ativa === false) continue;
+        if (rg.tipo === 'quantidade' && rg.qtd_minima) {
+          var itemAtual = _pedidoAtual.itens.find(function(i) { return i.id_produto === p.id; });
+          var qtdAtual = itemAtual ? itemAtual.quantidade : 1;
+          var faltam = rg.qtd_minima - qtdAtual;
+          if (faltam > 0 && faltam < rg.qtd_minima) {
+            avisos.push('Adicione mais ' + faltam + (faltam===1?' peça':' peças') + ' deste produto e ganhe ' + rg.desconto_perc + '% de desconto!' + (rg.descricao ? ' ' + rg.descricao : ''));
+          }
+        }
+        if (rg.tipo === 'qtd_grupo' && rg.nome_grupo && rg.qtd_minima) {
+          var nomeGrupoRg = (rg.nome_grupo||'').toLowerCase().trim();
+          var grupoItem = (p.grupo||'').toLowerCase().trim();
+          var matchGrupo = grupoItem && (grupoItem.includes(nomeGrupoRg) || nomeGrupoRg.includes(grupoItem));
+          if (matchGrupo) {
+            var qtdGrupo = _pedidoAtual.itens.filter(function(x) {
+              var g = (x.grupo||'').toLowerCase().trim();
+              return g && (g.includes(nomeGrupoRg) || nomeGrupoRg.includes(g));
+            }).reduce(function(acc, x) { return acc + (x.quantidade||0); }, 0);
+            var faltamGrupo = rg.qtd_minima - qtdGrupo;
+            if (faltamGrupo > 0 && faltamGrupo < rg.qtd_minima) {
+              avisos.push('Adicione mais ' + faltamGrupo + (faltamGrupo===1?' produto':' produtos') + ' de ' + rg.nome_grupo + ' e ganhe ' + rg.desconto_perc + '% de desconto!');
+            }
+          }
+        }
+      }
+      if (avisos.length > 0) window.pedMostrarIncentivo(avisos[0]);
+    }
+
   }
   fecharDrawer();
   pedRenderCarrinho();
