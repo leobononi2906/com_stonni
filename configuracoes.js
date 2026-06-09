@@ -603,7 +603,67 @@ window.cfgExcluirAcao = async function(id) {
 // ============================================================
 //  ABA 4 — CATÁLOGO
 // ============================================================
+
+// ============================================================
+//  TAGS DO CATÁLOGO
+// ============================================================
+window.cfgAbrirTags = async function() {
+  const tags = await supa('ped_catalogo_tags', 'order=nome&select=*') || [];
+  window._cfgTags = tags.filter(t => t.ativo);
+
+  const listaHtml = tags.length
+    ? `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+        ${tags.map(t => `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+            <span style="flex:1;font-size:13px;font-weight:500">${t.nome}</span>
+            <span class="badge ${t.ativo ? 'badge-aprovado' : 'badge-cancelado'}" style="font-size:10px">${t.ativo ? 'Ativa' : 'Inativa'}</span>
+            <button class="btn btn-outline btn-sm" onclick="cfgEditarTag(${t.id})">Editar</button>
+            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="cfgExcluirTag(${t.id})">✕</button>
+          </div>`).join('')}
+      </div>`
+    : '<div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Nenhuma tag cadastrada ainda.</div>';
+
+  const bodyHtml = `
+    ${listaHtml}
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Nova tag</div>
+      <div style="display:flex;gap:10px">
+        <input type="text" id="tag-nova-nome" class="cfg-input" placeholder="Ex: Motor Home" style="flex:1">
+        <button class="btn btn-primary" onclick="cfgSalvarTag()">+ Adicionar</button>
+      </div>
+    </div>`;
+
+  abrirDrawer('🏷️ Tags do Catálogo', 'Classifique seus produtos com tags personalizadas', bodyHtml, `
+    <button class="btn btn-outline" onclick="fecharDrawer()">Fechar</button>
+  `);
+};
+
+window.cfgSalvarTag = async function() {
+  const nome = document.getElementById('tag-nova-nome')?.value.trim();
+  if (!nome) return;
+  await supaInsert('ped_catalogo_tags', { nome, ativo: true });
+  cfgAbrirTags();
+};
+
+window.cfgEditarTag = async function(id) {
+  const tags = await supa('ped_catalogo_tags', `id=eq.${id}&select=nome`);
+  const nomeAtual = tags?.[0]?.nome || '';
+  const novoNome = prompt('Nome da tag:', nomeAtual);
+  if (!novoNome?.trim()) return;
+  await supaPatch('ped_catalogo_tags', `id=eq.${id}`, { nome: novoNome.trim() });
+  cfgAbrirTags();
+};
+
+window.cfgExcluirTag = async function(id) {
+  if (!confirm('Excluir esta tag? Ela será removida dos produtos.')) return;
+  await supaPatch('ped_catalogo_tags', `id=eq.${id}`, { ativo: false });
+  cfgAbrirTags();
+};
+
 async function cfgCarregarCatalogo(el) {
+  // Carrega tags para o formulário de produto
+  const tagsAll = await supa('ped_catalogo_tags', 'ativo=eq.true&order=nome&select=*');
+  window._cfgTags = tagsAll || [];
   const [produtos, estoques] = await Promise.all([
     supa('ped_catalogo_produtos', 'order=nome&select=*'),
     supa('comp_produtos_consolidado', 'select=id_produto,estoque_total,situacao_estoque')
@@ -634,6 +694,7 @@ async function cfgCarregarCatalogo(el) {
         </select>
       </div>
       <button class="btn btn-outline" onclick="cfgSincronizarTodos()" style="flex-shrink:0" id="btn-sync-todos">🔄 Sincronizar todos</button>
+      <button class="btn btn-outline" onclick="cfgAbrirTags()" style="flex-shrink:0">🏷️ Tags</button>
       <button class="btn btn-primary" onclick="cfgAdicionarProduto()" style="flex-shrink:0">+ Produto</button>
     </div>
     <div id="sync-todos-progress" style="display:none;margin-top:10px"></div>
