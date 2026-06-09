@@ -472,8 +472,20 @@ async function carregarUsuario(user, token) {
   // Busca dados do representante se for perfil representante
   if (USUARIO.perfil === 'representante') {
     try {
-      const repRes = await fetch(`${SUPA_URL}/rest/v1/ped_representantes?user_id=eq.${USUARIO.id}&select=*&limit=1`, { headers: HEADERS });
-      const reps = await repRes.json();
+      // Busca por user_id primeiro, fallback por email
+      let repRes = await fetch(`${SUPA_URL}/rest/v1/ped_representantes?user_id=eq.${USUARIO.id}&select=*&limit=1`, { headers: HEADERS });
+      let reps = await repRes.json();
+      if (!Array.isArray(reps) || !reps.length) {
+        repRes = await fetch(`${SUPA_URL}/rest/v1/ped_representantes?email=eq.${encodeURIComponent(USUARIO.email)}&select=*&limit=1`, { headers: HEADERS });
+        reps = await repRes.json();
+        // Vincula user_id para próximas vezes
+        if (Array.isArray(reps) && reps.length > 0) {
+          await fetch(`${SUPA_URL}/rest/v1/ped_representantes?id=eq.${reps[0].id}`, {
+            method: 'PATCH', headers: { ...HEADERS, 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ user_id: USUARIO.id })
+          });
+        }
+      }
       if (Array.isArray(reps) && reps.length > 0) {
         USUARIO.id_representante = reps[0].id;
         USUARIO.nome = reps[0].nome || USUARIO.nome;
@@ -748,7 +760,6 @@ function renderRepresentantes(el, params) {
 </script>
 
 <script src="configuracoes.js"></script>
-<script src="catalogo-pdf.js"></script>
 <script src="catalogo.js"></script>
 <script src="pedidos.js"></script>
 <script src="pdf-pedido.js"></script>
