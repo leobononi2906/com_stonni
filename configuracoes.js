@@ -790,7 +790,7 @@ window.cfgSincronizarTodos = async function() {
   const produtos = window._cfgProdutos || [];
   const comSyncFotos = produtos.filter(p => p.sync_fotos !== false && p.ativo);
   if (!comSyncFotos.length) { alert('Nenhum produto ativo com sincronização de fotos habilitada.'); return; }
-  if (!confirm(`Sincronizar fotos de ${comSyncFotos.length} produto(s) com o Bling?\n\nIsso pode levar alguns minutos.`)) return;
+  if (!confirm(`Sincronizar fotos e medidas de ${comSyncFotos.length} produto(s) com o Bling?\n\nIsso pode levar alguns minutos.`)) return;
 
   const btn = document.getElementById('btn-sync-todos');
   const prog = document.getElementById('sync-todos-progress');
@@ -813,10 +813,18 @@ window.cfgSincronizarTodos = async function() {
     </div>`;
     try {
       const skuLimpo = String(parseInt(p.referencia));
-      const r = await fetch(`${BLING_PROXY}?acao=fotos-cache&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({}));
+      // Busca fotos e dimensões em paralelo
+      const [rFotos, rDim] = await Promise.all([
+        fetch(`${BLING_PROXY}?acao=fotos-cache&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})),
+        fetch(`${BLING_PROXY}?acao=dimensoes&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({}))
+      ]);
       const patch = {};
-      if ((r?.fotos||[]).length > 0) patch.fotos = r.fotos;
-      if (r?.foto_miniatura) patch.foto_miniatura = r.foto_miniatura;
+      if ((rFotos?.fotos||[]).length > 0) patch.fotos = rFotos.fotos;
+      if (rFotos?.foto_miniatura) patch.foto_miniatura = rFotos.foto_miniatura;
+      if (rDim?.peso_kg)       patch.peso_kg       = rDim.peso_kg;
+      if (rDim?.altura_cm)     patch.altura_cm     = rDim.altura_cm;
+      if (rDim?.largura_cm)    patch.largura_cm    = rDim.largura_cm;
+      if (rDim?.comprimento_cm) patch.comprimento_cm = rDim.comprimento_cm;
       if (Object.keys(patch).length > 0) await supaPatch('ped_catalogo_produtos', `id=eq.${p.id}`, patch);
       ok++;
     } catch(_) { erro++; }
