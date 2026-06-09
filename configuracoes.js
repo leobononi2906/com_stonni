@@ -395,12 +395,15 @@ async function cfgSalvarRegra() {
   const tipo = document.getElementById('rg-tipo').value;
   const desconto = parseFloat(document.getElementById('rg-desconto').value);
   if (!desconto || desconto <= 0) { alert('Informe o percentual de desconto'); return; }
-  const body = { id_tabela: parseInt(document.getElementById('rg-id-tabela').value), tipo, desconto_perc: desconto, descricao: document.getElementById('rg-desc').value.trim(), ativa: true };
+  const idTabela = parseInt(document.getElementById('rg-id-tabela').value);
+  if (!idTabela || isNaN(idTabela)) { alert('Erro: tabela não identificada. Feche e tente novamente.'); return; }
+  const body = { id_tabela: idTabela, tipo, desconto_perc: desconto, descricao: document.getElementById('rg-desc').value.trim(), ativa: true };
   if (tipo === 'quantidade')   body.qtd_minima  = parseFloat(document.getElementById('rg-qtd')?.value) || null;
   if (tipo === 'valor_pedido') body.valor_minimo = parseFloat(document.getElementById('rg-valor')?.value) || null;
   if (tipo === 'grupo') { body.id_grupo = parseInt(document.getElementById('rg-grupo')?.value)||null; body.id_subgrupo = parseInt(document.getElementById('rg-subgrupo')?.value)||null; }
   if (tipo === 'qtd_grupo') { body.nome_grupo = document.getElementById('rg-nome-grupo')?.value||null; body.qtd_minima = parseFloat(document.getElementById('rg-qtd-grupo')?.value)||null; }
-  await supaInsert('ped_tabela_regras', body);
+  const res = await supaInsert('ped_tabela_regras', body);
+  if (res?.code || res?.error) { alert('Erro ao salvar: ' + (res.message || res.error || JSON.stringify(res))); return; }
   fecharDrawer(); cfgAba('precos', null);
 }
 window.cfgEditarRegra = async function(id) {
