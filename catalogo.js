@@ -236,8 +236,8 @@ window.catAdicionarAoPedido = function(idProduto) {
     .cat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:all .2s; display:flex; flex-direction:column; }
     .cat-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); border-color:var(--blue-mid); }
     .cat-card-esgotado { opacity:.65; }
-    .cat-card-foto { position:relative; width:100%; padding-top:75%; background:var(--surface2); overflow:hidden; }
-    .cat-card-foto img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .cat-card-foto { position:relative; width:100%; padding-top:75%; background:#f5f6fa; overflow:hidden; }
+    .cat-card-foto img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; padding:6px; }
     .cat-card-sem-foto { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--text-muted); }
     .cat-card-badge-esg { position:absolute; top:8px; left:8px; background:var(--red); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; letter-spacing:.5px; }
     .cat-card-badge-promo { position:absolute; top:8px; right:8px; background:var(--green); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; }
