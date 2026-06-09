@@ -874,10 +874,14 @@ window.cfgBuscarERP = async function() {
   if (!sku) { alert('Digite o SKU primeiro'); return; }
   const res = document.getElementById('np-erp-resultado');
   res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Buscando no ERP...</div>';
-  const rows = await supa('vw_fb_produtos_compras', `id_produto=eq.${parseInt(sku)}&id_empresa=eq.8&select=id_produto,referencia,nome,complemento,id_grupo,grupo,id_subgrupo,subgrupo,preco_aux2,estoque_fisico`);
+  // Tenta empresa 8 (Bononi SC) primeiro, fallback para qualquer empresa do grupo
+  let rows = await supa('vw_fb_produtos_compras', `id_produto=eq.${parseInt(sku)}&id_empresa=eq.8&select=id_produto,referencia,nome,complemento,id_grupo,grupo,id_subgrupo,subgrupo,preco_aux2,estoque_fisico`);
+  if (!rows?.length) {
+    rows = await supa('vw_fb_produtos_compras', `id_produto=eq.${parseInt(sku)}&select=id_produto,referencia,nome,complemento,id_grupo,grupo,id_subgrupo,subgrupo,preco_aux2,estoque_fisico&limit=1`);
+  }
   const p = rows?.[0];
   if (!p) {
-    res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Produto <strong>${sku}</strong> não encontrado na Bononi SC. Preencha manualmente.</div>`;
+    res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Produto <strong>${sku}</strong> não encontrado no ERP. Pode ser um produto novo — verifique se a integração com o Firebird já sincronizou. Preencha manualmente enquanto isso.</div>`;
     document.getElementById('np-ref').value = sku;
     document.getElementById('np-form-produto').style.display = 'block';
     document.getElementById('np-btn-salvar').style.display = 'inline-flex';
