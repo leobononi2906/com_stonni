@@ -13,11 +13,8 @@ window.catGerarPDF = async function(opcoes = {}) {
     capaUrl      = ''
   } = opcoes;
 
-  // Busca produtos ativos
-  let produtos = window._catProdutos || [];
-  if (!produtos.length) {
-    produtos = await supa('ped_catalogo_produtos', 'ativo=eq.true&order=subgrupo,nome&select=*') || [];
-  }
+  // Sempre busca produtos frescos do banco para garantir campo tags atualizado
+  let produtos = await supa('ped_catalogo_produtos', 'ativo=eq.true&order=subgrupo,nome&select=*') || [];
 
   // Aplica filtros
   if (tagsFiltro.length > 0) {
