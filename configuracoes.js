@@ -604,7 +604,62 @@ window.cfgExcluirAcao = async function(id) {
 // ============================================================
 //  ABA 4 — CATÁLOGO
 // ============================================================
+
+// ============================================================
+//  GESTÃO DE TAGS DO CATÁLOGO
+// ============================================================
+window.cfgAbrirTags = async function() {
+  const tags = await supa('ped_catalogo_tags', 'order=nome&select=*') || [];
+  window._cfgTags = tags.filter(t=>t.ativo);
+
+  const listaHtml = tags.length
+    ? tags.map(t=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);margin-bottom:6px">
+          <span style="flex:1;font-size:13px;font-weight:500">${t.nome}</span>
+          <span class="badge ${t.ativo?'badge-aprovado':'badge-cancelado'}" style="font-size:10px">${t.ativo?'Ativa':'Inativa'}</span>
+          <button class="btn btn-outline btn-sm" onclick="cfgEditarTag(${t.id})">Editar</button>
+          <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="cfgExcluirTag(${t.id})">✕</button>
+        </div>`).join('')
+    : '<div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Nenhuma tag ainda.</div>';
+
+  abrirDrawer('🏷️ Tags do Catálogo', 'Classifique produtos com tags personalizadas',
+    `${listaHtml}
+     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:8px">
+       <div style="font-size:13px;font-weight:600;margin-bottom:10px">Nova tag</div>
+       <div style="display:flex;gap:10px">
+         <input type="text" id="tag-nova-nome" class="cfg-input" placeholder="Ex: Motor Home" style="flex:1">
+         <button class="btn btn-primary" onclick="cfgSalvarTag()">+ Adicionar</button>
+       </div>
+     </div>`,
+    `<button class="btn btn-outline" onclick="fecharDrawer()">Fechar</button>`
+  );
+};
+
+window.cfgSalvarTag = async function() {
+  const nome = document.getElementById('tag-nova-nome')?.value.trim();
+  if (!nome) return;
+  await supaInsert('ped_catalogo_tags', { nome, ativo: true });
+  cfgAbrirTags();
+};
+
+window.cfgEditarTag = async function(id) {
+  const res = await supa('ped_catalogo_tags', `id=eq.${id}&select=nome`);
+  const nomeAtual = res?.[0]?.nome || '';
+  const novoNome = prompt('Nome da tag:', nomeAtual);
+  if (!novoNome?.trim()) return;
+  await supaPatch('ped_catalogo_tags', `id=eq.${id}`, { nome: novoNome.trim() });
+  cfgAbrirTags();
+};
+
+window.cfgExcluirTag = async function(id) {
+  if (!confirm('Excluir esta tag?')) return;
+  await supaPatch('ped_catalogo_tags', `id=eq.${id}`, { ativo: false });
+  cfgAbrirTags();
+};
+
 async function cfgCarregarCatalogo(el) {
+  const tagsAll = await supa('ped_catalogo_tags', 'ativo=eq.true&order=nome&select=*');
+  window._cfgTags = tagsAll || [];
   const [produtos, estoques] = await Promise.all([
     supa('ped_catalogo_produtos', 'order=nome&select=*'),
     supa('comp_produtos_consolidado', 'select=id_produto,estoque_total,situacao_estoque')
@@ -635,6 +690,7 @@ async function cfgCarregarCatalogo(el) {
         </select>
       </div>
       <button class="btn btn-outline" onclick="cfgSincronizarTodos()" style="flex-shrink:0" id="btn-sync-todos">🔄 Sincronizar todos</button>
+      <button class="btn btn-outline" onclick="cfgAbrirTags()" style="flex-shrink:0">🏷️ Tags</button>
       <button class="btn btn-primary" onclick="cfgAdicionarProduto()" style="flex-shrink:0">+ Produto</button>
     </div>
     <div id="sync-todos-progress" style="display:none;margin-top:10px"></div>
@@ -795,6 +851,12 @@ window.cfgAdicionarProduto = function() {
       </div>
       <div class="form-field"><label>Descrição</label><textarea id="np-desc" class="cfg-input" rows="2"></textarea></div>
       <input type="hidden" id="np-id-grupo"><input type="hidden" id="np-id-subgrupo">
+      <div style="margin-top:12px">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px">Tags</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" id="np-tags-wrap">
+          ${(window._cfgTags||[]).map(t=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px"><input type="checkbox" class="np-tag-check" value="${t.nome}" style="accent-color:#1A3A8F"> ${t.nome}</label>`).join('') || '<span style="font-size:12px;color:var(--text-muted)">Crie tags em 🏷️ Tags</span>'}
+        </div>
+      </div>
       <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="np-ativo" checked style="accent-color:var(--blue-dark)"> Ativo no catálogo</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="np-esgotado" style="accent-color:var(--red)"> Esgotado</label>
@@ -844,7 +906,8 @@ window.cfgSalvarProduto = async function() {
   const btn = document.getElementById('np-btn-salvar');
   btn.textContent = 'Salvando...'; btn.disabled = true;
   const referencia = document.getElementById('np-ref').value.trim() || sku;
-  const body = { id_produto_erp: parseInt(sku), referencia, nome, descricao: document.getElementById('np-desc').value.trim(), aplicacao: document.getElementById('np-aplicacao').value.trim(), id_grupo: parseInt(document.getElementById('np-id-grupo').value) || null, grupo: document.getElementById('np-grupo').value.trim(), id_subgrupo: parseInt(document.getElementById('np-id-subgrupo').value) || null, subgrupo: document.getElementById('np-subgrupo').value.trim(), preco_base: parseFloat(document.getElementById('np-preco').value) || 0, ativo: document.getElementById('np-ativo').checked, esgotado: document.getElementById('np-esgotado').checked, fotos: [], especificacoes: {} };
+  const npTags = [...document.querySelectorAll('.np-tag-check:checked')].map(el=>el.value);
+  const body = { id_produto_erp: parseInt(sku), referencia, nome, descricao: document.getElementById('np-desc').value.trim(), aplicacao: document.getElementById('np-aplicacao').value.trim(), id_grupo: parseInt(document.getElementById('np-id-grupo').value) || null, grupo: document.getElementById('np-grupo').value.trim(), id_subgrupo: parseInt(document.getElementById('np-id-subgrupo').value) || null, subgrupo: document.getElementById('np-subgrupo').value.trim(), preco_base: parseFloat(document.getElementById('np-preco').value) || 0, ativo: document.getElementById('np-ativo').checked, esgotado: document.getElementById('np-esgotado').checked, fotos: [], especificacoes: {}, tags: npTags };
   const inserted = await supaInsert('ped_catalogo_produtos', body);
   const idNovo = inserted?.[0]?.id;
   btn.textContent = 'Sincronizando com Bling...';
@@ -901,6 +964,12 @@ window.cfgEditarProduto = async function(id) {
       <div class="form-field"><label>IPI (%)</label><input type="number" id="ep-ipi" class="cfg-input" value="${p.ipi_perc||0}" step="0.01" min="0" max="100" placeholder="0"></div>
     </div>
     <div class="form-field"><label>Descrição</label><textarea id="ep-desc" class="cfg-input" rows="2">${p.descricao||''}</textarea></div>
+    <div style="margin-top:4px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px">Tags</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${(window._cfgTags||[]).map(t=>{const ok=(p.tags||[]).includes(t.nome);return `<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;background:var(--surface2);border:1px solid ${ok?'#1A3A8F':'var(--border)'};border-radius:6px;padding:4px 10px"><input type="checkbox" class="ep-tag-check" value="${t.nome}" ${ok?'checked':''} style="accent-color:#1A3A8F"> ${t.nome}</label>`;}).join('') || '<span style="font-size:12px;color:var(--text-muted)">Crie tags em 🏷️ Tags</span>'}
+      </div>
+    </div>
     <div style="margin-top:14px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">📦 Dimensões para frete</div>
       <div class="cfg-grid-2">
