@@ -29,37 +29,44 @@ window.aplicarRegrasDesconto = function(itens, regras) {
   if (!regras || !regras.length || !itens || !itens.length) return itens;
   const regrasAtivas = regras.filter(r => r.ativa !== false);
   return itens.map(item => {
-    let melhorDesconto = item.desconto_perc || 0;
+    let melhorDesconto = Number(item.desconto_perc) || 0;
     let regraAplicada  = item.regras_aplicadas?.length ? item.regras_aplicadas : [];
     for (const rg of regrasAtivas) {
       let desconto = 0;
-      if (rg.tipo === 'quantidade' && rg.qtd_minima) {
-        if (item.quantidade >= rg.qtd_minima) desconto = Number(rg.desconto_perc);
+      const qtdMinima   = Number(rg.qtd_minima)   || 0;
+      const valorMinimo = Number(rg.valor_minimo)  || 0;
+      const descontoPc  = Number(rg.desconto_perc) || 0;
+
+      if (rg.tipo === 'quantidade' && qtdMinima) {
+        if (Number(item.quantidade) >= qtdMinima) desconto = descontoPc;
       }
-      if (rg.tipo === 'qtd_grupo' && rg.nome_grupo && rg.qtd_minima) {
+      if (rg.tipo === 'qtd_grupo' && rg.nome_grupo && qtdMinima) {
         const nomeGrupoRg = (rg.nome_grupo || '').toLowerCase().trim();
-        const grupoItem   = (item.grupo || '').toLowerCase().trim();
+        const grupoItem   = (item.grupo     || '').toLowerCase().trim();
         const match = grupoItem && (grupoItem.includes(nomeGrupoRg) || nomeGrupoRg.includes(grupoItem));
         if (match) {
-          const qtdGrupo = itens.filter(x => {
-            const g = (x.grupo || '').toLowerCase().trim();
-            return g && (g.includes(nomeGrupoRg) || nomeGrupoRg.includes(g));
-          }).reduce((acc, x) => acc + (x.quantidade || 0), 0);
-          if (qtdGrupo >= rg.qtd_minima) desconto = Number(rg.desconto_perc);
+          const qtdGrupo = itens
+            .filter(x => {
+              const g = (x.grupo || '').toLowerCase().trim();
+              return g && (g.includes(nomeGrupoRg) || nomeGrupoRg.includes(g));
+            })
+            .reduce((acc, x) => acc + (Number(x.quantidade) || 0), 0);
+          if (qtdGrupo >= qtdMinima) desconto = descontoPc;
         }
       }
-      if (rg.tipo === 'valor_pedido' && rg.valor_minimo) {
-        const totalPedido = itens.reduce((acc, x) => acc + (x.preco_unitario * x.quantidade), 0);
-        if (totalPedido >= rg.valor_minimo) desconto = Number(rg.desconto_perc);
+      if (rg.tipo === 'valor_pedido' && valorMinimo) {
+        const totalPedido = itens.reduce((acc, x) => acc + (Number(x.preco_unitario) * Number(x.quantidade)), 0);
+        if (totalPedido >= valorMinimo) desconto = descontoPc;
       }
-      if (rg.tipo === 'global') desconto = Number(rg.desconto_perc);
+      if (rg.tipo === 'global') desconto = descontoPc;
+
       if (desconto > melhorDesconto) {
         melhorDesconto = desconto;
         regraAplicada  = [rg.descricao || rg.tipo];
       }
     }
     if (melhorDesconto > 0) {
-      const precoFinal = parseFloat((item.preco_unitario * (1 - melhorDesconto / 100)).toFixed(2));
+      const precoFinal = parseFloat((Number(item.preco_unitario) * (1 - melhorDesconto / 100)).toFixed(2));
       return { ...item, desconto_perc: melhorDesconto, preco_final: precoFinal, regras_aplicadas: regraAplicada };
     }
     return item;
