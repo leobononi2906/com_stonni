@@ -227,6 +227,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .badge-reprovado { background: var(--red-bg);      color: var(--red); }
 .badge-faturado  { background: #F3E8FF;             color: #7C3AED; }
 .badge-cancelado { background: var(--surface2);    color: var(--text-muted); }
+  .badge-warning  { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+  .badge-faturado { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
 .badge-esgotado  { background: var(--red-bg);      color: var(--red); }
 .badge-disponivel{ background: var(--green-bg);    color: var(--green); }
 
@@ -312,19 +314,88 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
 
 @media (max-width: 768px) {
+  /* Layout */
   .sidebar { transform: translateX(-100%); }
   .sidebar.mobile-open { transform: translateX(0); }
   .sidebar-backdrop.open { display: block; }
   .main { left: 0 !important; }
   .mobile-topbar { display: flex; }
   .topbar { display: none; }
-  .content { padding: 16px; }
-  .cards-grid-4 { grid-template-columns: repeat(2, 1fr); }
-  .cards-grid-3 { grid-template-columns: repeat(2, 1fr); }
-  .form-row-2, .form-row-3 { grid-template-columns: 1fr; }
-  .drawer { width: 100%; right: -100%; }
+  .content { padding: 12px; }
+
+  /* Grids */
+  .cards-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .cards-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .cfg-grid-2, .form-row-2, .form-row-3, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+
+  /* Drawer — tela cheia no mobile */
+  .drawer { width: 100%; right: -100%; border-radius: 0; }
+  .drawer-header { padding: 14px 16px; }
+  .drawer-body { padding: 12px 16px; }
+  .drawer-footer { padding: 12px 16px; gap: 8px; }
+  .drawer-footer .btn { flex: 1; }
+
+  /* Tabelas — esconde colunas secundárias */
   .data-table { font-size: 12px; }
-  .data-table th, .data-table td { padding: 8px 12px; }
+  .data-table th, .data-table td { padding: 8px 10px; }
+  .hide-mobile { display: none !important; }
+
+  /* Cards do catálogo — 2 colunas no mobile */
+  .cat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .cat-card { border-radius: 8px; }
+  .cat-card-body { padding: 8px; }
+  .cat-card-body h3 { font-size: 11px; }
+  .cat-card-footer { padding: 6px 8px 8px; }
+  .cat-card-footer .btn { font-size: 12px; padding: 6px; }
+
+  /* Topbar mobile */
+  .mobile-topbar { height: 52px; padding: 0 14px; }
+  .mobile-topbar .app-logo { font-size: 15px; }
+
+  /* Pedidos — carrinho mais compacto */
+  .ped-etapa { padding: 14px; margin-bottom: 12px; }
+  .ped-etapa-header { gap: 8px; margin-bottom: 12px; }
+  .ped-etapa-num { width: 28px; height: 28px; font-size: 13px; }
+  .ped-etapa-titulo { font-size: 15px; }
+
+  /* Botões no carrinho empilham */
+  .ped-acoes { flex-direction: column; }
+  .ped-acoes .btn { width: 100%; }
+
+  /* Seção header com botões — empilha no mobile */
+  .section-header { flex-wrap: wrap; gap: 8px; }
+  .section-header .btn { font-size: 12px; padding: 6px 12px; }
+
+  /* Configurações — tabs scroll horizontal */
+  .cfg-abas { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; padding-bottom: 4px; }
+  .cfg-aba { white-space: nowrap; flex-shrink: 0; font-size: 12px; padding: 6px 12px; }
+
+  /* Resumo do pedido */
+  .ped-resumo-linha { font-size: 13px; }
+  .ped-total { font-size: 18px; }
+
+  /* Form fields mais espaçosos no touch */
+  .cfg-input, input[type="text"], input[type="number"], select, textarea {
+    font-size: 16px !important; /* Evita zoom no iOS */
+    min-height: 40px;
+  }
+
+  /* Badges menores */
+  .badge { font-size: 10px; padding: 2px 6px; }
+
+  /* Cards de KPI */
+  .card { padding: 12px; }
+  .card-value { font-size: 22px; }
+
+  /* Scroll horizontal em tabelas largas */
+  .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* Extra small — celulares menores */
+@media (max-width: 390px) {
+  .cards-grid-4, .cards-grid-3 { grid-template-columns: 1fr 1fr; }
+  .cat-grid { grid-template-columns: 1fr 1fr !important; }
+  .content { padding: 8px; }
 }
 
 /* ============================================================
