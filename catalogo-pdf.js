@@ -133,8 +133,8 @@ window.catGerarPDF = async function(opcoes = {}) {
 
   /* ── CARD ── */
   .card { border:1px solid #e0e5f0; border-radius:8px; overflow:hidden; background:#fff; break-inside:avoid; }
-  .card-foto { width:100%; aspect-ratio:4/3; overflow:hidden; background:#f5f6fa; }
-  .card-foto img { width:100%; height:100%; object-fit:cover; }
+  .card-foto { width:100%; aspect-ratio:4/3; overflow:hidden; background:#f5f6fa; display:flex; align-items:center; justify-content:center; }
+  .card-foto img { width:100%; height:100%; object-fit:contain; padding:4px; }
   .sem-foto { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; color:#aaa; letter-spacing:1px; }
   .card-body { padding:8px; }
   .card-ref { font-size:9px; color:#888; text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px; }
