@@ -12,15 +12,7 @@ let _pedidoAtual = {
   obs: ''
 };
 
-async function renderNovoPedido(el, params = {}) {
-  // Carrega configs necessárias
-  const [configs, tabelas, pedRegras] = await Promise.all([
-    supa('ped_configuracoes', 'select=chave,valor'),
-    supa('ped_tabelas_preco', `id=eq.${USUARIO.id_tabela_preco||1}&select=*`),
-    supa('ped_tabela_regras', `id_tabela=eq.${USUARIO.id_tabela_preco||1}&ativa=eq.true&select=*`)
-  ]);
-
-  // ── Aplica regras de desconto da tabela de preço ──
+// ── Aplica regras de desconto da tabela de preço ──
 
 window.pedMostrarIncentivo = function(msg) {
   const anterior = document.getElementById('ped-incentivo-toast');
@@ -74,8 +66,17 @@ window.aplicarRegrasDesconto = function(itens, regras) {
   });
 };
 
+async function renderNovoPedido(el, params = {}) {
+  // Carrega configs necessárias
+  const [configs, tabelas, pedRegras] = await Promise.all([
+    supa('ped_configuracoes', 'select=chave,valor'),
+    supa('ped_tabelas_preco', `id=eq.${USUARIO.id_tabela_preco||1}&select=*`),
+    supa('ped_tabela_regras', `id_tabela=eq.${USUARIO.id_tabela_preco||1}&ativa=eq.true&select=*`)
+  ]);
+
 window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
   window._pedTabela = tabelas?.[0] || { markup_global: 0 };
+  window._pedRegras = pedRegras || [];
   const prazos = JSON.parse(window._pedConfig.prazos_pagamento || '["28 DDL","35 DDL","42 DDL"]');
 
   // Reseta pedido atual
