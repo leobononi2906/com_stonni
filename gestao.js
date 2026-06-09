@@ -147,12 +147,18 @@ window.gPedAbrir = async function(id) {
     </div>`).join('') || '<div style="font-size:12px;color:var(--text-muted)">Sem histórico</div>';
 
   // Ações do gestor
-  const acoesGestorHtml = isGestor && pedido.status === 'ENVIADO' ? `
+  const statusPermiteAcao = ['ENVIADO','AGUARDANDO','APROVADO'].includes(pedido.status);
+  const acoesGestorHtml = isGestor && statusPermiteAcao ? `
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-top:16px">
       <div style="font-size:13px;font-weight:600;margin-bottom:12px">⚙️ Ações do gestor</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-success" onclick="gPedAprovar(${id})">✅ Aprovar pedido</button>
-        <button class="btn btn-danger" onclick="gPedReprovar(${id})">❌ Reprovar pedido</button>
+        ${['ENVIADO','AGUARDANDO'].includes(pedido.status) ? `
+          <button class="btn btn-success" onclick="gPedAprovar(${id})">✅ Aprovar</button>
+          <button class="btn btn-danger"  onclick="gPedReprovar(${id})">❌ Reprovar</button>
+        ` : ''}
+        ${pedido.status === 'APROVADO' ? `
+          <button class="btn btn-primary" onclick="gPedFaturarDireto(${id})">🧾 Faturar</button>
+        ` : ''}
       </div>
     </div>` : '';
 
@@ -271,7 +277,8 @@ window.gPedTab = function(tab, btn) {
 window.gPedAprovar = async function(id) {
   if (!confirm('Aprovar este pedido?')) return;
   await supaPatch('ped_pedidos', `id=eq.${id}`, { status:'APROVADO', aprovado_por: USUARIO.nome, aprovado_em: new Date().toISOString() });
-  await supaInsert('ped_pedido_log', { id_pedido:id, status_de:'ENVIADO', status_para:'APROVADO', usuario: USUARIO.nome });
+  const statusAnterior = (await supa('ped_pedidos', `id=eq.${id}&select=status`))?.[0]?.status || 'ENVIADO';
+  await supaInsert('ped_pedido_log', { id_pedido:id, status_de: statusAnterior, status_para:'APROVADO', usuario: USUARIO.nome });
   fecharDrawer();
   renderPedidos(document.getElementById('page-content'));
 };
@@ -292,6 +299,14 @@ window.gPedSalvarDocs = async function(id) {
     boleto_url: document.getElementById('doc-boleto-url')?.value.trim()||null,
   });
   alert('Documentos salvos!');
+};
+
+window.gPedFaturarDireto = async function(id) {
+  if (!confirm('Marcar este pedido como Faturado?')) return;
+  await supaPatch('ped_pedidos', `id=eq.${id}`, { status: 'FATURADO' });
+  await supaInsert('ped_pedido_log', { id_pedido:id, status_de:'APROVADO', status_para:'FATURADO', usuario: USUARIO.nome });
+  fecharDrawer();
+  renderPedidos(document.getElementById('page-content'));
 };
 
 window.gPedFaturar = async function(id) {
