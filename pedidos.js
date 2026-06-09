@@ -291,6 +291,33 @@ window.pedConfirmarCliente = function() {
 };
 
 // ── Carrinho ──
+
+window.pedEditarPreco = function(idx, novoValor) {
+  const item = _pedidoAtual.itens[idx];
+  if (!item) return;
+  const preco = parseFloat(novoValor);
+  if (isNaN(preco) || preco < 0) return;
+  const tabelaBase = Number(item.preco_unitario);
+
+  // Salva preço editado
+  item.preco_final   = preco;
+  item.preco_editado = true;
+
+  // Marca se está abaixo da tabela
+  const abaixo = preco < tabelaBase * 0.999;
+  item.abaixo_tabela = abaixo;
+
+  // Se abaixo da tabela muda status para AGUARDANDO_APROVACAO ao salvar
+  if (abaixo) {
+    window._pedidoTemPrecoAbaixo = true;
+    pedMostrarIncentivo('⚠️ Preço abaixo da tabela — este pedido ficará aguardando aprovação do gestor.');
+  } else {
+    window._pedidoTemPrecoAbaixo = _pedidoAtual.itens.some(i => i.abaixo_tabela);
+  }
+
+  pedRenderCarrinho();
+};
+
 window.pedRenderCarrinho = function() {
   const body = document.getElementById('ped-carrinho-body');
   const totaisCard = document.getElementById('ped-totais-card');
@@ -307,15 +334,34 @@ window.pedRenderCarrinho = function() {
   const hoje    = new Date().toISOString().split('T')[0];
 
   const linhas = _pedidoAtual.itens.map((item, idx) => {
-    const total = item.preco_final * item.quantidade;
+    const precoFinal = Number(item.preco_final) || Number(item.preco_unitario);
+    const ipiPerc    = parseFloat(item.ipi_perc) || 0;
+    const valorIpi   = precoFinal * item.quantidade * ipiPerc / 100;
+    const total      = precoFinal * item.quantidade + valorIpi;
+    const tabelaBase = Number(item.preco_unitario);
+    const abaixoTabela = precoFinal < tabelaBase * 0.999; // tolerância 0.1%
+
     return `
       <tr>
         <td>
           <div style="font-weight:500;font-size:13px">${item.nome}</div>
           <div style="font-size:11px;color:var(--text-muted)">Ref: ${item.referencia||'—'}</div>
-          ${item.desconto_perc > 0 ? `<div style="font-size:11px;color:var(--green)">Desconto: ${item.desconto_perc}%</div>` : ''}
+          ${item.desconto_perc > 0 ? `<div style="font-size:11px;color:var(--green)">✓ Desconto ${item.desconto_perc}% aplicado</div>` : ''}
+          ${ipiPerc > 0 ? `<div style="font-size:11px;color:var(--orange)">+ ${ipiPerc}% IPI = R$ ${valorIpi.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : ''}
         </td>
-        <td class="mono" style="text-align:right">R$ ${item.preco_unitario.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+        <td style="text-align:right;min-width:140px">
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px">
+            <span style="font-size:11px;color:var(--text-muted)">R$</span>
+            <input type="number"
+              class="ped-preco-input mono"
+              value="${precoFinal.toFixed(2)}"
+              step="0.01" min="0"
+              style="width:90px;text-align:right;font-size:13px;font-weight:600;border:1px solid ${abaixoTabela?'var(--red)':'var(--border)'};border-radius:4px;padding:3px 6px;background:${abaixoTabela?'var(--red-bg)':'var(--surface)'}"
+              onchange="pedEditarPreco(${idx}, this.value)"
+              title="Preço de tabela: R$ ${tabelaBase.toLocaleString('pt-BR',{minimumFractionDigits:2})}">
+          </div>
+          ${abaixoTabela ? `<div style="font-size:10px;color:var(--red);text-align:right;margin-top:2px">⚠️ Abaixo da tabela — sujeito a aprovação</div>` : ''}
+        </td>
         <td>
           <div style="display:flex;align-items:center;gap:8px">
             <button class="ped-qty-btn" onclick="pedAlterarQtd(${idx},-1)">−</button>
@@ -331,7 +377,7 @@ window.pedRenderCarrinho = function() {
   body.innerHTML = `
     <div class="table-card">
       <table class="data-table">
-        <thead><tr><th>Produto</th><th class="right">Preço unit.</th><th>Qtd</th><th class="right">Total</th><th></th></tr></thead>
+        <thead><tr><th>Produto</th><th class="right">Preço unit.</th><th>Qtd</th><th class="right">Total c/ IPI</th><th></th></tr></thead>
         <tbody>${linhas}</tbody>
       </table>
     </div>`;
@@ -342,8 +388,8 @@ window.pedRenderCarrinho = function() {
 };
 
 window.pedAtualizarTotais = function() {
-  const subtotal  = _pedidoAtual.itens.reduce((s,i) => s + (i.preco_final * i.quantidade), 0);
-  const valorIPI  = _pedidoAtual.itens.reduce((s,i) => s + (i.preco_final * i.quantidade * (parseFloat(i.ipi_perc)||0) / 100), 0);
+  const subtotal  = _pedidoAtual.itens.reduce((s,i) => s + (Number(i.preco_final||i.preco_unitario) * Number(i.quantidade)), 0);
+  const valorIPI  = _pedidoAtual.itens.reduce((s,i) => s + (Number(i.preco_final||i.preco_unitario) * Number(i.quantidade) * (parseFloat(i.ipi_perc)||0) / 100), 0);
   const temIPI    = valorIPI > 0;
   const valorMinimo = parseFloat(window._pedConfig?.pedido_valor_minimo||0);
   const freteGratis = parseFloat(window._pedConfig?.frete_gratis_acima||0);
