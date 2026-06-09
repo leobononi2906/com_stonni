@@ -35,6 +35,7 @@ function cfgAba(aba, btn) {
     case 'acoes':           cfgCarregarAcoes(body); break;
     case 'catalogo':        cfgCarregarCatalogo(body); break;
     case 'representantes':  cfgCarregarRepresentantes(body); break;
+    case 'status':           cfgCarregarStatus(body); break;
   }
 }
 
@@ -603,67 +604,7 @@ window.cfgExcluirAcao = async function(id) {
 // ============================================================
 //  ABA 4 — CATÁLOGO
 // ============================================================
-
-// ============================================================
-//  TAGS DO CATÁLOGO
-// ============================================================
-window.cfgAbrirTags = async function() {
-  const tags = await supa('ped_catalogo_tags', 'order=nome&select=*') || [];
-  window._cfgTags = tags.filter(t => t.ativo);
-
-  const listaHtml = tags.length
-    ? `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
-        ${tags.map(t => `
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
-            <span style="flex:1;font-size:13px;font-weight:500">${t.nome}</span>
-            <span class="badge ${t.ativo ? 'badge-aprovado' : 'badge-cancelado'}" style="font-size:10px">${t.ativo ? 'Ativa' : 'Inativa'}</span>
-            <button class="btn btn-outline btn-sm" onclick="cfgEditarTag(${t.id})">Editar</button>
-            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="cfgExcluirTag(${t.id})">✕</button>
-          </div>`).join('')}
-      </div>`
-    : '<div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Nenhuma tag cadastrada ainda.</div>';
-
-  const bodyHtml = `
-    ${listaHtml}
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px">
-      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Nova tag</div>
-      <div style="display:flex;gap:10px">
-        <input type="text" id="tag-nova-nome" class="cfg-input" placeholder="Ex: Motor Home" style="flex:1">
-        <button class="btn btn-primary" onclick="cfgSalvarTag()">+ Adicionar</button>
-      </div>
-    </div>`;
-
-  abrirDrawer('🏷️ Tags do Catálogo', 'Classifique seus produtos com tags personalizadas', bodyHtml, `
-    <button class="btn btn-outline" onclick="fecharDrawer()">Fechar</button>
-  `);
-};
-
-window.cfgSalvarTag = async function() {
-  const nome = document.getElementById('tag-nova-nome')?.value.trim();
-  if (!nome) return;
-  await supaInsert('ped_catalogo_tags', { nome, ativo: true });
-  cfgAbrirTags();
-};
-
-window.cfgEditarTag = async function(id) {
-  const tags = await supa('ped_catalogo_tags', `id=eq.${id}&select=nome`);
-  const nomeAtual = tags?.[0]?.nome || '';
-  const novoNome = prompt('Nome da tag:', nomeAtual);
-  if (!novoNome?.trim()) return;
-  await supaPatch('ped_catalogo_tags', `id=eq.${id}`, { nome: novoNome.trim() });
-  cfgAbrirTags();
-};
-
-window.cfgExcluirTag = async function(id) {
-  if (!confirm('Excluir esta tag? Ela será removida dos produtos.')) return;
-  await supaPatch('ped_catalogo_tags', `id=eq.${id}`, { ativo: false });
-  cfgAbrirTags();
-};
-
 async function cfgCarregarCatalogo(el) {
-  // Carrega tags para o formulário de produto
-  const tagsAll = await supa('ped_catalogo_tags', 'ativo=eq.true&order=nome&select=*');
-  window._cfgTags = tagsAll || [];
   const [produtos, estoques] = await Promise.all([
     supa('ped_catalogo_produtos', 'order=nome&select=*'),
     supa('comp_produtos_consolidado', 'select=id_produto,estoque_total,situacao_estoque')
@@ -694,7 +635,6 @@ async function cfgCarregarCatalogo(el) {
         </select>
       </div>
       <button class="btn btn-outline" onclick="cfgSincronizarTodos()" style="flex-shrink:0" id="btn-sync-todos">🔄 Sincronizar todos</button>
-      <button class="btn btn-outline" onclick="cfgAbrirTags()" style="flex-shrink:0">🏷️ Tags</button>
       <button class="btn btn-primary" onclick="cfgAdicionarProduto()" style="flex-shrink:0">+ Produto</button>
     </div>
     <div id="sync-todos-progress" style="display:none;margin-top:10px"></div>
@@ -790,7 +730,7 @@ window.cfgSincronizarTodos = async function() {
   const produtos = window._cfgProdutos || [];
   const comSyncFotos = produtos.filter(p => p.sync_fotos !== false && p.ativo);
   if (!comSyncFotos.length) { alert('Nenhum produto ativo com sincronização de fotos habilitada.'); return; }
-  if (!confirm(`Sincronizar fotos e medidas de ${comSyncFotos.length} produto(s) com o Bling?\n\nIsso pode levar alguns minutos.`)) return;
+  if (!confirm(`Sincronizar fotos de ${comSyncFotos.length} produto(s) com o Bling?\n\nIsso pode levar alguns minutos.`)) return;
 
   const btn = document.getElementById('btn-sync-todos');
   const prog = document.getElementById('sync-todos-progress');
@@ -813,18 +753,10 @@ window.cfgSincronizarTodos = async function() {
     </div>`;
     try {
       const skuLimpo = String(parseInt(p.referencia));
-      // Busca fotos e dimensões em paralelo
-      const [rFotos, rDim] = await Promise.all([
-        fetch(`${BLING_PROXY}?acao=fotos-cache&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})),
-        fetch(`${BLING_PROXY}?acao=dimensoes&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({}))
-      ]);
+      const r = await fetch(`${BLING_PROXY}?acao=fotos-cache&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({}));
       const patch = {};
-      if ((rFotos?.fotos||[]).length > 0) patch.fotos = rFotos.fotos;
-      if (rFotos?.foto_miniatura) patch.foto_miniatura = rFotos.foto_miniatura;
-      if (rDim?.peso_kg)       patch.peso_kg       = rDim.peso_kg;
-      if (rDim?.altura_cm)     patch.altura_cm     = rDim.altura_cm;
-      if (rDim?.largura_cm)    patch.largura_cm    = rDim.largura_cm;
-      if (rDim?.comprimento_cm) patch.comprimento_cm = rDim.comprimento_cm;
+      if ((r?.fotos||[]).length > 0) patch.fotos = r.fotos;
+      if (r?.foto_miniatura) patch.foto_miniatura = r.foto_miniatura;
       if (Object.keys(patch).length > 0) await supaPatch('ped_catalogo_produtos', `id=eq.${p.id}`, patch);
       ok++;
     } catch(_) { erro++; }
@@ -1355,3 +1287,100 @@ function cfgRenderLinhasGestor(gestores) {
   `;
   document.head.appendChild(style);
 })();
+
+// ============================================================
+//  ABA STATUS DE PEDIDOS
+// ============================================================
+async function cfgCarregarStatus(el) {
+  const lista = await supa('ped_status', 'order=ordem&select=*') || [];
+
+  const cores = { 'ENVIADO':'#f59e0b','APROVADO':'#22c55e','FATURADO':'#3b82f6','REPROVADO':'#ef4444','CANCELADO':'#6b7280' };
+
+  el.innerHTML = `
+    <div class="section-header" style="margin-bottom:16px">
+      <h2 style="font-size:16px;font-weight:700">Status dos Pedidos</h2>
+      <button class="btn btn-primary" onclick="cfgNovoStatus()">+ Novo status</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:600px">
+      ${lista.map(s => `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+          <div style="width:12px;height:12px;border-radius:50%;background:${s.cor||'#888'};flex-shrink:0"></div>
+          <span style="flex:1;font-size:13px;font-weight:600">${s.nome}</span>
+          <span style="font-size:11px;color:var(--text-muted)">Ordem: ${s.ordem}</span>
+          ${s.final ? '<span class="badge badge-cancelado" style="font-size:10px">Final</span>' : ''}
+          <span class="badge ${s.ativo ? 'badge-aprovado' : 'badge-cancelado'}" style="font-size:10px">${s.ativo?'Ativo':'Inativo'}</span>
+          <button class="btn btn-outline btn-sm" onclick="cfgEditarStatus(${s.id})">Editar</button>
+        </div>`).join('')}
+    </div>`;
+}
+
+window.cfgNovoStatus = function() {
+  abrirDrawer('Novo Status', 'Crie um novo status para os pedidos', `
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="form-field"><label>Nome do status</label><input type="text" id="st-nome" class="cfg-input" placeholder="Ex: EM SEPARAÇÃO"></div>
+      <div class="form-field"><label>Cor</label><input type="color" id="st-cor" class="cfg-input" value="#1A3A8F" style="height:38px;padding:2px 6px"></div>
+      <div class="form-field"><label>Ordem (posição no filtro)</label><input type="number" id="st-ordem" class="cfg-input" value="10" min="0"></div>
+      <div class="form-field"><label>Status final? (pedido encerrado)</label>
+        <select id="st-final" class="cfg-input"><option value="false">Não</option><option value="true">Sim</option></select>
+      </div>
+    </div>`,
+    `<button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
+     <button class="btn btn-primary" onclick="cfgSalvarStatus()">Salvar</button>`
+  );
+};
+
+window.cfgSalvarStatus = async function() {
+  const nome = document.getElementById('st-nome')?.value.trim().toUpperCase();
+  if (!nome) { alert('Nome obrigatório'); return; }
+  await supaInsert('ped_status', {
+    nome,
+    cor:   document.getElementById('st-cor')?.value || '#1A3A8F',
+    ordem: parseInt(document.getElementById('st-ordem')?.value)||10,
+    final: document.getElementById('st-final')?.value === 'true',
+    ativo: true
+  });
+  window._pedidoStatus = null; // limpa cache
+  fecharDrawer();
+  cfgAba('status', null);
+};
+
+window.cfgEditarStatus = async function(id) {
+  const res = await supa('ped_status', `id=eq.${id}&select=*`);
+  const s = res?.[0]; if (!s) return;
+  abrirDrawer('Editar Status', s.nome, `
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="form-field"><label>Nome</label><input type="text" id="st-edit-nome" class="cfg-input" value="${s.nome}"></div>
+      <div class="form-field"><label>Cor</label><input type="color" id="st-edit-cor" class="cfg-input" value="${s.cor||'#1A3A8F'}" style="height:38px;padding:2px 6px"></div>
+      <div class="form-field"><label>Ordem</label><input type="number" id="st-edit-ordem" class="cfg-input" value="${s.ordem||0}" min="0"></div>
+      <div class="form-field"><label>Status final?</label>
+        <select id="st-edit-final" class="cfg-input">
+          <option value="false" ${!s.final?'selected':''}>Não</option>
+          <option value="true"  ${s.final?'selected':''}>Sim</option>
+        </select>
+      </div>
+      <div class="form-field"><label>Ativo?</label>
+        <select id="st-edit-ativo" class="cfg-input">
+          <option value="true"  ${s.ativo?'selected':''}>Sim</option>
+          <option value="false" ${!s.ativo?'selected':''}>Não</option>
+        </select>
+      </div>
+    </div>`,
+    `<button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
+     <button class="btn btn-primary" onclick="cfgAtualizarStatus(${id})">Salvar</button>`
+  );
+};
+
+window.cfgAtualizarStatus = async function(id) {
+  await supaPatch('ped_status', `id=eq.${id}`, {
+    nome:  document.getElementById('st-edit-nome')?.value.trim().toUpperCase(),
+    cor:   document.getElementById('st-edit-cor')?.value,
+    ordem: parseInt(document.getElementById('st-edit-ordem')?.value)||0,
+    final: document.getElementById('st-edit-final')?.value === 'true',
+    ativo: document.getElementById('st-edit-ativo')?.value === 'true'
+  });
+  window._pedidoStatus = null;
+  fecharDrawer();
+  cfgAba('status', null);
+};
+
