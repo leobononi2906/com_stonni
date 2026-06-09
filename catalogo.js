@@ -6,9 +6,11 @@
 async function renderCatalogo(el) {
   el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
 
-  const [produtos, acoes] = await Promise.all([
-    supa('ped_catalogo_produtos', 'ativo=eq.true&order=grupo,nome&select=*'),
-    supa('ped_acoes_comerciais',  `ativa=eq.true&select=*`)
+  const [produtos, acoes, tags, configs] = await Promise.all([
+    supa('ped_catalogo_produtos', 'ativo=eq.true&order=subgrupo,nome&select=*'),
+    supa('ped_acoes_comerciais',  `ativa=eq.true&select=*`),
+    supa('ped_catalogo_tags',     'ativo=eq.true&order=nome&select=*'),
+    supa('ped_configuracoes',     'chave=like.catalogo_*&select=chave,valor')
   ]);
 
   // Tabela de preço do representante logado
@@ -19,6 +21,8 @@ async function renderCatalogo(el) {
   window._catProdutos = produtos || [];
   window._catAcoes    = acoes || [];
   window._catTabela   = tabela;
+  window._catTags     = tags || [];
+  window._catConfigs  = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
 
   // Grupos disponíveis
   const grupos = [...new Map((produtos||[]).filter(p=>p.grupo).map(p=>[p.id_grupo,{id:p.id_grupo,nome:p.grupo}])).values()];
@@ -30,6 +34,10 @@ async function renderCatalogo(el) {
         <select id="cat-grupo" class="cat-select" onchange="catFiltrar()">
           <option value="">Todos os grupos</option>
           ${grupos.map(g=>`<option value="${g.id}">${g.nome}</option>`).join('')}
+        </select>
+        <select id="cat-tag" class="cat-select" onchange="catFiltrar()">
+          <option value="">Todas as tags</option>
+          ${(window._catTags||[]).map(t=>`<option value="${t.nome}">${t.nome}</option>`).join('')}
         </select>
         <select id="cat-disp" class="cat-select" onchange="catFiltrar()">
           <option value="">Disponíveis e esgotados</option>
@@ -101,6 +109,8 @@ window.catFiltrar = function() {
     p.grupo?.toLowerCase().includes(busca)
   );
   if (grupo)        lista = lista.filter(p => p.id_grupo == grupo);
+  const tag = document.getElementById('cat-tag')?.value||'';
+  if (tag) lista = lista.filter(p => (p.tags||[]).includes(tag));
   if (disp==='disp') lista = lista.filter(p => !p.esgotado);
   if (disp==='esg')  lista = lista.filter(p => p.esgotado);
 
