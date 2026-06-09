@@ -5,6 +5,12 @@
 // ── MEUS PEDIDOS ──
 async function renderMeusPedidos(el) {
   el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+  // Carrega status configuráveis
+  if (!window._pedidoStatus) {
+    const statusRows = await supa('ped_status', 'ativo=eq.true&order=ordem&select=nome');
+    window._pedidoStatus = (statusRows||[]).map(s=>s.nome);
+  }
+
   const pedidos = await fetch(
     `${SUPA_URL}/rest/v1/ped_pedidos?id_representante=eq.${USUARIO.id_representante}&order=criado_em.desc&select=*`,
     { headers: HEADERS }
@@ -15,6 +21,12 @@ async function renderMeusPedidos(el) {
 // ── GESTÃO DE PEDIDOS (gestor/admin) ──
 async function renderPedidos(el) {
   el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+  // Carrega status configuráveis
+  if (!window._pedidoStatus) {
+    const statusRows = await supa('ped_status', 'ativo=eq.true&order=ordem&select=nome');
+    window._pedidoStatus = (statusRows||[]).map(s=>s.nome);
+  }
+
   const pedidos = await fetch(
     `${SUPA_URL}/rest/v1/ped_pedidos?order=criado_em.desc&select=*`,
     { headers: HEADERS }
@@ -25,7 +37,7 @@ async function renderPedidos(el) {
 function _renderListaPedidos(el, pedidos, isGestor) {
   window._pedidosLista = pedidos;
 
-  const statusOpts = ['','ENVIADO','APROVADO','REPROVADO','FATURADO','CANCELADO'];
+  const statusOpts = ['', ...(window._pedidoStatus||['ENVIADO','APROVADO','FATURADO','REPROVADO','CANCELADO'])];
 
   el.innerHTML = `
     <div class="section-header" style="margin-bottom:16px">
