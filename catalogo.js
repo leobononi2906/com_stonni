@@ -24,7 +24,6 @@ async function renderCatalogo(el) {
   window._catTabela   = tabela;
   window._catTags     = tags || [];
   window._catConfigs  = Object.fromEntries((cfgRows||[]).map(c=>[c.chave,c.valor]));
-  window._catConfigs  = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
 
   // Grupos disponíveis
   const grupos = [...new Map((produtos||[]).filter(p=>p.grupo).map(p=>[p.id_grupo,{id:p.id_grupo,nome:p.grupo}])).values()];
