@@ -1,3 +1,11 @@
+
+// Formata preço: sem decimais se termina em .00, com 2 casas se tem centavos
+function fmtPreco(v) {
+  const n = Number(v) || 0;
+  if (n === Math.floor(n)) return 'R$ ' + n.toLocaleString('pt-BR');
+  return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 // ============================================================
 //  MÓDULO: CONFIGURAÇÕES
 //  Abas: Geral | Tabelas de Preço | Ações Comerciais | Catálogo | Representantes
@@ -941,14 +949,36 @@ window.cfgSalvarProduto = async function() {
   fecharDrawer(); cfgAba('catalogo', null);
 };
 
+
+window.cfgDefinirCapa = async function(id, indice) {
+  if (indice === 0) return; // já é capa
+  const res = await supa('ped_catalogo_produtos', `id=eq.${id}&select=fotos`);
+  const fotos = res?.[0]?.fotos || [];
+  if (!fotos[indice]) return;
+  // Move foto escolhida para o índice 0
+  const novas = [fotos[indice], ...fotos.filter((_,i) => i !== indice)];
+  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos: novas });
+  // Recarrega o drawer
+  cfgEditarProduto(id);
+};
+
 window.cfgEditarProduto = async function(id) {
   const res = await supa('ped_catalogo_produtos', `id=eq.${id}`);
   const p = res?.[0]; if (!p) return;
   const fotos = p.fotos || [];
   abrirDrawer('Editar Produto', p.nome, `
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-      ${fotos.slice(0,4).map(f => `<img src="${f}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">`).join('')}
-      ${!fotos.length ? '<div style="font-size:12px;color:var(--text-muted)">Sem fotos</div>' : ''}
+    <div style="margin-bottom:4px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px">
+        Fotos ${fotos.length > 1 ? '· <span style=\"font-weight:400;color:var(--blue-mid)\">clique para definir capa</span>' : ''}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${fotos.length ? fotos.slice(0,6).map((f,fi) => `
+          <div onclick="cfgDefinirCapa(${id},${fi})" title="${fi===0?'✅ Capa atual':'Clique para definir como capa'}"
+            style="position:relative;cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid ${fi===0?'#1A3A8F':'var(--border)'};transition:border .15s">
+            <img src="${f}" style="width:72px;height:72px;object-fit:contain;background:#f5f6fa;display:block">
+            ${fi===0 ? '<div style=\"position:absolute;bottom:0;left:0;right:0;background:#1A3A8F;color:#fff;font-size:9px;font-weight:700;text-align:center;padding:2px\">CAPA</div>' : ''}
+          </div>`).join('') : '<div style="font-size:12px;color:var(--text-muted)">Sem fotos — sincronize com o Bling</div>'}
+      </div>
     </div>
     <button class="btn btn-outline btn-sm" onclick="cfgSincronizarBling(${id},'${p.referencia}')" style="margin-bottom:4px;width:100%">🔄 Sincronizar com Bling</button>
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Atualiza fotos + peso + dimensões</div>
