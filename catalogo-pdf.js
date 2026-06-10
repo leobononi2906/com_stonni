@@ -41,7 +41,11 @@ window.catGerarPDF = async function(opcoes = {}) {
   }
 
   // Formata preço
-  const fmtVal = v => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  const fmtVal = v => {
+    const n = Number(v || 0);
+    if (n === Math.floor(n)) return n.toLocaleString('pt-BR');
+    return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
 
   // Gera cards HTML
   const gerarCard = (p) => {
