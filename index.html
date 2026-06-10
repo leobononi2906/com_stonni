@@ -532,6 +532,7 @@ async function carregarUsuario(user, token) {
   const meta = user.user_metadata ?? {};
   HEADERS['Authorization'] = `Bearer ${token}`;
 
+  // Perfil inicial pelo metadata (fallback)
   USUARIO = {
     id: user.id,
     email: user.email,
@@ -540,16 +541,39 @@ async function carregarUsuario(user, token) {
     token
   };
 
-  // Busca dados do representante se for perfil representante
+  // ── FONTE DE VERDADE: ped_gestores ──
+  // Sempre verifica se o email está em ped_gestores — ignora o metadata do Auth
+  // Isso garante que mudanças de perfil feitas no portal funcionem mesmo que
+  // outro sistema sobrescreva o metadata do Auth
+  try {
+    const gestRes = await fetch(
+      `${SUPA_URL}/rest/v1/ped_gestores?email=eq.${encodeURIComponent(USUARIO.email)}&ativo=eq.true&select=*&limit=1`,
+      { headers: HEADERS }
+    );
+    const gestores = await gestRes.json();
+    if (Array.isArray(gestores) && gestores.length > 0) {
+      const g = gestores[0];
+      USUARIO.perfil        = g.perfil || 'gestor';
+      USUARIO.nome          = g.nome   || USUARIO.nome;
+      USUARIO.id_gestor     = g.id;
+      USUARIO.pode_aprovar  = g.pode_aprovar;
+      USUARIO.pode_reprovar = g.pode_reprovar;
+      USUARIO.pode_faturar  = g.pode_faturar;
+      USUARIO.pode_catalogo = g.pode_catalogo;
+      USUARIO.pode_config   = g.pode_config;
+      iniciarApp();
+      return;
+    }
+  } catch(e) {}
+
+  // ── Se não é gestor, verifica representantes ──
   if (USUARIO.perfil === 'representante') {
     try {
-      // Busca por user_id primeiro, fallback por email
       let repRes = await fetch(`${SUPA_URL}/rest/v1/ped_representantes?user_id=eq.${USUARIO.id}&select=*&limit=1`, { headers: HEADERS });
       let reps = await repRes.json();
       if (!Array.isArray(reps) || !reps.length) {
         repRes = await fetch(`${SUPA_URL}/rest/v1/ped_representantes?email=eq.${encodeURIComponent(USUARIO.email)}&select=*&limit=1`, { headers: HEADERS });
         reps = await repRes.json();
-        // Vincula user_id para próximas vezes
         if (Array.isArray(reps) && reps.length > 0) {
           await fetch(`${SUPA_URL}/rest/v1/ped_representantes?id=eq.${reps[0].id}`, {
             method: 'PATCH', headers: { ...HEADERS, 'Prefer': 'return=minimal' },
@@ -559,8 +583,8 @@ async function carregarUsuario(user, token) {
       }
       if (Array.isArray(reps) && reps.length > 0) {
         USUARIO.id_representante = reps[0].id;
-        USUARIO.nome = reps[0].nome || USUARIO.nome;
-        USUARIO.id_tabela_preco = reps[0].id_tabela_preco;
+        USUARIO.nome             = reps[0].nome || USUARIO.nome;
+        USUARIO.id_tabela_preco  = reps[0].id_tabela_preco;
       }
     } catch(e) {}
   }
