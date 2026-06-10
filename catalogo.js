@@ -1,3 +1,10 @@
+// Formata preço sem decimais desnecessários
+function fmtPreco(v) {
+  const n = Number(v) || 0;
+  if (n === Math.floor(n)) return 'R\u00a0' + n.toLocaleString('pt-BR');
+  return 'R\u00a0' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 // ============================================================
 //  MÓDULO: CATÁLOGO
 //  Visão do representante — grid de produtos com busca e filtro
