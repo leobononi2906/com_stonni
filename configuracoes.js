@@ -1093,10 +1093,6 @@ async function cfgCarregarRepresentantes(el) {
         <span class="section-title">🔐 Gestores (${(gestores||[]).length})</span>
         <button class="btn btn-primary" onclick="cfgNovoGestor()">+ Novo gestor</button>
       </div>
-      <div class="alert alert-info" style="margin-bottom:12px">
-        <span class="alert-icon">ℹ️</span>
-        Crie o usuário no <strong>Supabase Auth</strong> com <code>{"perfil": "gestor"}</code> no User Metadata, depois cadastre aqui.
-      </div>
       <div class="table-card hide-mobile">
         <table class="data-table">
           <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Aprovar</th><th>Reprovar</th><th>Faturar</th><th>Catálogo</th><th>Config</th><th>Status</th><th></th></tr></thead>
@@ -1125,10 +1121,6 @@ async function cfgCarregarRepresentantes(el) {
       <div class="section-header" style="margin-bottom:14px">
         <span class="section-title">👥 Representantes (${(reps||[]).length})</span>
         <button class="btn btn-primary" onclick="cfgNovoRepresentante()">+ Novo representante</button>
-      </div>
-      <div class="alert alert-info" style="margin-bottom:12px">
-        <span class="alert-icon">ℹ️</span>
-        Crie o usuário no <strong>Supabase Auth</strong> com <code>{"perfil": "representante"}</code>, depois cadastre aqui.
       </div>
       <div class="table-card hide-mobile">
         <table class="data-table">
@@ -1230,19 +1222,33 @@ window.cfgEditarGestor = async function(id) {
   `);
 };
 window.cfgAtualizarGestor = async function(id) {
-  await supaPatch('ped_gestores', 'id=eq.'+id, { nome: document.getElementById('gs-nome').value.trim(), email: document.getElementById('gs-email').value.trim(), perfil: document.getElementById('gs-perfil').value, pode_aprovar: document.getElementById('gs-aprovar').checked, pode_reprovar: document.getElementById('gs-reprovar').checked, pode_faturar: document.getElementById('gs-faturar').checked, pode_catalogo: document.getElementById('gs-catalogo').checked, pode_config: document.getElementById('gs-config').checked, ativo: document.getElementById('gs-ativo').value === 'true' });
+  const nome   = document.getElementById('gs-nome').value.trim();
+  const email  = document.getElementById('gs-email').value.trim();
+  const perfil = document.getElementById('gs-perfil').value;
+  const ativo  = document.getElementById('gs-ativo').value === 'true';
+
+  // Atualiza no banco
+  await supaPatch('ped_gestores', 'id=eq.'+id, {
+    nome, email, perfil,
+    pode_aprovar:  document.getElementById('gs-aprovar').checked,
+    pode_reprovar: document.getElementById('gs-reprovar').checked,
+    pode_faturar:  document.getElementById('gs-faturar').checked,
+    pode_catalogo: document.getElementById('gs-catalogo').checked,
+    pode_config:   document.getElementById('gs-config').checked,
+    ativo
+  });
+
+  // Sincroniza perfil no Auth — garante que não volta para representante
+  if (email && ativo) await adminCriarUsuario(email, nome, perfil);
+
   fecharDrawer(); cfgAba('representantes', null);
 };
 
 function cfgFormRepresentante(r = {}) {
   const tabelas = window._cfgTabelas || [];
   return `
-    <div class="alert alert-info" style="margin-bottom:16px">
-      <span class="alert-icon">ℹ️</span>
-      Crie o usuário no <strong>Supabase Auth</strong> primeiro, depois cadastre aqui com o mesmo e-mail.
-    </div>
     <div class="cfg-grid-2">
-      <div class="form-field"><label>Nome completo</label><input type="text" id="rp-nome" class="cfg-input" value="${r.nome||''}"></div>
+      <div class="form-field"><label>Nome completo (o usuário receberá um e-mail de acesso)</label><input type="text" id="rp-nome" class="cfg-input" value="${r.nome||''}"></div>
       <div class="form-field"><label>E-mail</label><input type="email" id="rp-email" class="cfg-input" value="${r.email||''}"></div>
     </div>
     <div class="cfg-grid-2">
