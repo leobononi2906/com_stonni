@@ -158,8 +158,9 @@ window.gPedAbrir = async function(id) {
       <div style="font-size:13px;font-weight:600;margin-bottom:12px">⚙️ Ações do gestor</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         ${pedido.status === 'COTACAO' ? `
+          <button class="btn btn-warning" onclick="gPedEditarCotacao(${id})">✏️ Editar Cotação</button>
           <button class="btn btn-primary" onclick="gPedConverterCotacao(${id})">📦 Converter em Pedido</button>
-          <button class="btn btn-outline" onclick="pedGerarPDF(${id})">🖨️ Gerar PDF Cotação</button>
+          <button class="btn btn-outline" onclick="pedGerarPDF(${id})">🖨️ Gerar PDF</button>
           <button class="btn btn-danger"  onclick="gPedReprovar(${id})">❌ Cancelar</button>
         ` : ''}
         ${['ENVIADO','AGUARDANDO'].includes(pedido.status) ? `
@@ -309,6 +310,14 @@ window.gPedSalvarDocs = async function(id) {
     boleto_url: document.getElementById('doc-boleto-url')?.value.trim()||null,
   });
   alert('Documentos salvos!');
+};
+
+
+window.gPedEditarCotacao = async function(id) {
+  fecharDrawer();
+  // Guarda o id da cotação para o pedidos.js carregar
+  window._editandoCotacaoId = id;
+  irPara('novo-pedido');
 };
 
 window.gPedConverterCotacao = async function(id) {
