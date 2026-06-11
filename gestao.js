@@ -4,6 +4,7 @@
 
 // ── MEUS PEDIDOS ──
 async function renderMeusPedidos(el) {
+  window._pedidosCache = null; // força reload
   el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
   // Carrega status configuráveis
   if (!window._pedidoStatus) {
@@ -147,11 +148,16 @@ window.gPedAbrir = async function(id) {
     </div>`).join('') || '<div style="font-size:12px;color:var(--text-muted)">Sem histórico</div>';
 
   // Ações do gestor
-  const statusPermiteAcao = ['ENVIADO','AGUARDANDO','APROVADO'].includes(pedido.status);
+  const statusPermiteAcao = ['COTACAO','ENVIADO','AGUARDANDO','APROVADO'].includes(pedido.status);
   const acoesGestorHtml = isGestor && statusPermiteAcao ? `
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-top:16px">
       <div style="font-size:13px;font-weight:600;margin-bottom:12px">⚙️ Ações do gestor</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${pedido.status === 'COTACAO' ? `
+          <button class="btn btn-primary" onclick="gPedConverterCotacao(${id})">📦 Converter em Pedido</button>
+          <button class="btn btn-outline" onclick="pedGerarPDF(${id})">🖨️ Gerar PDF Cotação</button>
+          <button class="btn btn-danger"  onclick="gPedReprovar(${id})">❌ Cancelar</button>
+        ` : ''}
         ${['ENVIADO','AGUARDANDO'].includes(pedido.status) ? `
           <button class="btn btn-success" onclick="gPedAprovar(${id})">✅ Aprovar</button>
           <button class="btn btn-danger"  onclick="gPedReprovar(${id})">❌ Reprovar</button>
@@ -299,6 +305,14 @@ window.gPedSalvarDocs = async function(id) {
     boleto_url: document.getElementById('doc-boleto-url')?.value.trim()||null,
   });
   alert('Documentos salvos!');
+};
+
+window.gPedConverterCotacao = async function(id) {
+  if (!confirm('Converter esta cotação em pedido?')) return;
+  await supaPatch('ped_pedidos', `id=eq.${id}`, { status: 'ENVIADO' });
+  await supaInsert('ped_pedido_log', { id_pedido:id, status_de:'COTACAO', status_para:'ENVIADO', usuario: USUARIO.nome });
+  fecharDrawer();
+  renderPedidos(document.getElementById('page-content'));
 };
 
 window.gPedFaturarDireto = async function(id) {
