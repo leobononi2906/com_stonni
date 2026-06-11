@@ -329,6 +329,11 @@ function cfgFormTabela(t = {}) {
       <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Positivo = acréscimo · Negativo = desconto · Zero = igual à tabela base</div>
     </div>
     <div class="form-field">
+      <label>Desconto à vista (%)</label>
+      <input type="number" id="tb-avista" class="cfg-input" value="${t.desconto_avista_perc||0}" step="0.1" min="0" max="100" placeholder="Ex: 3">
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Aplicado automaticamente quando representante seleciona prazo À VISTA</div>
+    </div>
+    <div class="form-field">
       <label>Status</label>
       <select id="tb-ativa" class="cfg-input">
         <option value="true" ${t.ativa !== false ? 'selected':''}>Ativa</option>
@@ -358,7 +363,7 @@ window.cfgEditarTabela = async function(id) {
   `);
 };
 window.cfgAtualizarTabela = async function(id) {
-  await supaPatch('ped_tabelas_preco', `id=eq.${id}`, { nome: document.getElementById('tb-nome').value.trim(), descricao: document.getElementById('tb-desc').value.trim(), markup_global: parseFloat(document.getElementById('tb-markup').value) || 0, ativa: document.getElementById('tb-ativa').value === 'true' });
+  await supaPatch('ped_tabelas_preco', `id=eq.${id}`, { nome: document.getElementById('tb-nome').value.trim(), descricao: document.getElementById('tb-desc').value.trim(), markup_global: parseFloat(document.getElementById('tb-markup').value) || 0, desconto_avista_perc: parseFloat(document.getElementById('tb-avista')?.value) || 0, ativa: document.getElementById('tb-ativa').value === 'true' });
   fecharDrawer(); cfgAba('precos', null);
 };
 
