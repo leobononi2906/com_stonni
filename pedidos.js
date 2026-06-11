@@ -176,7 +176,10 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
         </div>
 
         <div style="margin-top:16px;display:flex;justify-content:flex-end">
-          <button class="btn btn-primary btn-lg" onclick="pedEnviar()">📤 Enviar pedido</button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="btn btn-outline btn-lg" onclick="pedEnviar('COTACAO')">📋 Salvar Cotação</button>
+            <button class="btn btn-primary btn-lg" onclick="pedEnviar('PEDIDO')">📦 Enviar Pedido</button>
+          </div>
         </div>
       </div>
     </div>
@@ -683,7 +686,8 @@ window.pedSelecionarFrete = function(idx, transportadora, valor, prazo) {
 };
 
 // ── Enviar pedido ──
-window.pedEnviar = async function() {
+window.pedEnviar = async function(tipo) {
+  window._tipoPedidoCarrinho = tipo || window._tipoPedidoCarrinho || 'PEDIDO';
   if (!_pedidoAtual.cliente) { alert('Informe o cliente.'); return; }
   if (!_pedidoAtual.itens.length) { alert('Adicione pelo menos um produto.'); return; }
 
@@ -691,7 +695,8 @@ window.pedEnviar = async function() {
   const subtotal = _pedidoAtual.itens.reduce((s,i)=>s+(i.preco_final*i.quantidade),0);
   if (subtotal < valorMinimo) { alert(`Valor mínimo do pedido: R$ ${valorMinimo.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); return; }
 
-  if (!confirm('Confirmar envio do pedido?')) return;
+  const ehCotacao = window._tipoPedidoCarrinho === 'COTACAO';
+  if (!confirm(ehCotacao ? 'Salvar como cotação?' : 'Confirmar envio do pedido?')) return;
 
   const freteVal = _pedidoAtual.frete?.valor_escolhido || 0;
   const total = subtotal + freteVal;
@@ -749,7 +754,7 @@ window.pedEnviar = async function() {
   }
 
   // Log
-  await supaInsert('ped_pedido_log', { id_pedido: idPedido, status_de: 'RASCUNHO', status_para: 'ENVIADO', usuario: USUARIO.nome });
+  await supaInsert('ped_pedido_log', { id_pedido: idPedido, status_de: 'RASCUNHO', status_para: ehCotacao ? 'COTACAO' : 'ENVIADO', usuario: USUARIO.nome });
 
   // Limpa carrinho após salvar
   window._carrinho = [];
@@ -761,9 +766,9 @@ window.pedEnviar = async function() {
   el.innerHTML = `
     <div style="max-width:500px;margin:60px auto;text-align:center">
       <div style="font-size:64px;margin-bottom:16px">✅</div>
-      <h2 style="font-size:22px;font-weight:700;color:var(--blue-dark);margin-bottom:8px">${window._tipoPedidoCarrinho==='COTACAO'?'Cotação salva!':'Pedido enviado!'}</h2>
+      <h2 style="font-size:22px;font-weight:700;color:var(--blue-dark);margin-bottom:8px">${ehCotacao?'Cotação salva!':' Pedido enviado!'}</h2>
       <p style="font-size:14px;color:var(--text-secondary);margin-bottom:4px">Código: <strong class="mono">${codigo}</strong></p>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px">${window._tipoPedidoCarrinho==='COTACAO'?'Você pode editar e converter em pedido a qualquer momento.':'Aguarde a aprovação do gestor.'}</p>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px">${ehCotacao?'Você pode editar e converter em pedido a qualquer momento.':'Aguarde a aprovação do gestor.'}</p>
       <div style="display:flex;gap:10px;justify-content:center">
         <button class="btn btn-outline" onclick="irPara('catalogo')">Ver catálogo</button>
         <button class="btn btn-primary" onclick="window._pedidosCache=null;irPara('meus-pedidos')">Meus pedidos</button>
