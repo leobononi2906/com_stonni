@@ -31,9 +31,13 @@ async function renderCatalogo(el) {
   const grupos = [...new Map((produtos||[]).filter(p=>p.grupo).map(p=>[p.id_grupo,{id:p.id_grupo,nome:p.grupo}])).values()];
 
   el.innerHTML = `
+    <!-- TOPBAR: linha 1 — busca + filtros -->
     <div class="cat-topbar">
-      <div class="cat-filtros">
-        <input type="text" id="cat-search" class="cat-search" placeholder="🔍  Buscar produto, referência ou aplicação..." oninput="catFiltrar()">
+      <div class="cat-filtros-row">
+        <div class="cat-search-wrap">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none">🔍</span>
+          <input type="text" id="cat-search" class="cat-search" placeholder="Buscar produto, referência ou aplicação..." oninput="catFiltrar()" style="padding-left:32px">
+        </div>
         <select id="cat-grupo" class="cat-select" onchange="catFiltrar()">
           <option value="">Todos os grupos</option>
           ${grupos.map(g=>`<option value="${g.id}">${g.nome}</option>`).join('')}
@@ -43,20 +47,28 @@ async function renderCatalogo(el) {
           ${(window._catTags||[]).map(t=>`<option value="${t.nome}">${t.nome}</option>`).join('')}
         </select>
         <select id="cat-disp" class="cat-select" onchange="catFiltrar()">
-          <option value="">Disponíveis e esgotados</option>
-          <option value="disp">Apenas disponíveis</option>
-          <option value="esg">Apenas esgotados</option>
+          <option value="">Disponíveis</option>
+          <option value="disp">Só disponíveis</option>
+          <option value="esg">Só esgotados</option>
         </select>
       </div>
-      <button class="btn btn-outline btn-sm" id="btn-carrinho-cat" onclick="catAbrirCarrinho()" style="display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;position:relative">
-        🛒 Carrinho <span id="carrinho-badge" style="display:none;background:#e53e3e;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px">0</span>
-      </button>
-      <button class="btn btn-outline btn-sm" onclick="catAbrirGerador()" style="display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0">
-        📄 Gerar Catálogo
-      </button>
-      <div class="cat-info">
-        <span id="cat-count" style="font-size:12px;color:var(--text-muted)"></span>
-        <span class="badge badge-b" style="font-size:11px">${tabela.nome}${tabela.markup_global?` ${tabela.markup_global>0?'+':''}${tabela.markup_global}%`:''}</span>
+
+      <!-- linha 2 — ações + info -->
+      <div class="cat-acoes-row">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span id="cat-count" style="font-size:12px;color:var(--text-muted)"></span>
+          <span class="badge badge-b" style="font-size:11px">${tabela.nome}${tabela.markup_global?` ${tabela.markup_global>0?'+':''}${tabela.markup_global}%`:''}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button onclick="catAbrirGerador()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text-secondary);font-size:13px;cursor:pointer;padding:6px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'">
+            📄 Catálogo PDF
+          </button>
+          <button id="btn-carrinho-cat" onclick="catAbrirCarrinho()"
+            style="display:flex;align-items:center;gap:8px;background:#1A3A8F;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;position:relative">
+            🛒 Carrinho
+            <span id="carrinho-badge" style="display:none;background:#e53e3e;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;min-width:20px;text-align:center">0</span>
+          </button>
+        </div>
       </div>
     </div>
     <div id="cat-grid" class="cat-grid"></div>
