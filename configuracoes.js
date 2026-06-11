@@ -1107,7 +1107,15 @@ window.cfgAtualizarProduto = async function(id) {
   if (altura)      patch.altura_cm      = altura;
   if (largura)     patch.largura_cm     = largura;
   if (comprimento) patch.comprimento_cm = comprimento;
-  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, patch);
+  // Patch principal (campos simples)
+  const r1 = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, patch);
+  console.log('patch principal:', r1);
+
+  // Patch de tags separado (array — pode ter comportamento diferente)
+  const epTags = [...document.querySelectorAll('.ep-tag-check:checked')].map(el => el.value);
+  const r2 = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { tags: epTags });
+  console.log('patch tags:', r2, epTags);
+
   fecharDrawer(); cfgAba('catalogo', null);
 };
 
