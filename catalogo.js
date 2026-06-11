@@ -361,8 +361,7 @@ window.catAbrirCarrinho = function() {
          <div style="font-size:18px;font-weight:700;color:var(--blue-dark)">R$ ${totalGeral.toLocaleString('pt-BR',{minimumFractionDigits:totalGeral%1===0?0:2})}</div>
        </div>
      </div>`,
-    `<button class="btn btn-outline" onclick="catIniciarComCarrinho('COTACAO')">📋 Gerar Cotação</button>
-     <button class="btn btn-primary" onclick="catIniciarComCarrinho('PEDIDO')">✅ Gerar Pedido</button>`
+    `<button class="btn btn-primary" style="width:100%" onclick="catIniciarComCarrinho()">➡️ Ir para Pedido / Cotação</button>`
   );
 };
 
@@ -386,9 +385,9 @@ window.catCarrinhoLimpar = function() {
   fecharDrawer();
 };
 
-window.catIniciarComCarrinho = function(tipo) {
+window.catIniciarComCarrinho = function() {
   window._carrinhoParaPedido = window._carrinho.slice();
-  window._tipoPedidoCarrinho = tipo;
+  window._tipoPedidoCarrinho = null; // representante decide na tela
   fecharDrawer();
-  navegarPara('novo-pedido');
+  irPara('novo-pedido');
 };
