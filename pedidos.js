@@ -318,6 +318,46 @@ window.pedEditarPreco = function(idx, novoValor) {
   pedRenderCarrinho();
 };
 
+
+window.pedAplicarDescontoAvista = function() {
+  const prazo   = document.getElementById('ped-prazo')?.value || '';
+  const tabela  = window._pedTabela || {};
+  const descPc  = Number(tabela.desconto_avista_perc) || 0;
+
+  if (!descPc) return; // tabela não tem desconto à vista configurado
+
+  const eAvista = prazo === 'À VISTA';
+  let mudou = false;
+
+  _pedidoAtual.itens = _pedidoAtual.itens.map(item => {
+    if (eAvista) {
+      // Aplica desconto à vista sobre o preco_unitario (base)
+      const precoComDesc = parseFloat((Number(item.preco_unitario) * (1 - descPc / 100)).toFixed(2));
+      if (item.preco_final !== precoComDesc) mudou = true;
+      return { ...item, preco_final: precoComDesc, desconto_avista: descPc };
+    } else {
+      // Remove desconto à vista — volta ao preco_final anterior (regras ou base)
+      if (item.desconto_avista) {
+        const precoSemAvista = item.preco_unitario;
+        mudou = true;
+        const novoItem = { ...item, desconto_avista: 0 };
+        delete novoItem.desconto_avista;
+        // Re-aplica regras normais
+        const reAplicado = window.aplicarRegrasDesconto([{ ...novoItem, preco_final: precoSemAvista }], window._pedRegras || []);
+        return reAplicado[0] || novoItem;
+      }
+    }
+    return item;
+  });
+
+  if (mudou) {
+    pedRenderCarrinho();
+    if (eAvista && descPc > 0) {
+      pedMostrarIncentivo(`💰 Desconto à vista de ${descPc}% aplicado em todos os produtos!`);
+    }
+  }
+};
+
 window.pedRenderCarrinho = function() {
   const body = document.getElementById('ped-carrinho-body');
   const totaisCard = document.getElementById('ped-totais-card');
@@ -347,6 +387,7 @@ window.pedRenderCarrinho = function() {
           <div style="font-weight:500;font-size:13px">${item.nome}</div>
           <div style="font-size:11px;color:var(--text-muted)">Ref: ${item.referencia||'—'}</div>
           ${item.desconto_perc > 0 ? `<div style="font-size:11px;color:var(--green)">✓ Desconto ${item.desconto_perc}% aplicado</div>` : ''}
+          ${item.desconto_avista > 0 ? `<div style="font-size:11px;color:var(--blue-mid)">💰 ${item.desconto_avista}% à vista</div>` : ''}
           ${ipiPerc > 0 ? `<div style="font-size:11px;color:var(--orange)">+ ${ipiPerc}% IPI = R$ ${valorIpi.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : ''}
         </td>
         <td style="text-align:right;min-width:140px">
