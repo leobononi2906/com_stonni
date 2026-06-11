@@ -1073,8 +1073,9 @@ window.cfgSincronizarBling = async function(id, sku) {
 
 
 window.cfgToggleEsgotado = async function(id, esgotado) {
-  // esgotado_manual = true impede o pg_cron de reverter
-  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { esgotado, esgotado_manual: esgotado });
+  console.log('cfgToggleEsgotado', id, esgotado);
+  const res = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { esgotado, esgotado_manual: esgotado });
+  console.log('supaPatch result:', res);
   // Atualiza o checkbox visualmente sem recarregar tudo
   const chk = document.getElementById('ep-esgotado-check');
   if (chk) chk.checked = esgotado;
@@ -1088,6 +1089,9 @@ window.cfgToggleEsgotado = async function(id, esgotado) {
 };
 
 window.cfgAtualizarProduto = async function(id) {
+  console.log('cfgAtualizarProduto id:', id);
+  const esgotadoCheck = document.getElementById('ep-esgotado-check');
+  console.log('esgotado-check element:', esgotadoCheck, 'checked:', esgotadoCheck?.checked);
   const patch = { sync_fotos: document.getElementById('ep-sync-fotos')?.checked !== false, sync_medidas: document.getElementById('ep-sync-medidas')?.checked !== false, nome: document.getElementById('ep-nome').value.trim(), referencia: document.getElementById('ep-ref').value.trim(), aplicacao: document.getElementById('ep-aplicacao').value.trim(), grupo: document.getElementById('ep-grupo').value.trim(), subgrupo: document.getElementById('ep-subgrupo').value.trim(), preco_base: parseFloat(document.getElementById('ep-preco').value) || 0, ipi_perc: parseFloat(document.getElementById('ep-ipi')?.value) || 0, descricao: document.getElementById('ep-desc').value.trim(), ativo: document.getElementById('ep-ativo').checked, esgotado: document.getElementById('ep-esgotado-check')?.checked || document.getElementById('ep-esgotado')?.checked || false, atualizado_em: new Date().toISOString() };
   const peso = parseFloat(document.getElementById('ep-peso')?.value);
   const altura = parseFloat(document.getElementById('ep-altura')?.value);
