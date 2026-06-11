@@ -1,10 +1,3 @@
-// Formata preço sem decimais desnecessários
-function fmtPreco(v) {
-  const n = Number(v) || 0;
-  if (n === Math.floor(n)) return 'R\u00a0' + n.toLocaleString('pt-BR');
-  return 'R\u00a0' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 // ============================================================
 //  MÓDULO: CATÁLOGO
 //  Visão do representante — grid de produtos com busca e filtro
@@ -243,8 +236,8 @@ window.catAdicionarAoPedido = function(idProduto) {
     .cat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:all .2s; display:flex; flex-direction:column; }
     .cat-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); border-color:var(--blue-mid); }
     .cat-card-esgotado { opacity:.65; }
-    .cat-card-foto { position:relative; width:100%; padding-top:75%; background:#f5f6fa; overflow:hidden; }
-    .cat-card-foto img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; padding:6px; }
+    .cat-card-foto { position:relative; width:100%; padding-top:75%; background:var(--surface2); overflow:hidden; }
+    .cat-card-foto img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
     .cat-card-sem-foto { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--text-muted); }
     .cat-card-badge-esg { position:absolute; top:8px; left:8px; background:var(--red); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; letter-spacing:.5px; }
     .cat-card-badge-promo { position:absolute; top:8px; right:8px; background:var(--green); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; }
@@ -271,8 +264,15 @@ window.catAdicionarAoPedido = function(idProduto) {
 // ============================================================
 //  GERADOR DE CATÁLOGO PDF
 // ============================================================
-window.catAbrirGerador = function() {
-  const tags     = window._catTags || [];
+window.catAbrirGerador = async function() {
+  // Sempre busca tags frescas — garante que estão atualizadas
+  const [tagRows, cfgRows] = await Promise.all([
+    supa('ped_catalogo_tags', 'ativo=eq.true&order=nome&select=*'),
+    supa('ped_configuracoes', 'chave=like.catalogo_*&select=chave,valor')
+  ]);
+  const tags = tagRows || [];
+  window._catTags    = tags;
+  window._catConfigs = Object.fromEntries((cfgRows||[]).map(c=>[c.chave,c.valor]));
   const produtos = window._catProdutosAll || window._catProdutos || [];
   const cfgs     = window._catConfigs || {};
 
@@ -288,7 +288,13 @@ window.catAbrirGerador = function() {
           value="${cfgs.catalogo_titulo||'CATÁLOGO PRODUTOS 2026'}"
           placeholder="Ex: Catálogo Motor Home 2026">
       </div>
-
+      <div class="form-field">
+        <label>Exibir preços?</label>
+        <select id="gpdf-preco" class="cfg-input">
+          <option value="sim">Sim — com preço</option>
+          <option value="nao">Não — sem preço</option>
+        </select>
+      </div>
       <div class="form-field">
         <label>Filtrar por tag <span style="font-weight:400;color:var(--text-muted)">(desmarcado = todos)</span></label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px" id="gpdf-tags">
@@ -316,7 +322,7 @@ window.catAbrirGerador = function() {
 
 window.catExecutarGerador = function() {
   const titulo      = document.getElementById('gpdf-titulo')?.value.trim()||'CATÁLOGO PRODUTOS 2026';
-  const exibirPreco = false; // preço desabilitado
+  const exibirPreco = document.getElementById('gpdf-preco')?.value !== 'nao';
   const cfgs        = window._catConfigs || {};
   const tagsFiltro      = [...document.querySelectorAll('#gpdf-tags input:checked')].map(el=>el.value);
   const subgruposFiltro = [...document.querySelectorAll('#gpdf-subgrupos input:checked')].map(el=>el.value);
