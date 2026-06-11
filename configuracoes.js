@@ -734,7 +734,7 @@ function cfgRenderLinhasProduto(lista) {
     const status = !p.ativo ? 'inativo' : p.esgotado ? 'esgotado' : 'disponivel';
     const badgeMap = { inativo:'badge-cancelado', esgotado:'badge-esgotado', disponivel:'badge-disponivel' };
     const labelMap = { inativo:'Inativo', esgotado:'Esgotado', disponivel:'Disponível' };
-    return `<tr>
+    return `<tr data-id="${p.id}">
       <td>${foto ? `<img src="${foto}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">` : `<div style="width:52px;height:52px;background:var(--surface2);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:20px;border:1px solid var(--border)">📦</div>`}</td>
       <td><div style="font-weight:500;font-size:13px">${p.nome}</div>${p.aplicacao ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">📍 ${p.aplicacao}</div>` : ''}</td>
       <td class="mono" style="font-size:12px">${p.referencia||'—'}</td>
@@ -742,7 +742,7 @@ function cfgRenderLinhasProduto(lista) {
       <td class="right mono" style="font-weight:600">R$ ${(p.preco_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
       <td style="font-size:12px;color:var(--text-muted)">${p.estoque_total != null ? `${Math.floor(p.estoque_total)} un.` : '—'}</td>
       <td style="text-align:center">${p.peso_kg ? `<span title="Peso: ${p.peso_kg}kg · ${p.largura_cm||'?'}×${p.altura_cm||'?'}×${p.comprimento_cm||'?'}cm" style="font-size:16px;cursor:default">✅</span>` : `<span title="Medidas não cadastradas" style="font-size:16px;cursor:default;opacity:.35">⬜</span>`}</td>
-      <td><span class="badge ${badgeMap[status]}">${labelMap[status]}</span></td>
+      <td><span class="badge ${badgeMap[status]} badge-status">${labelMap[status]}</span></td>
       <td style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id})}')" title="Excluir produto">✕</button></td>
     </tr>`;
   }).join('');
@@ -762,7 +762,7 @@ function cfgRenderCardsProduto(lista) {
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Ref: ${p.referencia||'—'} · ${p.grupo||'—'}</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span class="mono" style="font-weight:700;color:var(--blue-dark);font-size:13px">R$ ${(p.preco_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-          <span class="badge ${badgeMap[status]}">${labelMap[status]}</span>
+          <span class="badge ${badgeMap[status]} badge-status">${labelMap[status]}</span>
           ${p.estoque_total != null ? `<span style="font-size:11px;color:var(--text-muted)">${p.estoque_total} un.</span>` : ''}
         </div>
       </div>
@@ -1073,19 +1073,25 @@ window.cfgSincronizarBling = async function(id, sku) {
 
 
 window.cfgToggleEsgotado = async function(id, esgotado) {
-  console.log('cfgToggleEsgotado', id, esgotado);
-  const res = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { esgotado, esgotado_manual: esgotado });
-  console.log('supaPatch result:', res);
-  // Atualiza o checkbox visualmente sem recarregar tudo
-  const chk = document.getElementById('ep-esgotado-check');
-  if (chk) chk.checked = esgotado;
-  // Atualiza na lista em memória
+  const status = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { esgotado, esgotado_manual: esgotado });
+  if (status !== 204 && status !== 200) {
+    alert('Erro ao salvar. Tente novamente.');
+    return;
+  }
+  // Atualiza em memória imediatamente
   if (window._cfgProdutos) {
     const p = window._cfgProdutos.find(x => x.id === id);
-    if (p) p.esgotado = esgotado;
+    if (p) { p.esgotado = esgotado; p.esgotado_manual = esgotado; }
   }
-  // Recarrega a lista para refletir o badge
-  cfgAba('catalogo', null);
+  // Atualiza o badge na linha da tabela sem recarregar tudo
+  const badge = document.querySelector(`tr[data-id="${id}"] .badge-status`);
+  if (badge) {
+    badge.className = `badge ${esgotado ? 'badge-esgotado' : 'badge-disponivel'} badge-status`;
+    badge.textContent = esgotado ? 'Esgotado' : 'Disponível';
+  } else {
+    // Fallback: recarrega a lista
+    cfgAba('catalogo', null);
+  }
 };
 
 window.cfgAtualizarProduto = async function(id) {
