@@ -89,6 +89,13 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
   // Reseta pedido atual
   _pedidoAtual = { cliente: null, alertas: null, itens: [], frete: null, prazo: prazos[0], obs: '' };
 
+  // Se está editando uma cotação existente
+  if (window._editandoCotacaoId) {
+    await pedCarregarCotacao(window._editandoCotacaoId);
+    window._editandoCotacaoId = null;
+    return; // renderNovoPedido já foi chamado recursivamente com dados
+  }
+
   // Se veio do carrinho do catálogo, pré-carrega os itens
   if (window._carrinhoParaPedido?.length) {
     for (const x of window._carrinhoParaPedido) {
@@ -381,6 +388,61 @@ window.pedAplicarDescontoAvista = function() {
       pedMostrarIncentivo(`💰 Desconto à vista de ${descPc}% aplicado em todos os produtos!`);
     }
   }
+};
+
+
+window.pedCarregarCotacao = async function(id) {
+  const [pedidos, itens] = await Promise.all([
+    supa('ped_pedidos',       `id=eq.${id}&select=*`),
+    supa('ped_pedido_itens',  `id_pedido=eq.${id}&select=*&order=id.asc`)
+  ]);
+  const cot = pedidos?.[0];
+  if (!cot) { alert('Cotação não encontrada.'); return; }
+  if (cot.status !== 'COTACAO') { alert('Este pedido não pode ser editado.'); return; }
+
+  // Guarda o id para sobrescrever ao salvar
+  window._cotacaoEditandoId = id;
+  window._tipoPedidoCarrinho = 'COTACAO';
+
+  // Monta _pedidoAtual com dados da cotação
+  _pedidoAtual = {
+    cliente: {
+      nome: cot.nome_cliente, cnpj: cot.cnpj_cliente,
+      cidade: cot.cidade_cliente, uf: cot.uf_cliente, cep: cot.cep_cliente,
+    },
+    alertas: null,
+    itens: (itens||[]).map(i => ({
+      id_produto: i.id_produto, referencia: i.referencia,
+      nome: i.nome_produto, grupo: i.grupo || null,
+      preco_unitario: Number(i.preco_unitario || i.preco_final),
+      preco_final:    Number(i.preco_final),
+      quantidade:     Number(i.quantidade),
+      desconto_perc:  Number(i.desconto_perc || 0),
+      ipi_perc:       Number(i.ipi_perc || 0),
+      regras_aplicadas: i.regras_aplicadas || [],
+    })),
+    frete: cot.valor_frete > 0 ? { valor_escolhido: cot.valor_frete, transportadora: cot.transportadora } : null,
+    prazo: cot.prazo_pagamento || '',
+    obs:   cot.obs || '',
+  };
+
+  // Re-renderiza a tela de pedido com os dados carregados
+  const el = document.getElementById('page-content');
+  await renderNovoPedido(el, {});
+
+  // Preenche cliente na UI após render
+  setTimeout(() => {
+    const clienteDiv = document.getElementById('etapa-cliente');
+    if (clienteDiv && cot.cnpj_cliente) {
+      const cnpjInput = document.getElementById('ped-cnpj');
+      if (cnpjInput) {
+        cnpjInput.value = cot.cnpj_cliente;
+        document.getElementById('ped-buscar-cliente')?.click();
+      }
+    }
+    // Scroll para o topo
+    el.scrollTop = 0;
+  }, 500);
 };
 
 window.pedRenderCarrinho = function() {
@@ -733,8 +795,23 @@ window.pedEnviar = async function(tipo) {
     status:             'ENVIADO'
   };
 
-  const inserted = await supaInsert('ped_pedidos', pedido);
-  const idPedido = inserted?.[0]?.id;
+  let idPedido;
+  if (window._cotacaoEditandoId) {
+    // Atualiza cotação existente
+    await supaPatch('ped_pedidos', `id=eq.${window._cotacaoEditandoId}`, {
+      ...pedido,
+      status: ehCotacao ? 'COTACAO' : 'ENVIADO'
+    });
+    // Remove itens antigos e reinsere
+    await fetch(`${SUPA_URL}/rest/v1/ped_pedido_itens?id_pedido=eq.${window._cotacaoEditandoId}`, {
+      method: 'DELETE', headers: HEADERS
+    });
+    idPedido = window._cotacaoEditandoId;
+    window._cotacaoEditandoId = null;
+  } else {
+    const inserted = await supaInsert('ped_pedidos', pedido);
+    idPedido = inserted?.[0]?.id;
+  }
 
   if (!idPedido) { alert('Erro ao salvar pedido. Tente novamente.'); return; }
 
