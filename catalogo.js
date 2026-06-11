@@ -114,7 +114,7 @@ window.catFiltrar = function() {
   );
   if (grupo)        lista = lista.filter(p => p.id_grupo == grupo);
   const tagFiltro = document.getElementById('cat-tag')?.value||'';
-  if (tagFiltro) lista = lista.filter(p => (p.tags||[]).includes(tagFiltro));
+  if (tagFiltro) lista = lista.filter(p => Array.isArray(p.tags) && p.tags.includes(tagFiltro));
   if (disp==='disp') lista = lista.filter(p => !p.esgotado);
   if (disp==='esg')  lista = lista.filter(p => p.esgotado);
 
@@ -288,13 +288,7 @@ window.catAbrirGerador = async function() {
           value="${cfgs.catalogo_titulo||'CATÁLOGO PRODUTOS 2026'}"
           placeholder="Ex: Catálogo Motor Home 2026">
       </div>
-      <div class="form-field">
-        <label>Exibir preços?</label>
-        <select id="gpdf-preco" class="cfg-input">
-          <option value="sim">Sim — com preço</option>
-          <option value="nao">Não — sem preço</option>
-        </select>
-      </div>
+
       <div class="form-field">
         <label>Filtrar por tag <span style="font-weight:400;color:var(--text-muted)">(desmarcado = todos)</span></label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px" id="gpdf-tags">
