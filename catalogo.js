@@ -48,6 +48,9 @@ async function renderCatalogo(el) {
           <option value="esg">Apenas esgotados</option>
         </select>
       </div>
+      <button class="btn btn-outline btn-sm" id="btn-carrinho-cat" onclick="catAbrirCarrinho()" style="display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;position:relative">
+        🛒 Carrinho <span id="carrinho-badge" style="display:none;background:#e53e3e;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:2px">0</span>
+      </button>
       <button class="btn btn-outline btn-sm" onclick="catAbrirGerador()" style="display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0">
         📄 Gerar Catálogo
       </button>
@@ -158,10 +161,12 @@ window.catFiltrar = function() {
           </div>
         </div>
         <div class="cat-card-footer">
-          <button class="btn btn-primary btn-sm" style="width:100%" onclick="event.stopPropagation();catAdicionarAoPedido(${p.id})"
-            ${p.esgotado ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''}>
-            ${p.esgotado ? 'Esgotado' : '+ Adicionar ao pedido'}
-          </button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-primary btn-sm" style="flex:1" onclick="event.stopPropagation();catAdicionarCarrinho(${p.id})"
+              ${p.esgotado ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''} id="btn-add-${p.id}">
+              ${p.esgotado ? 'Esgotado' : '+ Carrinho'}
+            </button>
+          </div>
         </div>
       </div>
     `;
