@@ -89,6 +89,28 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
   // Reseta pedido atual
   _pedidoAtual = { cliente: null, alertas: null, itens: [], frete: null, prazo: prazos[0], obs: '' };
 
+  // Se veio do carrinho do catálogo, pré-carrega os itens
+  if (window._carrinhoParaPedido?.length) {
+    for (const x of window._carrinhoParaPedido) {
+      const p = x.produto;
+      const markup = (window._pedTabela?.markup_global || 0) / 100;
+      const precoBase = Number(p.preco_base) || 0;
+      const preco = parseFloat((precoBase * (1 + markup)).toFixed(2));
+      _pedidoAtual.itens.push({
+        id_produto: p.id, id_produto_erp: p.id_produto_erp,
+        referencia: p.referencia, nome: p.nome, grupo: p.grupo || null,
+        preco_unitario: preco, preco_final: preco,
+        quantidade: x.quantidade, desconto_perc: 0,
+        regras_aplicadas: [], ipi_perc: parseFloat(p.ipi_perc) || 0,
+        peso_kg: p.peso_kg || null, altura_cm: p.altura_cm || null,
+        largura_cm: p.largura_cm || null, comprimento_cm: p.comprimento_cm || null,
+      });
+    }
+    if (window._pedRegras?.length)
+      _pedidoAtual.itens = window.aplicarRegrasDesconto(_pedidoAtual.itens, window._pedRegras);
+    window._carrinhoParaPedido = null;
+  }
+
   el.innerHTML = `
     <div style="max-width:900px">
       <!-- ETAPA 1: CLIENTE -->
@@ -729,17 +751,22 @@ window.pedEnviar = async function() {
   // Log
   await supaInsert('ped_pedido_log', { id_pedido: idPedido, status_de: 'RASCUNHO', status_para: 'ENVIADO', usuario: USUARIO.nome });
 
+  // Limpa carrinho após salvar
+  window._carrinho = [];
+  if (typeof catAtualizarBadge === 'function') catAtualizarBadge();
+  window._tipoPedidoCarrinho = null;
+
   // Sucesso
   const el = document.getElementById('page-content');
   el.innerHTML = `
     <div style="max-width:500px;margin:60px auto;text-align:center">
       <div style="font-size:64px;margin-bottom:16px">✅</div>
-      <h2 style="font-size:22px;font-weight:700;color:var(--blue-dark);margin-bottom:8px">Pedido enviado!</h2>
+      <h2 style="font-size:22px;font-weight:700;color:var(--blue-dark);margin-bottom:8px">${window._tipoPedidoCarrinho==='COTACAO'?'Cotação salva!':'Pedido enviado!'}</h2>
       <p style="font-size:14px;color:var(--text-secondary);margin-bottom:4px">Código: <strong class="mono">${codigo}</strong></p>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px">Aguarde a aprovação do gestor.</p>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px">${window._tipoPedidoCarrinho==='COTACAO'?'Você pode editar e converter em pedido a qualquer momento.':'Aguarde a aprovação do gestor.'}</p>
       <div style="display:flex;gap:10px;justify-content:center">
         <button class="btn btn-outline" onclick="irPara('catalogo')">Ver catálogo</button>
-        <button class="btn btn-primary" onclick="irPara('meus-pedidos')">Meus pedidos</button>
+        <button class="btn btn-primary" onclick="window._pedidosCache=null;irPara('meus-pedidos')">Meus pedidos</button>
       </div>
     </div>`;
 };
