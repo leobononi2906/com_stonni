@@ -186,8 +186,8 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
 
         <div style="margin-top:16px;display:flex;justify-content:flex-end">
           <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
-            <button class="btn btn-outline btn-lg" onclick="pedEnviar('COTACAO')">📋 Salvar Cotação</button>
-            <button class="btn btn-primary btn-lg" onclick="pedEnviar('PEDIDO')">📦 Enviar Pedido</button>
+            <button class="btn btn-outline btn-lg" onclick="pedSalvarCotacao()">📋 Salvar Cotação</button>
+            <button class="btn btn-primary btn-lg" onclick="pedSalvarPedido()">📦 Enviar Pedido</button>
           </div>
         </div>
       </div>
@@ -761,7 +761,9 @@ window.pedSelecionarFrete = function(idx, transportadora, valor, prazo) {
 
 // ── Enviar pedido ──
 window.pedEnviar = async function(tipo) {
-  window._tipoPedidoCarrinho = tipo || window._tipoPedidoCarrinho || 'PEDIDO';
+  // tipo pode vir do botão onclick ou de _tipoPedidoCarrinho
+  const tipoFinal = tipo || window._tipoPedidoCarrinho || 'PEDIDO';
+  window._tipoPedidoCarrinho = tipoFinal;
   if (!_pedidoAtual.cliente) { alert('Informe o cliente.'); return; }
   if (!_pedidoAtual.itens.length) { alert('Adicione pelo menos um produto.'); return; }
 
@@ -769,7 +771,7 @@ window.pedEnviar = async function(tipo) {
   const subtotal = _pedidoAtual.itens.reduce((s,i)=>s+(i.preco_final*i.quantidade),0);
   if (subtotal < valorMinimo) { alert(`Valor mínimo do pedido: R$ ${valorMinimo.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); return; }
 
-  const ehCotacao = window._tipoPedidoCarrinho === 'COTACAO';
+  const ehCotacao = tipoFinal === 'COTACAO';
   if (!confirm(ehCotacao ? 'Salvar como cotação?' : 'Confirmar envio do pedido?')) return;
 
   const freteVal = _pedidoAtual.frete?.valor_escolhido || 0;
@@ -884,7 +886,18 @@ window.pedEnviar = async function(tipo) {
     .ped-prod-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:6px; cursor:pointer; transition:all .15s; }
     .ped-prod-item:hover { border-color:var(--blue-mid); background:var(--blue-pale); }
     .ped-frete-opcao { display:flex; align-items:center; gap:10px; padding:10px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); margin-bottom:6px; cursor:pointer; transition:all .15s; font-size:13px; }
-    .ped-frete-opcao.selected { border-color:var(--blue-dark); background:var(--blue-pale); }
+    .ped-frete-opcao.selected { border-color:var(--blue-dark
+
+// ── Funções globais de pedido (fora da IIFE para serem acessíveis nos onclick) ──
+window.pedSalvarCotacao = function() {
+  window._tipoPedidoCarrinho = 'COTACAO';
+  window.pedEnviar('COTACAO');
+};
+window.pedSalvarPedido = function() {
+  window._tipoPedidoCarrinho = 'PEDIDO';
+  window.pedEnviar('PEDIDO');
+};
+); background:var(--blue-pale); }
   `;
   document.head.appendChild(s);
 })();
