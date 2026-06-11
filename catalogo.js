@@ -5,12 +5,14 @@
 
 async function renderCatalogo(el) {
   el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+  // Limpa cache para garantir dados frescos (esgotado, preço, etc)
+  window._catProdutos    = null;
+  window._catProdutosAll = null;
 
   const [produtos, acoes, tags, cfgRows] = await Promise.all([
     supa('ped_catalogo_produtos', 'ativo=eq.true&order=subgrupo,nome&select=*'),
     supa('ped_acoes_comerciais',  `ativa=eq.true&select=*`),
     supa('ped_catalogo_tags',     'ativo=eq.true&order=nome&select=*'),
-    supa('ped_configuracoes',     'chave=like.catalogo_*&select=chave,valor'),
     supa('ped_configuracoes',     'chave=like.catalogo_*&select=chave,valor')
   ]);
 
