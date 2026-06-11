@@ -889,10 +889,6 @@ window.pedEnviar = async function(tipo) {
     .ped-frete-opcao.selected { border-color:var(--blue-dark
 
 // ── Funções globais de pedido (fora da IIFE para serem acessíveis nos onclick) ──
-window.pedSalvarCotacao = function() {
-  window._tipoPedidoCarrinho = 'COTACAO';
-  window.pedEnviar('COTACAO');
-};
 window.pedSalvarPedido = function() {
   window._tipoPedidoCarrinho = 'PEDIDO';
   window.pedEnviar('PEDIDO');
@@ -901,3 +897,13 @@ window.pedSalvarPedido = function() {
   `;
   document.head.appendChild(s);
 })();
+
+// Funções globais — fora da IIFE
+window.pedSalvarCotacao = function() {
+  window._tipoPedidoCarrinho = 'COTACAO';
+  window.pedEnviar('COTACAO');
+};
+window.pedSalvarPedido = function() {
+  window._tipoPedidoCarrinho = 'PEDIDO';
+  window.pedEnviar('PEDIDO');
+};
