@@ -161,12 +161,12 @@ window.catFiltrar = function() {
           </div>
         </div>
         <div class="cat-card-footer">
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-primary btn-sm" style="flex:1" onclick="event.stopPropagation();catAdicionarCarrinho(${p.id})"
-              ${p.esgotado ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''} id="btn-add-${p.id}">
-              ${p.esgotado ? 'Esgotado' : '+ Carrinho'}
-            </button>
-          </div>
+          ${p.esgotado
+              ? '<button class="btn btn-sm" style="width:100%;opacity:.5;cursor:not-allowed" disabled>Esgotado</button>'
+              : `<div id="cat-ctrl-${p.id}" style="display:flex;align-items:center;gap:4px">
+                  <button class="btn btn-primary btn-sm" style="flex:1" onclick="event.stopPropagation();catAdicionarCarrinho(${p.id})">+ Carrinho</button>
+                </div>`
+            }
         </div>
       </div>
     `;
@@ -268,4 +268,127 @@ window.catAdicionarAoPedido = function(idProduto) {
   document.head.appendChild(s);
 })();
 
+// ============================================================
+//  CARRINHO DO CATÁLOGO — fora da IIFE para ser global
+// ============================================================
+window._carrinho = window._carrinho || [];
 
+window.catAtualizarBadge = function() {
+  const total = window._carrinho.reduce((s, x) => s + x.quantidade, 0);
+  const badge = document.getElementById('carrinho-badge');
+  if (!badge) return;
+  if (total > 0) { badge.style.display = 'inline'; badge.textContent = total; }
+  else { badge.style.display = 'none'; }
+  // Atualiza controles nos cards
+  (window._catProdutos || []).forEach(p => {
+    const ctrl = document.getElementById(`cat-ctrl-${p.id}`);
+    if (!ctrl) return;
+    const item = window._carrinho.find(x => x.produto.id === p.id);
+    if (item) {
+      ctrl.innerHTML = `
+        <button onclick="event.stopPropagation();catCarrinhoQtdCard(${p.id},-1)" style="width:28px;height:28px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-size:14px;flex-shrink:0">−</button>
+        <span style="flex:1;text-align:center;font-weight:700;font-size:13px">${item.quantidade}</span>
+        <button onclick="event.stopPropagation();catCarrinhoQtdCard(${p.id},1)" style="width:28px;height:28px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-size:14px;flex-shrink:0">+</button>`;
+      ctrl.style.cssText = 'display:flex;align-items:center;gap:4px;width:100%';
+    } else {
+      ctrl.innerHTML = `<button class="btn btn-primary btn-sm" style="flex:1" onclick="event.stopPropagation();catAdicionarCarrinho(${p.id})">+ Carrinho</button>`;
+      ctrl.style.cssText = 'display:flex;align-items:center;gap:4px';
+    }
+  });
+};
+
+window.catAdicionarCarrinho = function(idProduto) {
+  const produto = (window._catProdutos || []).find(p => p.id === idProduto);
+  if (!produto) return;
+  const existing = window._carrinho.find(x => x.produto.id === idProduto);
+  if (existing) existing.quantidade++;
+  else window._carrinho.push({ produto, quantidade: 1 });
+  catAtualizarBadge();
+};
+
+window.catCarrinhoQtdCard = function(idProduto, delta) {
+  const existing = window._carrinho.find(x => x.produto.id === idProduto);
+  if (!existing) return;
+  existing.quantidade = Math.max(0, existing.quantidade + delta);
+  if (existing.quantidade === 0) {
+    window._carrinho = window._carrinho.filter(x => x.produto.id !== idProduto);
+  }
+  catAtualizarBadge();
+};
+
+window.catAbrirCarrinho = function() {
+  const carr = window._carrinho;
+  if (!carr.length) {
+    abrirDrawer('🛒 Carrinho', 'Nenhum produto adicionado ainda', `
+      <div class="empty-state" style="padding:40px 0">
+        <div class="empty-state-icon">🛒</div>
+        <h3>Carrinho vazio</h3>
+        <p>Adicione produtos pelo catálogo</p>
+      </div>`, '');
+    return;
+  }
+  const linhas = carr.map((x, idx) => {
+    const p = x.produto;
+    const preco = Number(p.preco_base) || 0;
+    const ipi   = Number(p.ipi_perc)   || 0;
+    const total = preco * x.quantidade;
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        ${p.fotos?.[0] ? `<img src="${p.fotos[0]}" style="width:48px;height:48px;object-fit:contain;border-radius:6px;border:1px solid var(--border);flex-shrink:0;background:#f5f6fa">` : '<div style="width:48px;height:48px;background:var(--surface2);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px">📦</div>'}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nome}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Ref: ${p.referencia}${ipi>0?` · IPI ${ipi}%`:''}</div>
+          <div style="font-size:12px;color:var(--blue-dark);font-weight:600;margin-top:2px">R$ ${preco.toLocaleString('pt-BR',{minimumFractionDigits:preco%1===0?0:2})}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <button onclick="catCarrinhoQtd(${idx},-1)" style="width:28px;height:28px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-size:15px">−</button>
+          <span style="min-width:22px;text-align:center;font-weight:700">${x.quantidade}</span>
+          <button onclick="catCarrinhoQtd(${idx},1)" style="width:28px;height:28px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;font-size:15px">+</button>
+          <button onclick="catCarrinhoRemover(${idx})" style="width:28px;height:28px;border:none;background:var(--red-bg);color:var(--red);border-radius:4px;cursor:pointer;font-size:14px">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  const totalGeral = carr.reduce((s, x) => s + (Number(x.produto.preco_base)||0) * x.quantidade, 0);
+  const totalPecas = carr.reduce((s, x) => s + x.quantidade, 0);
+
+  abrirDrawer('🛒 Carrinho', `${carr.length} produto(s) · ${totalPecas} peça(s)`,
+    `<div id="carrinho-lista">${linhas}</div>
+     <div style="margin-top:14px;padding-top:12px;border-top:2px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+       <button onclick="catCarrinhoLimpar()" style="background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline">Limpar carrinho</button>
+       <div style="text-align:right">
+         <div style="font-size:11px;color:var(--text-muted)">Subtotal (sem IPI/frete)</div>
+         <div style="font-size:18px;font-weight:700;color:var(--blue-dark)">R$ ${totalGeral.toLocaleString('pt-BR',{minimumFractionDigits:totalGeral%1===0?0:2})}</div>
+       </div>
+     </div>`,
+    `<button class="btn btn-outline" onclick="catIniciarComCarrinho('COTACAO')">📋 Gerar Cotação</button>
+     <button class="btn btn-primary" onclick="catIniciarComCarrinho('PEDIDO')">✅ Gerar Pedido</button>`
+  );
+};
+
+window.catCarrinhoQtd = function(idx, delta) {
+  if (!window._carrinho[idx]) return;
+  window._carrinho[idx].quantidade = Math.max(1, window._carrinho[idx].quantidade + delta);
+  catAtualizarBadge();
+  catAbrirCarrinho();
+};
+
+window.catCarrinhoRemover = function(idx) {
+  window._carrinho.splice(idx, 1);
+  catAtualizarBadge();
+  if (!window._carrinho.length) fecharDrawer();
+  else catAbrirCarrinho();
+};
+
+window.catCarrinhoLimpar = function() {
+  window._carrinho = [];
+  catAtualizarBadge();
+  fecharDrawer();
+};
+
+window.catIniciarComCarrinho = function(tipo) {
+  window._carrinhoParaPedido = window._carrinho.slice();
+  window._tipoPedidoCarrinho = tipo;
+  fecharDrawer();
+  navegarPara('novo-pedido');
+};
