@@ -86,8 +86,10 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
   window._pedRegras = pedRegras || [];
   const prazos = JSON.parse(window._pedConfig.prazos_pagamento || '["28 DDL","35 DDL","42 DDL"]');
 
-  // Reseta pedido atual
-  _pedidoAtual = { cliente: null, alertas: null, itens: [], frete: null, prazo: prazos[0], obs: '' };
+  // Reseta pedido atual — exceto quando está editando cotação (dados já carregados)
+  if (!window._cotacaoEditandoId) {
+    _pedidoAtual = { cliente: null, alertas: null, itens: [], frete: null, prazo: prazos[0], obs: '' };
+  }
 
   // Se está editando uma cotação existente
   if (window._editandoCotacaoId) {
@@ -430,19 +432,29 @@ window.pedCarregarCotacao = async function(id) {
   const el = document.getElementById('page-content');
   await renderNovoPedido(el, {});
 
-  // Preenche cliente na UI após render
+  // Preenche campos da UI após render
   setTimeout(() => {
-    const clienteDiv = document.getElementById('etapa-cliente');
-    if (clienteDiv && cot.cnpj_cliente) {
-      const cnpjInput = document.getElementById('ped-cnpj');
-      if (cnpjInput) {
-        cnpjInput.value = cot.cnpj_cliente;
-        document.getElementById('ped-buscar-cliente')?.click();
-      }
+    // CNPJ + buscar cliente
+    const cnpjInput = document.getElementById('ped-cnpj');
+    if (cnpjInput && cot.cnpj_cliente) {
+      cnpjInput.value = cot.cnpj_cliente;
+      document.getElementById('ped-buscar-cliente')?.click();
     }
-    // Scroll para o topo
+    // Prazo de pagamento
+    const prazoSel = document.getElementById('ped-prazo');
+    if (prazoSel && cot.prazo_pagamento) {
+      prazoSel.value = cot.prazo_pagamento;
+    }
+    // Observações
+    const obsInput = document.getElementById('ped-obs');
+    if (obsInput && cot.obs) obsInput.value = cot.obs;
+    // Avança para etapa 2 automaticamente (cliente já preenchido)
+    setTimeout(() => {
+      const btnContinuar = document.getElementById('ped-btn-continuar');
+      if (btnContinuar && _pedidoAtual.itens.length) btnContinuar?.click();
+    }, 800);
     el.scrollTop = 0;
-  }, 500);
+  }, 400);
 };
 
 window.pedRenderCarrinho = function() {
