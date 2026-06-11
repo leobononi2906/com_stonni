@@ -153,16 +153,11 @@ window.gPedAbrir = async function(id) {
 
   // Ações do gestor
   const statusPermiteAcao = ['COTACAO','ENVIADO','AGUARDANDO','APROVADO'].includes(pedido.status);
-  const acoesGestorHtml = isGestor && statusPermiteAcao ? `
+  // Ações do GESTOR — só Aprovar/Reprovar/Faturar
+  const acoesGestorHtml = isGestor && ['ENVIADO','AGUARDANDO','APROVADO'].includes(pedido.status) ? `
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-top:16px">
       <div style="font-size:13px;font-weight:600;margin-bottom:12px">⚙️ Ações do gestor</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        ${pedido.status === 'COTACAO' ? `
-          <button class="btn btn-warning" onclick="gPedEditarCotacao(${id})">✏️ Editar Cotação</button>
-          <button class="btn btn-primary" onclick="gPedConverterCotacao(${id})">📦 Converter em Pedido</button>
-          <button class="btn btn-outline" onclick="pedGerarPDF(${id})">🖨️ Gerar PDF</button>
-          <button class="btn btn-danger"  onclick="gPedReprovar(${id})">❌ Cancelar</button>
-        ` : ''}
         ${['ENVIADO','AGUARDANDO'].includes(pedido.status) ? `
           <button class="btn btn-success" onclick="gPedAprovar(${id})">✅ Aprovar</button>
           <button class="btn btn-danger"  onclick="gPedReprovar(${id})">❌ Reprovar</button>
@@ -170,6 +165,18 @@ window.gPedAbrir = async function(id) {
         ${pedido.status === 'APROVADO' ? `
           <button class="btn btn-primary" onclick="gPedFaturarDireto(${id})">🧾 Faturar</button>
         ` : ''}
+      </div>
+    </div>` : '';
+
+  // Ações da COTAÇÃO — visíveis para representante E gestor
+  const acoesCotacaoHtml = pedido.status === 'COTACAO' ? `
+    <div style="background:#faf5ff;border:1px solid #ddd6fe;border-radius:var(--radius-sm);padding:16px;margin-top:16px">
+      <div style="font-size:13px;font-weight:600;color:#7c3aed;margin-bottom:12px">📋 Cotação</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-warning" onclick="gPedEditarCotacao(${id})">✏️ Editar</button>
+        <button class="btn btn-outline" onclick="pedGerarPDF(${id})">🖨️ Gerar PDF</button>
+        <button class="btn btn-primary" onclick="gPedConverterCotacao(${id})">📦 Converter em Pedido</button>
+        <button class="btn btn-danger"  onclick="gPedReprovar(${id})">❌ Cancelar</button>
       </div>
     </div>` : '';
 
@@ -250,6 +257,7 @@ window.gPedAbrir = async function(id) {
       <div style="text-align:right;font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:var(--blue-dark)">
         Total: R$ ${(pedido.valor_total||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}
       </div>
+      ${acoesCotacaoHtml}
       ${acoesGestorHtml}
       ${uploadHtml}
       ${downloadHtml}
