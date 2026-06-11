@@ -37,27 +37,31 @@ window.pedGerarPDF = async function(idPedido) {
 
   // Totais do banco (fonte de verdade)
   const valorProdutos = Number(ped.valor_produtos || 0);
+  const valorDesconto = Number(ped.valor_desconto || 0);
   const valorIPI      = Number(ped.valor_ipi || 0);
   const valorFrete    = Number(ped.valor_frete || 0);
   // valor_total salvo no banco = valor_produtos + valor_frete (sem IPI no campo valor_total)
   // Calculamos o total real somando os 3 componentes
-  const valorTotal = valorProdutos + valorIPI + valorFrete;
+  const valorTotal = valorProdutos - valorDesconto + valorIPI + valorFrete;
 
   // Monta linhas de itens
-  // total_item no banco = preco_final * quantidade (SEM IPI)
-  // valor_ipi = IPI separado do item
-  // Última coluna: total_item + valor_ipi (total real do item com IPI)
+  // Itens: preço base → desconto → IPI sobre valor com desconto
   const linhasItens = (itens || []).map((it, i) => {
+    const precoBase    = Number(it.preco_unitario || it.preco_final || 0);
     const ipi          = Number(it.ipi_perc || 0);
-    const totalItem    = Number(it.total_item || (it.preco_final * it.quantidade));
-    const valorIpiItem = Number(it.valor_ipi || 0);
-    const totalComIpi  = totalItem + valorIpiItem;
+    const descPerc     = Number(it.desconto_perc || 0);
+    const subtotalItem = precoBase * Number(it.quantidade);
+    const descItem     = subtotalItem * descPerc / 100;
+    const baseIpi      = subtotalItem - descItem;
+    const valorIpiItem = baseIpi * ipi / 100;
+    const totalComIpi  = baseIpi + valorIpiItem;
     return `
       <tr class="${i % 2 === 0 ? 'par' : ''}">
         <td class="ref">${it.referencia || '—'}</td>
         <td class="nome">${it.nome_produto || '—'}</td>
         <td class="centro">${it.quantidade}</td>
-        <td class="centro mono">R$ ${fmtVal(it.preco_final)}</td>
+        <td class="centro mono">R$ ${fmtVal(precoBase)}</td>
+        <td class="centro">${descPerc > 0 ? descPerc + '%' : '—'}</td>
         <td class="centro">${ipi > 0 ? ipi + '%' : '—'}</td>
         <td class="centro mono">${valorIpiItem > 0 ? 'R$ ' + fmtVal(valorIpiItem) : '—'}</td>
         <td class="direita mono"><strong>R$ ${fmtVal(totalComIpi)}</strong></td>
@@ -240,6 +244,7 @@ window.pedGerarPDF = async function(idPedido) {
             <td>Subtotal produtos</td>
             <td class="mono direita">R$ ${fmtVal(valorProdutos)}</td>
           </tr>
+          ${valorDesconto > 0.01 ? `<tr><td colspan="2">Desconto</td><td class="mono direita" style="color:#22a06b"><strong>- R$ ${fmtVal(valorDesconto)}</strong></td></tr>` : ''}
           ${linhasIPI}
           ${linhasFrete}
           <tr class="total-final">
