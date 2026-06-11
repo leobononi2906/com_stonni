@@ -12,8 +12,12 @@ async function renderMeusPedidos(el) {
     window._pedidoStatus = (statusRows||[]).map(s=>s.nome);
   }
 
+  // Busca por id_representante ou por nome (fallback)
+  const filtroRep = USUARIO.id_representante
+    ? `id_representante=eq.${USUARIO.id_representante}`
+    : `nome_representante=eq.${encodeURIComponent(USUARIO.nome)}`;
   const pedidos = await fetch(
-    `${SUPA_URL}/rest/v1/ped_pedidos?id_representante=eq.${USUARIO.id_representante}&order=criado_em.desc&select=*`,
+    `${SUPA_URL}/rest/v1/ped_pedidos?${filtroRep}&order=criado_em.desc&select=*`,
     { headers: HEADERS }
   ).then(r=>r.json()).catch(()=>[]);
   _renderListaPedidos(el, Array.isArray(pedidos) ? pedidos : [], false);
@@ -38,7 +42,7 @@ async function renderPedidos(el) {
 function _renderListaPedidos(el, pedidos, isGestor) {
   window._pedidosLista = pedidos;
 
-  const statusOpts = ['', ...(window._pedidoStatus||['ENVIADO','APROVADO','FATURADO','REPROVADO','CANCELADO'])];
+  const statusOpts = ['', 'COTACAO', ...(window._pedidoStatus||['ENVIADO','APROVADO','FATURADO','REPROVADO','CANCELADO'])];
 
   el.innerHTML = `
     <div class="section-header" style="margin-bottom:16px">
@@ -54,10 +58,10 @@ function _renderListaPedidos(el, pedidos, isGestor) {
     <!-- Cards KPI (só gestor) -->
     ${isGestor ? `
       <div class="cards-grid cards-grid-4" style="margin-bottom:20px">
-        ${['ENVIADO','APROVADO','FATURADO','REPROVADO'].map(s => {
+        ${['COTACAO','ENVIADO','APROVADO','FATURADO'].map(s => {
           const qtd = pedidos.filter(p=>p.status===s).length;
-          const cores = {ENVIADO:'blue',APROVADO:'green',FATURADO:'a',REPROVADO:'red'};
-          const icons = {ENVIADO:'📤',APROVADO:'✅',FATURADO:'🧾',REPROVADO:'❌'};
+          const cores = {COTACAO:'',ENVIADO:'blue',APROVADO:'green',FATURADO:'a'};
+          const icons = {COTACAO:'📋',ENVIADO:'📤',APROVADO:'✅',FATURADO:'🧾'};
           return `<div class="card"><div class="card-label">${icons[s]} ${s}</div><div class="card-value ${cores[s]}">${qtd}</div><div class="card-sub">pedido(s)</div></div>`;
         }).join('')}
       </div>` : ''}
