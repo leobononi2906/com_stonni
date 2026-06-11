@@ -93,9 +93,10 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
 
   // Se está editando uma cotação existente
   if (window._editandoCotacaoId) {
-    await pedCarregarCotacao(window._editandoCotacaoId);
-    window._editandoCotacaoId = null;
-    return; // renderNovoPedido já foi chamado recursivamente com dados
+    const cotId = window._editandoCotacaoId;
+    window._editandoCotacaoId = null; // zera antes para evitar loop
+    await pedCarregarCotacao(cotId);
+    return;
   }
 
   // Se veio do carrinho do catálogo, pré-carrega os itens
@@ -428,33 +429,34 @@ window.pedCarregarCotacao = async function(id) {
     obs:   cot.obs || '',
   };
 
-  // Re-renderiza a tela de pedido com os dados carregados
+  // Renderiza a tela de pedido com dados da cotação
   const el = document.getElementById('page-content');
   await renderNovoPedido(el, {});
 
-  // Preenche campos da UI após render
+  // Após render, preenche campos da UI
   setTimeout(() => {
-    // CNPJ + buscar cliente
+    // CNPJ do cliente
     const cnpjInput = document.getElementById('ped-cnpj');
     if (cnpjInput && cot.cnpj_cliente) {
       cnpjInput.value = cot.cnpj_cliente;
-      document.getElementById('ped-buscar-cliente')?.click();
+      // Simula busca para mostrar o cliente
+      const btnBuscar = document.getElementById('ped-buscar-cliente');
+      if (btnBuscar) btnBuscar.click();
     }
-    // Prazo de pagamento
-    const prazoSel = document.getElementById('ped-prazo');
-    if (prazoSel && cot.prazo_pagamento) {
-      prazoSel.value = cot.prazo_pagamento;
-    }
-    // Observações
-    const obsInput = document.getElementById('ped-obs');
-    if (obsInput && cot.obs) obsInput.value = cot.obs;
-    // Avança para etapa 2 automaticamente (cliente já preenchido)
+    // Aguarda cliente carregar, depois avança
     setTimeout(() => {
-      const btnContinuar = document.getElementById('ped-btn-continuar');
-      if (btnContinuar && _pedidoAtual.itens.length) btnContinuar?.click();
-    }, 800);
+      const prazoSel = document.getElementById('ped-prazo');
+      if (prazoSel && cot.prazo_pagamento) prazoSel.value = cot.prazo_pagamento;
+      const obsInput = document.getElementById('ped-obs');
+      if (obsInput && cot.obs) obsInput.value = cot.obs;
+      // Avança para etapa do carrinho se tem itens
+      if (_pedidoAtual.itens.length > 0) {
+        const btnCont = document.getElementById('ped-btn-continuar');
+        if (btnCont) btnCont.click();
+      }
+    }, 1200);
     el.scrollTop = 0;
-  }, 400);
+  }, 500);
 };
 
 window.pedRenderCarrinho = function() {
