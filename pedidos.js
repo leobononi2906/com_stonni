@@ -66,10 +66,11 @@ window.aplicarRegrasDesconto = function(itens, regras) {
       }
     }
     if (melhorDesconto > 0) {
-      const precoFinal = parseFloat((Number(item.preco_unitario) * (1 - melhorDesconto / 100)).toFixed(2));
-      return { ...item, desconto_perc: melhorDesconto, preco_final: precoFinal, regras_aplicadas: regraAplicada };
+      // Não altera preco_final — desconto aparece separado no resumo
+      return { ...item, desconto_perc: melhorDesconto, preco_final: Number(item.preco_unitario), regras_aplicadas: regraAplicada };
     }
-    return item;
+    // Sem desconto — garante preco_final = preco_unitario
+    return { ...item, preco_final: Number(item.preco_unitario), desconto_perc: item.preco_editado ? item.desconto_perc : 0 };
   });
 };
 
@@ -480,7 +481,7 @@ window.pedRenderCarrinho = function() {
     const valorIpi   = precoFinal * item.quantidade * ipiPerc / 100;
     const total      = precoFinal * item.quantidade + valorIpi;
     const tabelaBase = Number(item.preco_unitario);
-    const abaixoTabela = precoFinal < tabelaBase * 0.999; // tolerância 0.1%
+    const abaixoTabela = item.preco_editado === true && Number(item.preco_unitario) < tabelaBase * 0.999;
 
     return `
       <tr>
@@ -496,7 +497,7 @@ window.pedRenderCarrinho = function() {
             <span style="font-size:11px;color:var(--text-muted)">R$</span>
             <input type="number"
               class="ped-preco-input mono"
-              value="${precoFinal.toFixed(2)}"
+              value="${Number(item.preco_unitario).toFixed(2)}"
               step="0.01" min="0"
               style="width:90px;text-align:right;font-size:13px;font-weight:600;border:1px solid ${abaixoTabela?'var(--red)':'var(--border)'};border-radius:4px;padding:3px 6px;background:${abaixoTabela?'var(--red-bg)':'var(--surface)'}"
               onchange="pedEditarPreco(${idx}, this.value)"
@@ -530,19 +531,32 @@ window.pedRenderCarrinho = function() {
 };
 
 window.pedAtualizarTotais = function() {
-  const subtotal  = _pedidoAtual.itens.reduce((s,i) => s + (Number(i.preco_final||i.preco_unitario) * Number(i.quantidade)), 0);
-  const valorIPI  = _pedidoAtual.itens.reduce((s,i) => s + (Number(i.preco_final||i.preco_unitario) * Number(i.quantidade) * (parseFloat(i.ipi_perc)||0) / 100), 0);
+  // Subtotal = preço unitário × qtd (sem descontos)
+  const subtotal = _pedidoAtual.itens.reduce((s,i) => s + (Number(i.preco_unitario) * Number(i.quantidade)), 0);
+  // Desconto total = soma dos descontos por item
+  const valorDesconto = _pedidoAtual.itens.reduce((s,i) => {
+    const descPerc = Number(i.desconto_perc) || 0;
+    const descManual = i.preco_editado ? (Number(i.preco_unitario) - Number(i.preco_editado || i.preco_unitario)) * Number(i.quantidade) : 0;
+    return s + (descPerc > 0 ? Number(i.preco_unitario) * Number(i.quantidade) * descPerc / 100 : 0) + descManual;
+  }, 0);
+  const subtotalComDesconto = subtotal - valorDesconto;
+  // IPI sobre o valor com desconto
+  const valorIPI = _pedidoAtual.itens.reduce((s,i) => {
+    const base = Number(i.preco_unitario) * Number(i.quantidade) * (1 - (Number(i.desconto_perc)||0)/100);
+    return s + base * (parseFloat(i.ipi_perc)||0) / 100;
+  }, 0);
   const temIPI    = valorIPI > 0;
   const valorMinimo = parseFloat(window._pedConfig?.pedido_valor_minimo||0);
   const freteGratis = parseFloat(window._pedConfig?.frete_gratis_acima||0);
   const freteVal  = _pedidoAtual.frete?.valor_escolhido || 0;
-  const total     = subtotal + valorIPI + freteVal;
+  const total     = subtotalComDesconto + valorIPI + freteVal;
 
   // Salva no estado para usar no envio
   _pedidoAtual.valor_ipi = valorIPI;
 
   var linhas = '<div style="display:flex;flex-direction:column;gap:8px">';
   linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Subtotal produtos</span><span class="mono" style="font-weight:600">R$ ' + subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
+  if (valorDesconto > 0.01) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Desconto (' + _pedidoAtual.itens.filter(i=>i.desconto_perc>0).map(i=>i.regras_aplicadas?.[0]||i.desconto_perc+'%').filter((v,i,a)=>a.indexOf(v)===i).join(', ') + ')</span><span class="mono" style="color:var(--green)">- R$ ' + valorDesconto.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
   if (temIPI) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">IPI</span><span class="mono" style="color:var(--orange)">R$ ' + valorIPI.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
   if (freteVal > 0) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Frete (' + (_pedidoAtual.frete?.transportadora||'') + ')</span><span class="mono">R$ ' + freteVal.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
   if (freteGratis > 0 && subtotal >= freteGratis) linhas += '<div class="alert alert-success" style="padding:8px 12px"><span class="alert-icon">🎉</span>Frete grátis acima de R$ ' + freteGratis.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</div>';
@@ -555,10 +569,20 @@ window.pedAtualizarTotais = function() {
 
 window.pedAlterarQtd = function(idx, delta) {
   _pedidoAtual.itens[idx].quantidade = Math.max(1, _pedidoAtual.itens[idx].quantidade + delta);
+  // Reseta preco_final para o base (desconto vai ser recalculado)
+  _pedidoAtual.itens[idx].preco_final = _pedidoAtual.itens[idx].preco_unitario;
+  _pedidoAtual.itens[idx].desconto_perc = 0;
+  _pedidoAtual.itens[idx].regras_aplicadas = [];
+  // Reaplica regras em todo o carrinho
+  if (window._pedRegras?.length)
+    _pedidoAtual.itens = window.aplicarRegrasDesconto(_pedidoAtual.itens, window._pedRegras);
   pedRenderCarrinho();
 };
 window.pedRemoverItem = function(idx) {
   _pedidoAtual.itens.splice(idx, 1);
+  // Reaplica regras — a remoção pode invalidar desconto de grupo
+  if (window._pedRegras?.length)
+    _pedidoAtual.itens = window.aplicarRegrasDesconto(_pedidoAtual.itens, window._pedRegras);
   pedRenderCarrinho();
 };
 
@@ -805,6 +829,7 @@ window.pedEnviar = async function(tipo) {
     prazo_frete_dias:   _pedidoAtual.frete?.prazo_frete_dias || null,
     obs:                _pedidoAtual.obs,
     valor_produtos:     subtotal,
+    valor_desconto:     valorDesconto,
     valor_ipi:          _pedidoAtual.valor_ipi || 0,
     valor_desconto:     0,
     valor_total:        total,
