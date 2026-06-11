@@ -19,7 +19,7 @@ window.catGerarPDF = async function(opcoes = {}) {
   // Aplica filtros
   if (tagsFiltro.length > 0) {
     produtos = produtos.filter(p => {
-      const tags = p.tags || [];
+      const tags = Array.isArray(p.tags) ? p.tags : [];
       return tagsFiltro.some(t => tags.includes(t));
     });
   }
