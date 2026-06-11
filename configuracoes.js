@@ -1023,7 +1023,13 @@ window.cfgEditarProduto = async function(id) {
     </div>
     <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="ep-ativo" ${p.ativo?'checked':''} style="accent-color:var(--blue-dark)"> Ativo</label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="ep-esgotado-check" ${p.esgotado?'checked':''} style="accent-color:var(--red)"> Esgotado</label>
+      <div style="display:flex;align-items:center;gap:10px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+          <input type="checkbox" id="ep-esgotado-check" ${p.esgotado?'checked':''} style="accent-color:var(--red)"
+            onchange="cfgToggleEsgotado(${p.id}, this.checked)"> Esgotado
+        </label>
+        <span style="font-size:11px;color:var(--text-muted)">(salva imediatamente)</span>
+      </div>
     </div>
   `, `
     <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red);margin-right:auto" onclick="cfgExcluirProduto(${id})" >🗑️ Excluir</button>
@@ -1063,6 +1069,21 @@ window.cfgSincronizarBling = async function(id, sku) {
     msg.textContent = msgs.length ? `✅ Sincronizado: ${msgs.join(' · ')}` : '⚠️ Sem dados no Bling para este produto.';
     msg.style.color = msgs.length ? 'var(--green)' : 'var(--orange)';
   } catch(e) { msg.textContent = '❌ Erro ao sincronizar.'; msg.style.color = 'var(--red)'; }
+};
+
+
+window.cfgToggleEsgotado = async function(id, esgotado) {
+  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { esgotado });
+  // Atualiza o checkbox visualmente sem recarregar tudo
+  const chk = document.getElementById('ep-esgotado-check');
+  if (chk) chk.checked = esgotado;
+  // Atualiza na lista em memória
+  if (window._cfgProdutos) {
+    const p = window._cfgProdutos.find(x => x.id === id);
+    if (p) p.esgotado = esgotado;
+  }
+  // Recarrega a lista para refletir o badge
+  cfgAba('catalogo', null);
 };
 
 window.cfgAtualizarProduto = async function(id) {
