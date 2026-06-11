@@ -740,7 +740,7 @@ function cfgRenderLinhasProduto(lista) {
       <td class="mono" style="font-size:12px">${p.referencia||'—'}</td>
       <td style="font-size:12px;color:var(--text-secondary)">${p.grupo||'—'}</td>
       <td class="right mono" style="font-weight:600">R$ ${(p.preco_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-      <td style="font-size:12px;color:var(--text-muted)">${p.estoque_total != null ? `${p.estoque_total} un.` : '—'}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${p.estoque_total != null ? `${Math.floor(p.estoque_total)} un.` : '—'}</td>
       <td style="text-align:center">${p.peso_kg ? `<span title="Peso: ${p.peso_kg}kg · ${p.largura_cm||'?'}×${p.altura_cm||'?'}×${p.comprimento_cm||'?'}cm" style="font-size:16px;cursor:default">✅</span>` : `<span title="Medidas não cadastradas" style="font-size:16px;cursor:default;opacity:.35">⬜</span>`}</td>
       <td><span class="badge ${badgeMap[status]}">${labelMap[status]}</span></td>
       <td style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id})}')" title="Excluir produto">✕</button></td>
@@ -1073,7 +1073,8 @@ window.cfgSincronizarBling = async function(id, sku) {
 
 
 window.cfgToggleEsgotado = async function(id, esgotado) {
-  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { esgotado });
+  // esgotado_manual = true impede o pg_cron de reverter
+  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { esgotado, esgotado_manual: esgotado });
   // Atualiza o checkbox visualmente sem recarregar tudo
   const chk = document.getElementById('ep-esgotado-check');
   if (chk) chk.checked = esgotado;
