@@ -102,30 +102,6 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
   }
 
   // Se estava editando cotação, preenche campos após render
-  if (window._cotacaoDados) {
-    const cot = window._cotacaoDados;
-    window._cotacaoDados = null;
-    // Cliente já está em _pedidoAtual.cliente — preenche diretamente sem buscar
-    if (!_pedidoAtual.cliente && cot.cnpj_cliente) {
-      _pedidoAtual.cliente = {
-        nome: cot.nome_cliente, cnpj: cot.cnpj_cliente,
-        cidade: cot.cidade_cliente, uf: cot.uf_cliente, cep: cot.cep_cliente,
-      };
-    }
-    setTimeout(() => {
-      // Avança direto para etapa do carrinho sem pedir CNPJ
-      const etapaCarrinho = document.getElementById('etapa-carrinho');
-      if (etapaCarrinho) {
-        etapaCarrinho.style.display = 'block';
-        const prazoSel = document.getElementById('ped-prazo');
-        if (prazoSel && cot.prazo_pagamento) prazoSel.value = cot.prazo_pagamento;
-        const obsInput = document.getElementById('ped-obs');
-        if (obsInput && cot.obs) obsInput.value = cot.obs;
-        pedRenderCarrinho();
-        etapaCarrinho.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 400);
-  }
 
   // Se veio do carrinho do catálogo, pré-carrega os itens
   if (window._carrinhoParaPedido?.length) {
@@ -222,6 +198,31 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
       </div>
     </div>
   `;
+
+  if (window._cotacaoDados) {
+    const cot = window._cotacaoDados;
+    window._cotacaoDados = null;
+    // Cliente já está em _pedidoAtual.cliente — preenche diretamente sem buscar
+    if (!_pedidoAtual.cliente && cot.cnpj_cliente) {
+      _pedidoAtual.cliente = {
+        nome: cot.nome_cliente, cnpj: cot.cnpj_cliente,
+        cidade: cot.cidade_cliente, uf: cot.uf_cliente, cep: cot.cep_cliente,
+      };
+    }
+    setTimeout(() => {
+      // Avança direto para etapa do carrinho sem pedir CNPJ
+      const etapaCarrinho = document.getElementById('etapa-carrinho');
+      if (etapaCarrinho) {
+        etapaCarrinho.style.display = 'block';
+        const prazoSel = document.getElementById('ped-prazo');
+        if (prazoSel && cot.prazo_pagamento) prazoSel.value = cot.prazo_pagamento;
+        const obsInput = document.getElementById('ped-obs');
+        if (obsInput && cot.obs) obsInput.value = cot.obs;
+        pedRenderCarrinho();
+        etapaCarrinho.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 400);
+  }
 
   // Se veio de "Adicionar ao pedido" do catálogo
   if (params.adicionarProduto) {
