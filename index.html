@@ -816,27 +816,59 @@ function iniciarApp() {
 // ============================================================
 window.addEventListener('DOMContentLoaded', async () => {
   try {
-    // Tenta sessão ativa do Supabase (funciona se logou pelo hub ou aqui antes)
-    const res = await fetch(`${SUPA_URL}/auth/v1/user`, {
-      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (localStorage.getItem('sb-vishxwdxqiygbxmtpfoy-auth-token') ? JSON.parse(localStorage.getItem('sb-vishxwdxqiygbxmtpfoy-auth-token')).access_token : '') }
-    });
-    if (res.ok) {
-      const userData = await res.json();
-      const sbToken = JSON.parse(localStorage.getItem('sb-vishxwdxqiygbxmtpfoy-auth-token') || '{}');
-      const token = sbToken.access_token;
-      if (token && userData.id) {
-        const meta = userData.user_metadata ?? {};
-        if (temAcessoStonni(meta)) {
-          await carregarUsuario(userData, token);
+    const LS_KEY = 'sb-vishxwdxqiygbxmtpfoy-auth-token';
+    const sbToken = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    let accessToken = sbToken.access_token;
+    const refreshToken = sbToken.refresh_token;
+
+    if (!accessToken && !refreshToken) throw new Error('sem token');
+
+    // Tenta usar o access_token atual
+    if (accessToken) {
+      const res = await fetch(`${SUPA_URL}/auth/v1/user`, {
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + accessToken }
+      });
+      if (res.ok) {
+        const userData = await res.json();
+        if (userData.id && temAcessoStonni(userData.user_metadata ?? {})) {
+          await carregarUsuario(userData, accessToken);
           return;
+        }
+      }
+    }
+
+    // access_token expirado — tenta renovar com refresh_token
+    if (refreshToken) {
+      const refRes = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken })
+      });
+      if (refRes.ok) {
+        const newSession = await refRes.json();
+        if (newSession.access_token) {
+          // Salva nova sessão no localStorage
+          localStorage.setItem(LS_KEY, JSON.stringify({
+            access_token: newSession.access_token,
+            refresh_token: newSession.refresh_token || refreshToken,
+            expires_at: Math.floor(Date.now()/1000) + (newSession.expires_in || 3600)
+          }));
+          const userRes = await fetch(`${SUPA_URL}/auth/v1/user`, {
+            headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + newSession.access_token }
+          });
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            if (userData.id && temAcessoStonni(userData.user_metadata ?? {})) {
+              await carregarUsuario(userData, newSession.access_token);
+              return;
+            }
+          }
         }
       }
     }
   } catch(e) {}
 
-  // Fallback: limpa dados antigos e mostra login
-  localStorage.removeItem('stonni_token');
-  localStorage.removeItem('stonni_usuario');
+  // Sem sessão válida — mostra login
   document.getElementById('login-screen').classList.remove('hidden');
 });
 
