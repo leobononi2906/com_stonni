@@ -876,20 +876,23 @@ window.pedEnviar = async function(tipo) {
   window._carrinho = [];
   if (typeof catAtualizarBadge === 'function') catAtualizarBadge();
   window._tipoPedidoCarrinho = null;
+  window._pedidosCache = null;
 
-  // Sucesso
-  const el = document.getElementById('page-content');
-  el.innerHTML = `
-    <div style="max-width:500px;margin:60px auto;text-align:center">
-      <div style="font-size:64px;margin-bottom:16px">✅</div>
-      <h2 style="font-size:22px;font-weight:700;color:var(--blue-dark);margin-bottom:8px">${ehCotacao?'Cotação salva!':' Pedido enviado!'}</h2>
-      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:4px">Código: <strong class="mono">${codigo}</strong></p>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px">${ehCotacao?'Você pode editar e converter em pedido a qualquer momento.':'Aguarde a aprovação do gestor.'}</p>
-      <div style="display:flex;gap:10px;justify-content:center">
-        <button class="btn btn-outline" onclick="irPara('catalogo')">Ver catálogo</button>
-        <button class="btn btn-primary" onclick="window._pedidosCache=null;irPara('meus-pedidos')">Meus pedidos</button>
-      </div>
-    </div>`;
+  // Navega direto para meus-pedidos com toast de confirmação
+  const msgSucesso = ehCotacao
+    ? 'Cotação ' + codigo + ' salva com sucesso!'
+    : 'Pedido ' + codigo + ' enviado com sucesso!';
+
+  irPara(USUARIO.perfil === 'representante' ? 'meus-pedidos' : 'pedidos');
+
+  // Mostra toast de sucesso após navegar
+  setTimeout(() => {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#22a06b;color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.2);text-align:center;max-width:90vw';
+    toast.textContent = '✅ ' + msgSucesso;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  }, 300);
 };
 
 // CSS
