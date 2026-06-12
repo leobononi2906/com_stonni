@@ -105,23 +105,24 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
   if (window._cotacaoDados) {
     const cot = window._cotacaoDados;
     window._cotacaoDados = null;
+    // Cliente já está em _pedidoAtual.cliente — preenche diretamente sem buscar
+    if (!_pedidoAtual.cliente && cot.cnpj_cliente) {
+      _pedidoAtual.cliente = {
+        nome: cot.nome_cliente, cnpj: cot.cnpj_cliente,
+        cidade: cot.cidade_cliente, uf: cot.uf_cliente, cep: cot.cep_cliente,
+      };
+    }
     setTimeout(() => {
-      const cnpjInput = document.getElementById('ped-cnpj');
-      if (cnpjInput && cot.cnpj_cliente) {
-        cnpjInput.value = cot.cnpj_cliente;
-        document.getElementById('ped-buscar-cliente')?.click();
-      }
+      // Avança direto para etapa 2 (pula validação de cliente)
+      pedContinuar();
       setTimeout(() => {
         const prazoSel = document.getElementById('ped-prazo');
         if (prazoSel && cot.prazo_pagamento) prazoSel.value = cot.prazo_pagamento;
         const obsInput = document.getElementById('ped-obs');
         if (obsInput && cot.obs) obsInput.value = cot.obs;
-        if (_pedidoAtual.itens.length > 0) {
-          pedRenderCarrinho();
-          document.getElementById('ped-btn-continuar')?.click();
-        }
+        pedRenderCarrinho();
         document.getElementById('page-content').scrollTop = 0;
-      }, 1000);
+      }, 200);
     }, 400);
   }
 
