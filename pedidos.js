@@ -113,16 +113,17 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
       };
     }
     setTimeout(() => {
-      // Avança direto para etapa 2 (pula validação de cliente)
-      pedContinuar();
-      setTimeout(() => {
+      // Avança direto para etapa do carrinho sem pedir CNPJ
+      const etapaCarrinho = document.getElementById('etapa-carrinho');
+      if (etapaCarrinho) {
+        etapaCarrinho.style.display = 'block';
         const prazoSel = document.getElementById('ped-prazo');
         if (prazoSel && cot.prazo_pagamento) prazoSel.value = cot.prazo_pagamento;
         const obsInput = document.getElementById('ped-obs');
         if (obsInput && cot.obs) obsInput.value = cot.obs;
         pedRenderCarrinho();
-        document.getElementById('page-content').scrollTop = 0;
-      }, 200);
+        etapaCarrinho.scrollIntoView({ behavior: 'smooth' });
+      }
     }, 400);
   }
 
