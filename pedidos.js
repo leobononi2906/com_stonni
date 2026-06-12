@@ -202,26 +202,38 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
   if (window._cotacaoDados) {
     const cot = window._cotacaoDados;
     window._cotacaoDados = null;
-    // Cliente já está em _pedidoAtual.cliente — preenche diretamente sem buscar
-    if (!_pedidoAtual.cliente && cot.cnpj_cliente) {
+    // Garante cliente no _pedidoAtual
+    if (!_pedidoAtual.cliente) {
       _pedidoAtual.cliente = {
         nome: cot.nome_cliente, cnpj: cot.cnpj_cliente,
         cidade: cot.cidade_cliente, uf: cot.uf_cliente, cep: cot.cep_cliente,
       };
     }
-    setTimeout(() => {
-      // Avança direto para etapa do carrinho sem pedir CNPJ
-      const etapaCarrinho = document.getElementById('etapa-carrinho');
-      if (etapaCarrinho) {
-        etapaCarrinho.style.display = 'block';
-        const prazoSel = document.getElementById('ped-prazo');
-        if (prazoSel && cot.prazo_pagamento) prazoSel.value = cot.prazo_pagamento;
-        const obsInput = document.getElementById('ped-obs');
-        if (obsInput && cot.obs) obsInput.value = cot.obs;
-        pedRenderCarrinho();
-        etapaCarrinho.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 400);
+    const cli = _pedidoAtual.cliente;
+    // Preenche etapa 1 com card do cliente diretamente no DOM
+    const etapaClienteCard = document.querySelector('#etapa-cliente .card');
+    if (etapaClienteCard && cli) {
+      etapaClienteCard.innerHTML =
+        '<div class="ped-cliente-card">' +
+          '<div style="font-weight:600;font-size:14px">' + (cli.nome||'') + '</div>' +
+          '<div style="font-size:12px;color:var(--text-muted);margin-top:2px">CNPJ: ' + (cli.cnpj||'') + ' &nbsp;·&nbsp; ' + (cli.cidade||'') + '/' + (cli.uf||'') + '</div>' +
+          '<div style="font-size:12px;color:var(--green);margin-top:6px">✅ Cotação em edição</div>' +
+        '</div>' +
+        '<div style="margin-top:10px;text-align:right">' +
+          '<button class="btn btn-outline btn-sm" onclick="pedTrocarCliente()" style="font-size:11px">Trocar cliente</button>' +
+        '</div>';
+    }
+    // Mostra etapa do carrinho
+    const etapaCarrinho = document.getElementById('etapa-carrinho');
+    if (etapaCarrinho) {
+      etapaCarrinho.style.display = 'block';
+      const prazoSel = document.getElementById('ped-prazo');
+      if (prazoSel && cot.prazo_pagamento) prazoSel.value = cot.prazo_pagamento;
+      const obsInput = document.getElementById('ped-obs');
+      if (obsInput && cot.obs) obsInput.value = cot.obs;
+      pedRenderCarrinho();
+      setTimeout(() => etapaCarrinho.scrollIntoView({ behavior: 'smooth' }), 100);
+    }
   }
 
   // Se veio de "Adicionar ao pedido" do catálogo
