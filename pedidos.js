@@ -696,7 +696,7 @@ window.pedCotarFrete = async function() {
   const btn = document.getElementById('btn-cotar-frete');
   btn.textContent = '⏳ Cotando...'; btn.disabled = true;
 
-  const subtotal = _pedidoAtual.itens.reduce((s,i)=>s+(i.preco_final*i.quantidade),0);
+  const subtotal = _pedidoAtual.itens.reduce((s,i)=>s+(Number(i.preco_unitario||i.preco_final)*Number(i.quantidade)),0);
 
   // Monta pacotes com dimensões reais do produto (cadastradas no catálogo via Bling)
   const pacotes = _pedidoAtual.itens.map(i => ({
@@ -794,7 +794,7 @@ window.pedEnviar = async function(tipo) {
   if (!_pedidoAtual.itens.length) { alert('Adicione pelo menos um produto.'); return; }
 
   const valorMinimo = parseFloat(window._pedConfig?.pedido_valor_minimo||0);
-  const subtotal = _pedidoAtual.itens.reduce((s,i)=>s+(i.preco_final*i.quantidade),0);
+  const subtotal = _pedidoAtual.itens.reduce((s,i)=>s+(Number(i.preco_unitario||i.preco_final)*Number(i.quantidade)),0);
   if (subtotal < valorMinimo) { alert(`Valor mínimo do pedido: R$ ${valorMinimo.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); return; }
 
   const ehCotacao = tipoFinal === 'COTACAO';
@@ -831,9 +831,8 @@ window.pedEnviar = async function(tipo) {
     valor_produtos:     subtotal,
     valor_desconto:     valorDesconto,
     valor_ipi:          _pedidoAtual.valor_ipi || 0,
-    valor_desconto:     0,
     valor_total:        total,
-    status:             'ENVIADO'
+    status:             ehCotacao ? 'COTACAO' : (window._pedidoTemPrecoAbaixo ? 'AGUARDANDO' : 'ENVIADO')
   };
 
   let idPedido;
