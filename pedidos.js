@@ -799,8 +799,15 @@ window.pedEnviar = async function(tipo) {
   const ehCotacao = tipoFinal === 'COTACAO';
   if (!confirm(ehCotacao ? 'Salvar como cotação?' : 'Confirmar envio do pedido?')) return;
 
+  const valorDesconto = _pedidoAtual.itens.reduce((s,i) => {
+    return s + Number(i.preco_unitario) * Number(i.quantidade) * (Number(i.desconto_perc)||0) / 100;
+  }, 0);
+  const valorIPI = _pedidoAtual.itens.reduce((s,i) => {
+    const base = Number(i.preco_unitario) * Number(i.quantidade) * (1 - (Number(i.desconto_perc)||0)/100);
+    return s + base * (parseFloat(i.ipi_perc)||0) / 100;
+  }, 0);
   const freteVal = _pedidoAtual.frete?.valor_escolhido || 0;
-  const total = subtotal + freteVal;
+  const total = subtotal - valorDesconto + valorIPI + freteVal;
   const ano = new Date().getFullYear();
 
   // Gera código sequencial
@@ -829,7 +836,7 @@ window.pedEnviar = async function(tipo) {
     obs:                _pedidoAtual.obs,
     valor_produtos:     subtotal,
     valor_desconto:     valorDesconto,
-    valor_ipi:          _pedidoAtual.valor_ipi || 0,
+    valor_ipi:          valorIPI,
     valor_total:        total,
     status:             ehCotacao ? 'COTACAO' : (window._pedidoTemPrecoAbaixo ? 'AGUARDANDO' : 'ENVIADO')
   };
