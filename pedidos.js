@@ -92,12 +92,37 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
     _pedidoAtual = { cliente: null, alertas: null, itens: [], frete: null, prazo: prazos[0], obs: '' };
   }
 
-  // Se está editando uma cotação existente
+  // Se está editando uma cotação existente — carrega dados e continua o render
   if (window._editandoCotacaoId) {
     const cotId = window._editandoCotacaoId;
-    window._editandoCotacaoId = null; // zera antes para evitar loop
+    window._editandoCotacaoId = null;
     await pedCarregarCotacao(cotId);
-    return;
+    // pedCarregarCotacao preencheu _pedidoAtual e setou _cotacaoEditandoId
+    // Continua o render normalmente abaixo
+  }
+
+  // Se estava editando cotação, preenche campos após render
+  if (window._cotacaoDados) {
+    const cot = window._cotacaoDados;
+    window._cotacaoDados = null;
+    setTimeout(() => {
+      const cnpjInput = document.getElementById('ped-cnpj');
+      if (cnpjInput && cot.cnpj_cliente) {
+        cnpjInput.value = cot.cnpj_cliente;
+        document.getElementById('ped-buscar-cliente')?.click();
+      }
+      setTimeout(() => {
+        const prazoSel = document.getElementById('ped-prazo');
+        if (prazoSel && cot.prazo_pagamento) prazoSel.value = cot.prazo_pagamento;
+        const obsInput = document.getElementById('ped-obs');
+        if (obsInput && cot.obs) obsInput.value = cot.obs;
+        if (_pedidoAtual.itens.length > 0) {
+          pedRenderCarrinho();
+          document.getElementById('ped-btn-continuar')?.click();
+        }
+        document.getElementById('page-content').scrollTop = 0;
+      }, 1000);
+    }, 400);
   }
 
   // Se veio do carrinho do catálogo, pré-carrega os itens
@@ -396,19 +421,21 @@ window.pedAplicarDescontoAvista = function() {
 
 
 window.pedCarregarCotacao = async function(id) {
+  // Busca dados da cotação
   const [pedidos, itens] = await Promise.all([
-    supa('ped_pedidos',       `id=eq.${id}&select=*`),
-    supa('ped_pedido_itens',  `id_pedido=eq.${id}&select=*&order=id.asc`)
+    supa('ped_pedidos',      `id=eq.${id}&select=*`),
+    supa('ped_pedido_itens', `id_pedido=eq.${id}&select=*&order=id.asc`)
   ]);
   const cot = pedidos?.[0];
   if (!cot) { alert('Cotação não encontrada.'); return; }
   if (cot.status !== 'COTACAO') { alert('Este pedido não pode ser editado.'); return; }
 
-  // Guarda o id para sobrescrever ao salvar
+  // Seta flags ANTES de renderNovoPedido para que ele preserve _pedidoAtual
   window._cotacaoEditandoId = id;
   window._tipoPedidoCarrinho = 'COTACAO';
+  window._cotacaoDados = cot; // guarda para preencher UI depois
 
-  // Monta _pedidoAtual com dados da cotação
+  // Monta _pedidoAtual — renderNovoPedido vai preservar porque _cotacaoEditandoId está setado
   _pedidoAtual = {
     cliente: {
       nome: cot.nome_cliente, cnpj: cot.cnpj_cliente,
@@ -429,35 +456,7 @@ window.pedCarregarCotacao = async function(id) {
     prazo: cot.prazo_pagamento || '',
     obs:   cot.obs || '',
   };
-
-  // Renderiza a tela de pedido com dados da cotação
-  const el = document.getElementById('page-content');
-  await renderNovoPedido(el, {});
-
-  // Após render, preenche campos da UI
-  setTimeout(() => {
-    // CNPJ do cliente
-    const cnpjInput = document.getElementById('ped-cnpj');
-    if (cnpjInput && cot.cnpj_cliente) {
-      cnpjInput.value = cot.cnpj_cliente;
-      // Simula busca para mostrar o cliente
-      const btnBuscar = document.getElementById('ped-buscar-cliente');
-      if (btnBuscar) btnBuscar.click();
-    }
-    // Aguarda cliente carregar, depois avança
-    setTimeout(() => {
-      const prazoSel = document.getElementById('ped-prazo');
-      if (prazoSel && cot.prazo_pagamento) prazoSel.value = cot.prazo_pagamento;
-      const obsInput = document.getElementById('ped-obs');
-      if (obsInput && cot.obs) obsInput.value = cot.obs;
-      // Avança para etapa do carrinho se tem itens
-      if (_pedidoAtual.itens.length > 0) {
-        const btnCont = document.getElementById('ped-btn-continuar');
-        if (btnCont) btnCont.click();
-      }
-    }, 1200);
-    el.scrollTop = 0;
-  }, 500);
+  // Não chama renderNovoPedido aqui — o fluxo já está em renderNovoPedido
 };
 
 window.pedRenderCarrinho = function() {
