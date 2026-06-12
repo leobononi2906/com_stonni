@@ -461,6 +461,23 @@ window.pedCarregarCotacao = async function(id) {
   // Não chama renderNovoPedido aqui — o fluxo já está em renderNovoPedido
 };
 
+window.pedTrocarCliente = function() {
+  _pedidoAtual.cliente = null;
+  const etapaCliente = document.getElementById('etapa-cliente');
+  if (etapaCliente) {
+    etapaCliente.querySelector('.card').innerHTML = `
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <div class="form-field" style="flex:1;margin:0">
+          <label>CNPJ do cliente</label>
+          <input type="text" id="ped-cnpj" class="ped-input" placeholder="00.000.000/0000-00"
+            oninput="pedMascaraCNPJ(this)" onkeydown="if(event.key==='Enter') pedBuscarCliente()">
+        </div>
+        <button class="btn btn-primary" onclick="pedBuscarCliente()">🔍 Buscar</button>
+      </div>`;
+  }
+  document.getElementById('etapa-carrinho').style.display = 'none';
+};
+
 window.pedRenderCarrinho = function() {
   const body = document.getElementById('ped-carrinho-body');
   const totaisCard = document.getElementById('ped-totais-card');
