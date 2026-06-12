@@ -911,14 +911,7 @@ window.pedEnviar = async function(tipo) {
     .ped-prod-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:6px; cursor:pointer; transition:all .15s; }
     .ped-prod-item:hover { border-color:var(--blue-mid); background:var(--blue-pale); }
     .ped-frete-opcao { display:flex; align-items:center; gap:10px; padding:10px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); margin-bottom:6px; cursor:pointer; transition:all .15s; font-size:13px; }
-    .ped-frete-opcao.selected { border-color:var(--blue-dark
-
-// ── Funções globais de pedido (fora da IIFE para serem acessíveis nos onclick) ──
-window.pedSalvarPedido = function() {
-  window._tipoPedidoCarrinho = 'PEDIDO';
-  window.pedEnviar('PEDIDO');
-};
-); background:var(--blue-pale); }
+    .ped-frete-opcao.selected { border-color:var(--blue-dark); background:var(--blue-pale); }
   `;
   document.head.appendChild(s);
 })();
