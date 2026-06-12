@@ -118,6 +118,7 @@ window.gPedFiltrar = function() {
 };
 
 window.gPedAbrir = async function(id) {
+  try {
   const [pedido, itens, logs] = await Promise.all([
     supa('ped_pedidos', `id=eq.${id}&select=*`).then(r=>r?.[0]),
     supa('ped_pedido_itens', `id_pedido=eq.${id}&select=*`),
@@ -279,9 +280,10 @@ window.gPedAbrir = async function(id) {
 
   abrirDrawer(
     pedido.codigo || 'Pedido',
-    `${pedido.nome_cliente} · ${new Date(pedido.criado_em).toLocaleDateString('pt-BR')}`,
+    `${(pedido.nome_cliente||'')} · ${(pedido.criado_em ? new Date(pedido.criado_em).toLocaleDateString('pt-BR') : '')}`,
     bodyHtml, '', tabsHtml
   );
+  } catch(e) { console.error('gPedAbrir erro:', e.message, e.stack); alert('Erro: ' + e.message); }
 };
 
 window.gPedTab = function(tab, btn) {
