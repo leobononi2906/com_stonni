@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Stonni — Portal do Representante</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -350,7 +350,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   .cat-card-footer .btn { font-size: 12px; padding: 6px; }
 
   /* Topbar mobile */
-  .mobile-topbar { height: 52px; padding: 0 14px; }
+  .mobile-topbar { height: 52px; padding: 0 14px; padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
+  .drawer-footer { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
   .mobile-topbar .app-logo { font-size: 15px; }
 
   /* Pedidos — carrinho mais compacto */
@@ -375,11 +376,36 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   .ped-resumo-linha { font-size: 13px; }
   .ped-total { font-size: 18px; }
 
-  /* Form fields mais espaçosos no touch */
-  .cfg-input, input[type="text"], input[type="number"], select, textarea {
-    font-size: 16px !important; /* Evita zoom no iOS */
-    min-height: 40px;
+  /* Form fields — evita zoom iOS */
+  .cfg-input, input[type="text"], input[type="number"], input[type="email"],
+  input[type="password"], select, textarea {
+    font-size: 16px !important;
+    min-height: 44px;
   }
+
+  /* Botões maiores para touch */
+  .btn { min-height: 40px; }
+  .btn-sm { min-height: 34px; }
+  .btn-lg { min-height: 52px; font-size: 16px !important; }
+
+  /* Tabela do carrinho do pedido — scroll horizontal */
+  .ped-tabela-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Coluna Total C/IPI no carrinho — esconde no mobile */
+  .ped-col-ipi { display: none; }
+
+  /* Catálogo topbar — filtros em coluna */
+  .cat-filtros-row { flex-direction: column; }
+  .cat-search-wrap { width: 100%; }
+  .cat-select { width: 100%; }
+  .cat-acoes-row { flex-direction: column; gap: 8px; }
+  .cat-acoes-row button { width: 100%; justify-content: center; }
+
+  /* Lista de pedidos — esconde colunas no mobile */
+  .gped-col-prazo { display: none; }
+
+  /* Drawer footer — botões em coluna no mobile pequeno */
+  .drawer-footer { flex-wrap: wrap; }
 
   /* Badges menores */
   .badge { font-size: 10px; padding: 2px 6px; }
