@@ -842,10 +842,14 @@ window.pedEnviar = async function(tipo) {
   const total = subtotal - valorDesconto + valorIPI + freteVal;
   const ano = new Date().getFullYear();
 
-  // Gera código sequencial
-  const ultPed = await supa('ped_pedidos', 'order=id.desc&select=codigo');
-  const ultNum = parseInt(ultPed?.[0]?.codigo?.split('-')?.[2]||'0') + 1;
-  const codigo = `PED-${ano}-${String(ultNum).padStart(5,'0')}`;
+  // Gera código sequencial — busca o maior número existente para evitar colisão
+  const gerarCodigo = async () => {
+    const todos = await supa('ped_pedidos', `select=codigo&codigo=like.PED-${ano}-%&order=codigo.desc&limit=1`);
+    const ultimo = todos?.[0]?.codigo;
+    const num = ultimo ? parseInt(ultimo.split('-')[2]||'0') + 1 : 1;
+    return `PED-${ano}-${String(num).padStart(5,'0')}`;
+  };
+  const codigo = await gerarCodigo();
 
   const pedido = {
     codigo,
@@ -887,7 +891,13 @@ window.pedEnviar = async function(tipo) {
     idPedido = window._cotacaoEditandoId;
     window._cotacaoEditandoId = null;
   } else {
-    const inserted = await supaInsert('ped_pedidos', pedido);
+    let inserted = await supaInsert('ped_pedidos', pedido);
+    // Se código duplicado, gera novo e tenta de novo
+    if (!inserted?.[0]?.id) {
+      const novoCodigo = await gerarCodigo();
+      pedido.codigo = novoCodigo;
+      inserted = await supaInsert('ped_pedidos', { ...pedido, codigo: novoCodigo });
+    }
     idPedido = inserted?.[0]?.id;
   }
 
