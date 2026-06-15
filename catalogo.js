@@ -403,3 +403,64 @@ window.catIniciarComCarrinho = function() {
   fecharDrawer();
   irPara('novo-pedido');
 };
+
+// ============================================================
+//  GERADOR DE CATÁLOGO PDF — fora da IIFE
+// ============================================================
+window.catAbrirGerador = async function() {
+  const [tagRows, cfgRows] = await Promise.all([
+    supa('ped_catalogo_tags', 'ativo=eq.true&order=nome&select=*'),
+    supa('ped_configuracoes', 'chave=like.catalogo_*&select=chave,valor')
+  ]);
+  const tags = tagRows || [];
+  window._catTags    = tags;
+  window._catConfigs = Object.fromEntries((cfgRows||[]).map(c=>[c.chave,c.valor]));
+  const produtos  = window._catProdutosAll || window._catProdutos || [];
+  const cfgs      = window._catConfigs || {};
+
+  const subgrupos = [...new Map(
+    produtos.filter(p=>p.subgrupo).map(p=>[p.id_subgrupo,{id:p.id_subgrupo,nome:p.subgrupo}])
+  ).values()].sort((a,b)=>a.nome.localeCompare(b.nome));
+
+  const bodyHtml = `
+    <div style="display:flex;flex-direction:column;gap:20px;padding:4px 0">
+      <div class="form-field">
+        <label>Título do catálogo</label>
+        <input type="text" id="gpdf-titulo" class="cfg-input"
+          value="${cfgs.catalogo_titulo||'CATÁLOGO PRODUTOS 2026'}"
+          placeholder="Ex: Catálogo Motor Home 2026">
+      </div>
+      <div class="form-field">
+        <label>Filtrar por tag <span style="font-weight:400;color:var(--text-muted)">(desmarcado = todos)</span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px" id="gpdf-tags">
+          ${tags.length
+            ? tags.map(t=>`<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px"><input type="checkbox" value="${t.nome}" style="accent-color:#1A3A8F"> ${t.nome}</label>`).join('')
+            : '<span style="font-size:12px;color:var(--text-muted)">Nenhuma tag cadastrada</span>'}
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Filtrar por subgrupo <span style="font-weight:400;color:var(--text-muted)">(desmarcado = todos)</span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px" id="gpdf-subgrupos">
+          ${subgrupos.map(s=>`<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px"><input type="checkbox" value="${s.id}" style="accent-color:#1A3A8F"> ${s.nome}</label>`).join('')}
+        </div>
+      </div>
+    </div>`;
+
+  abrirDrawer(
+    '📄 Gerar Catálogo PDF',
+    'Escolha as opções e clique em Gerar',
+    bodyHtml,
+    `<button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
+     <button class="btn btn-primary" onclick="catExecutarGerador()">🖨️ Gerar PDF</button>`
+  );
+};
+
+window.catExecutarGerador = function() {
+  const titulo = document.getElementById('gpdf-titulo')?.value.trim()||'CATÁLOGO PRODUTOS 2026';
+  const cfgs   = window._catConfigs || {};
+  const tagsFiltro      = [...document.querySelectorAll('#gpdf-tags input:checked')].map(el=>el.value);
+  const subgruposFiltro = [...document.querySelectorAll('#gpdf-subgrupos input:checked')].map(el=>el.value);
+  fecharDrawer();
+  if (typeof window.catGerarPDF !== 'function') { alert('catalogo-pdf.js não carregado.'); return; }
+  window.catGerarPDF({ titulo, subtitulo: cfgs.catalogo_subtitulo||'@STONNI.OFICIAL', exibirPreco: false, tagsFiltro, subgruposFiltro, capaUrl: cfgs.catalogo_capa_url||'' });
+};
