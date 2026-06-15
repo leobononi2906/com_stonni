@@ -526,7 +526,9 @@ let USUARIO = null; // { id, email, nome, perfil: 'representante'|'gestor'|'admi
 
 // Verifica acesso ao módulo 'atacado' via user_metadata
 function temAcessoStonni(meta) {
-  return meta.admin === true || (Array.isArray(meta.modulos) && meta.modulos.includes('stonni'));
+  // Acesso liberado para qualquer usuário autenticado
+  // A restrição real é feita pelo ped_gestores/ped_representantes em carregarUsuario
+  return true;
 }
 
 async function carregarUsuario(user, token) {
