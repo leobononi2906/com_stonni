@@ -844,8 +844,13 @@ window.pedEnviar = async function(tipo) {
 
   // Gera código sequencial — busca o maior número existente para evitar colisão
   const gerarCodigo = async () => {
-    const todos = await supa('ped_pedidos', `select=codigo&codigo=like.PED-${ano}-%&order=codigo.desc&limit=1`);
-    const ultimo = todos?.[0]?.codigo;
+    // Usa fetch direto para evitar &limit=9999 duplicado que causa CORS
+    const res = await fetch(
+      `${SUPA_URL}/rest/v1/ped_pedidos?select=codigo&codigo=like.PED-${ano}-%25&order=codigo.desc&limit=1`,
+      { headers: HEADERS }
+    );
+    const todos = res.ok ? await res.json() : [];
+    const ultimo = Array.isArray(todos) ? todos?.[0]?.codigo : null;
     const num = ultimo ? parseInt(ultimo.split('-')[2]||'0') + 1 : 1;
     return `PED-${ano}-${String(num).padStart(5,'0')}`;
   };
