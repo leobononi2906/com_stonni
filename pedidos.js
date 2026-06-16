@@ -727,6 +727,7 @@ window.pedCotarFrete = async function() {
   const btn = document.getElementById('btn-cotar-frete');
   btn.textContent = '⏳ Cotando...'; btn.disabled = true;
 
+  // subtotal usa preco_unitario para calcular desconto; total real usa preco_final
   const subtotal = _pedidoAtual.itens.reduce((s,i)=>s+(Number(i.preco_unitario||i.preco_final)*Number(i.quantidade)),0);
 
   // Monta pacotes com dimensões reais do produto (cadastradas no catálogo via Bling)
@@ -825,6 +826,7 @@ window.pedEnviar = async function(tipo) {
   if (!_pedidoAtual.itens.length) { alert('Adicione pelo menos um produto.'); return; }
 
   const valorMinimo = parseFloat(window._pedConfig?.pedido_valor_minimo||0);
+  // subtotal usa preco_unitario para calcular desconto; total real usa preco_final
   const subtotal = _pedidoAtual.itens.reduce((s,i)=>s+(Number(i.preco_unitario||i.preco_final)*Number(i.quantidade)),0);
   if (subtotal < valorMinimo) { alert(`Valor mínimo do pedido: R$ ${valorMinimo.toLocaleString('pt-BR',{minimumFractionDigits:2})}`); return; }
 
@@ -875,7 +877,7 @@ window.pedEnviar = async function(tipo) {
     valor_frete:        freteVal,
     prazo_frete_dias:   _pedidoAtual.frete?.prazo_frete_dias || null,
     obs:                _pedidoAtual.obs,
-    valor_produtos:     subtotal,
+    valor_produtos:     _pedidoAtual.itens.reduce((s,i)=>s+(Number(i.preco_final||i.preco_unitario)*Number(i.quantidade)),0),
     valor_desconto:     valorDesconto,
     valor_ipi:          valorIPI,
     valor_total:        total,
