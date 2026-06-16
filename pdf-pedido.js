@@ -45,14 +45,22 @@ window.pedGerarPDF = async function(idPedido) {
   const valorTotal = valorProdutos - valorDesconto + valorIPI + valorFrete;
 
   // Monta linhas de itens
-  // Itens: preço base → desconto → IPI sobre valor com desconto
+  // Itens: usa preco_final como preço real (pode ter sido editado manualmente)
   const linhasItens = (itens || []).map((it, i) => {
-    const precoBase    = Number(it.preco_unitario || it.preco_final || 0);
+    const precoTabela  = Number(it.preco_unitario || 0);
+    const precoFinal   = Number(it.preco_final || it.preco_unitario || 0);
     const ipi          = Number(it.ipi_perc || 0);
-    const descPerc     = Number(it.desconto_perc || 0);
-    const subtotalItem = precoBase * Number(it.quantidade);
-    const descItem     = subtotalItem * descPerc / 100;
-    const baseIpi      = subtotalItem - descItem;
+    const descPercReg  = Number(it.desconto_perc || 0);
+    // Se preço foi editado manualmente (preco_final < preco_unitario e sem desconto de regra)
+    const editadoManual = descPercReg === 0 && precoFinal < precoTabela * 0.999;
+    // Desconto efetivo: regra OU diferença manual
+    const descPerc = descPercReg > 0 ? descPercReg
+      : editadoManual ? Math.round((1 - precoFinal / precoTabela) * 10000) / 100
+      : 0;
+    // Preço exibido: sempre preco_final
+    const precoExibido = precoFinal;
+    const subtotalItem = precoExibido * Number(it.quantidade);
+    const baseIpi      = subtotalItem; // desconto já embutido no preco_final
     const valorIpiItem = baseIpi * ipi / 100;
     const totalComIpi  = baseIpi + valorIpiItem;
     return `
@@ -60,8 +68,8 @@ window.pedGerarPDF = async function(idPedido) {
         <td class="ref">${it.referencia || '—'}</td>
         <td class="nome">${it.nome_produto || '—'}</td>
         <td class="centro">${it.quantidade}</td>
-        <td class="centro mono">R$ ${fmtVal(precoBase)}</td>
-        <td class="centro">${descPerc > 0 ? descPerc + '%' : '—'}</td>
+        <td class="centro mono">R$ ${fmtVal(precoExibido)}</td>
+        <td class="centro">${descPerc > 0 ? descPerc.toFixed(descPerc % 1 === 0 ? 0 : 2) + '%' : '—'}</td>
         <td class="centro">${ipi > 0 ? ipi + '%' : '—'}</td>
         <td class="centro mono">${valorIpiItem > 0 ? 'R$ ' + fmtVal(valorIpiItem) : '—'}</td>
         <td class="direita mono"><strong>R$ ${fmtVal(totalComIpi)}</strong></td>
