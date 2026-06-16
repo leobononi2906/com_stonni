@@ -260,7 +260,7 @@ window.gPedAbrir = async function(id) {
         <tbody>${itensHtml}</tbody>
       </table>
       <div style="text-align:right;font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:var(--blue-dark)">
-        Total: R$ ${(pedido.valor_total||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}
+        Total: R$ ${(itens||[]).reduce((s,i)=>s+Number(i.preco_final||i.preco_unitario||0)*Number(i.quantidade||1),0).toLocaleString('pt-BR',{minimumFractionDigits:2})}
       </div>
       ${acoesCotacaoHtml}
       ${acoesGestorHtml}
