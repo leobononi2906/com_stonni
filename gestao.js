@@ -165,6 +165,10 @@ window.gPedAbrir = async function(id) {
         ` : ''}
         ${pedido.status === 'APROVADO' ? `
           <button class="btn btn-primary" onclick="gPedFaturarDireto(${id})">🧾 Faturar</button>
+          <button class="btn btn-danger"   onclick="gPedCancelar(${id})">⛔ Cancelar</button>
+        ` : ''}
+        ${['ENVIADO','AGUARDANDO','APROVADO'].includes(pedido.status) ? `
+          <button class="btn btn-outline" onclick="gPedVoltarCotacao(${id})">↩️ Voltar p/ Cotação</button>
         ` : ''}
       </div>
     </div>` : '';
@@ -328,6 +332,25 @@ window.gPedEditarCotacao = async function(id) {
   // Guarda o id da cotação para o pedidos.js carregar
   window._editandoCotacaoId = id;
   irPara('novo-pedido');
+};
+
+
+window.gPedCancelar = async function(id) {
+  if (!confirm('Cancelar este pedido? Esta ação não pode ser desfeita.')) return;
+  await supaPatch('ped_pedidos', `id=eq.${id}`, { status: 'CANCELADO' });
+  await supaInsert('ped_pedido_log', { id_pedido: id, status_de: 'APROVADO', status_para: 'CANCELADO', usuario: USUARIO.nome });
+  fecharDrawer();
+  renderPedidos(document.getElementById('page-content'));
+};
+
+window.gPedVoltarCotacao = async function(id) {
+  if (!confirm('Voltar este pedido para Cotação? O representante poderá editá-lo novamente.')) return;
+  const pedRes = await supa('ped_pedidos', `id=eq.${id}&select=status`);
+  const statusAtual = pedRes?.[0]?.status || 'ENVIADO';
+  await supaPatch('ped_pedidos', `id=eq.${id}`, { status: 'COTACAO' });
+  await supaInsert('ped_pedido_log', { id_pedido: id, status_de: statusAtual, status_para: 'COTACAO', usuario: USUARIO.nome });
+  fecharDrawer();
+  renderPedidos(document.getElementById('page-content'));
 };
 
 window.gPedConverterCotacao = async function(id) {
