@@ -36,7 +36,9 @@ window.pedGerarPDF = async function(idPedido) {
   };
 
   // Totais do banco (fonte de verdade)
-  const valorProdutos = Number(ped.valor_produtos || 0);
+  // Recalcula valor_produtos a partir dos itens (garante que usa preco_final)
+  const valorProdutosReal = (itens||[]).reduce((s,i) => s + Number(i.preco_final||i.preco_unitario||0) * Number(i.quantidade), 0);
+  const valorProdutos = valorProdutosReal || Number(ped.valor_produtos || 0);
   const valorDesconto = Number(ped.valor_desconto || 0);
   const valorIPI      = Number(ped.valor_ipi || 0);
   const valorFrete    = Number(ped.valor_frete || 0);
@@ -45,31 +47,31 @@ window.pedGerarPDF = async function(idPedido) {
   const valorTotal = valorProdutos - valorDesconto + valorIPI + valorFrete;
 
   // Monta linhas de itens
-  // Itens: usa preco_final como preço real (pode ter sido editado manualmente)
+  // Itens: usa preco_final (preço real negociado)
   const linhasItens = (itens || []).map((it, i) => {
     const precoTabela  = Number(it.preco_unitario || 0);
     const precoFinal   = Number(it.preco_final || it.preco_unitario || 0);
     const ipi          = Number(it.ipi_perc || 0);
     const descPercReg  = Number(it.desconto_perc || 0);
-    // Se preço foi editado manualmente (preco_final < preco_unitario e sem desconto de regra)
+
+    // Desconto: por regra OU diferença manual (não confunde com IPI)
     const editadoManual = descPercReg === 0 && precoFinal < precoTabela * 0.999;
-    // Desconto efetivo: regra OU diferença manual
-    const descPerc = descPercReg > 0 ? descPercReg
+    const descExibido = descPercReg > 0 ? descPercReg
       : editadoManual ? Math.round((1 - precoFinal / precoTabela) * 10000) / 100
       : 0;
-    // Preço exibido: sempre preco_final
-    const precoExibido = precoFinal;
-    const subtotalItem = precoExibido * Number(it.quantidade);
-    const baseIpi      = subtotalItem; // desconto já embutido no preco_final
-    const valorIpiItem = baseIpi * ipi / 100;
-    const totalComIpi  = baseIpi + valorIpiItem;
+
+    // Cálculo do total: preço_final × qtd + IPI (IPI sobre preço_final)
+    const subtotalItem = precoFinal * Number(it.quantidade);
+    const valorIpiItem = subtotalItem * ipi / 100;
+    const totalComIpi  = subtotalItem + valorIpiItem;
+
     return `
       <tr class="${i % 2 === 0 ? 'par' : ''}">
         <td class="ref">${it.referencia || '—'}</td>
         <td class="nome">${it.nome_produto || '—'}</td>
         <td class="centro">${it.quantidade}</td>
-        <td class="centro mono">R$ ${fmtVal(precoExibido)}</td>
-        <td class="centro">${descPerc > 0 ? descPerc.toFixed(descPerc % 1 === 0 ? 0 : 2) + '%' : '—'}</td>
+        <td class="centro mono">R$ ${fmtVal(precoFinal)}</td>
+        <td class="centro">${descExibido > 0 ? descExibido.toFixed(descExibido % 1 === 0 ? 0 : 1) + '%' : '—'}</td>
         <td class="centro">${ipi > 0 ? ipi + '%' : '—'}</td>
         <td class="centro mono">${valorIpiItem > 0 ? 'R$ ' + fmtVal(valorIpiItem) : '—'}</td>
         <td class="direita mono"><strong>R$ ${fmtVal(totalComIpi)}</strong></td>
