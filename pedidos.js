@@ -510,12 +510,15 @@ window.pedRenderCarrinho = function() {
   const hoje    = new Date().toISOString().split('T')[0];
 
   const linhas = _pedidoAtual.itens.map((item, idx) => {
-    const precoFinal = Number(item.preco_final) || Number(item.preco_unitario);
-    const ipiPerc    = parseFloat(item.ipi_perc) || 0;
-    const valorIpi   = precoFinal * item.quantidade * ipiPerc / 100;
-    const total      = precoFinal * item.quantidade + valorIpi;
-    const tabelaBase = Number(item.preco_unitario);
-    const abaixoTabela = item.preco_editado === true && Number(item.preco_unitario) < tabelaBase * 0.999;
+    const precoTabela  = Number(item.preco_unitario) || 0;
+    const descPerc     = Number(item.desconto_perc)  || 0;
+    const precoComDesc = parseFloat((precoTabela * (1 - descPerc / 100)).toFixed(2));
+    const ipiPerc      = parseFloat(item.ipi_perc) || 0;
+    const valorIpi     = precoComDesc * item.quantidade * ipiPerc / 100;
+    const total        = precoComDesc * item.quantidade + valorIpi;
+    const precoFinal   = precoTabela; // exibe preço de tabela no input
+    const tabelaBase   = precoTabela;
+    const abaixoTabela = item.preco_editado === true && precoComDesc < precoTabela * 0.999;
 
     return `
       <tr>
