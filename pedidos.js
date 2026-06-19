@@ -76,10 +76,11 @@ window.aplicarRegrasDesconto = function(itens, regras) {
 
 async function renderNovoPedido(el, params = {}) {
   // Carrega configs necessárias
-  const [configs, tabelas, pedRegras] = await Promise.all([
+  const [configs, tabelas, pedRegras, acoes] = await Promise.all([
     supa('ped_configuracoes', 'select=chave,valor'),
     supa('ped_tabelas_preco', `id=eq.${USUARIO.id_tabela_preco||1}&select=*`),
-    supa('ped_tabela_regras', `id_tabela=eq.${USUARIO.id_tabela_preco||1}&ativa=eq.true&select=*`)
+    supa('ped_tabela_regras', `id_tabela=eq.${USUARIO.id_tabela_preco||1}&ativa=eq.true&select=*`),
+    supa('ped_acoes_comerciais', 'ativa=eq.true&select=*')
   ]);
 
 window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
