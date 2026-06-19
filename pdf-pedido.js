@@ -36,8 +36,16 @@ window.pedGerarPDF = async function(idPedido) {
   };
 
   // Totais do banco (fonte de verdade)
-  // Recalcula valor_produtos a partir dos itens (garante que usa preco_final)
-  const valorProdutosReal = (itens||[]).reduce((s,i) => s + Number(i.preco_final||i.preco_unitario||0) * Number(i.quantidade), 0);
+  // Recalcula valor_produtos a partir dos itens com desconto e IPI corretos
+  const valorProdutosReal = (itens||[]).reduce((s,i) => {
+    const pt  = Number(i.preco_unitario || 0);
+    const dp  = Number(i.desconto_perc || 0);
+    const pcd = pt * (1 - dp/100);
+    const pf  = Number(i.preco_final || i.preco_unitario || 0);
+    // Se tem desconto_perc, usa precoComDesc; senão usa preco_final (editado manual)
+    const base = dp > 0 ? pcd : (pf < pt * 0.999 ? pf : pt);
+    return s + base * Number(i.quantidade);
+  }, 0);
   const valorProdutos = valorProdutosReal || Number(ped.valor_produtos || 0);
   const valorDesconto = Number(ped.valor_desconto || 0);
   const valorIPI      = Number(ped.valor_ipi || 0);
@@ -60,9 +68,11 @@ window.pedGerarPDF = async function(idPedido) {
       : editadoManual ? Math.round((1 - precoFinal / precoTabela) * 10000) / 100
       : 0;
 
-    // Preço exibido: sempre o preço de TABELA (preco_unitario)
-    // O total é calculado com preco_final (após desconto)
-    const subtotalItem = precoFinal * Number(it.quantidade);
+    // Preço exibido: preço de TABELA
+    // Preço com desconto: base para IPI e total
+    const precoComDesc = parseFloat((precoTabela * (1 - descExibido / 100)).toFixed(2));
+    const subtotalItem = precoComDesc * Number(it.quantidade);
+    // IPI calculado APÓS o desconto
     const valorIpiItem = subtotalItem * ipi / 100;
     const totalComIpi  = subtotalItem + valorIpiItem;
 
