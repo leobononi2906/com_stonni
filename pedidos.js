@@ -86,6 +86,8 @@ async function renderNovoPedido(el, params = {}) {
 window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
   window._pedTabela = tabelas?.[0] || { markup_global: 0 };
   window._pedRegras = pedRegras || [];
+  window._catAcoes  = acoes  || [];
+  window._catTabela = window._pedTabela;
   const prazos = JSON.parse(window._pedConfig.prazos_pagamento || '["28 DDL","35 DDL","42 DDL"]');
 
   // Reseta pedido atual — exceto quando está editando cotação (dados já carregados)
