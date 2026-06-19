@@ -64,7 +64,7 @@ window.pedGerarPDF = async function(idPedido) {
   const valorFrete    = Number(ped.valor_frete || 0);
   // valor_total salvo no banco = valor_produtos + valor_frete (sem IPI no campo valor_total)
   // Calculamos o total real somando os 3 componentes
-  const valorTotal = valorProdutos - valorDesconto + valorIPI + valorFrete;
+  const valorTotal = valorProdutos - valorDesconto + valorIPI + valorFrete + valorST;
 
   // Monta linhas de itens
   // Itens: mostra preço de TABELA + desconto separado (cliente vê o benefício)
@@ -280,6 +280,7 @@ window.pedGerarPDF = async function(idPedido) {
           </tr>
           ${valorDesconto > 0.01 ? `<tr><td colspan="2">Desconto</td><td class="mono direita" style="color:#22a06b"><strong>- R$ ${fmtVal(valorDesconto)}</strong></td></tr>` : ''}
           ${linhasIPI}
+          ${valorST > 0.01 ? `<tr><td colspan="2">ST (${stEstado})</td><td class="mono direita">+ R$ ${fmtVal(valorST)}</td></tr>` : ''}
           ${linhasFrete}
           <tr class="total-final">
             <td>TOTAL</td>
