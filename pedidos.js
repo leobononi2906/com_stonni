@@ -522,8 +522,6 @@ window.pedRenderCarrinho = function() {
         <td>
           <div style="font-weight:500;font-size:13px">${item.nome}</div>
           <div style="font-size:11px;color:var(--text-muted)">Ref: ${item.referencia||'—'}</div>
-          ${item.desconto_perc > 0 ? `<div style="font-size:11px;color:var(--green)">✓ Desconto ${item.desconto_perc}% aplicado</div>` : ''}
-          ${item.desconto_avista > 0 ? `<div style="font-size:11px;color:var(--blue-mid)">💰 ${item.desconto_avista}% à vista</div>` : ''}
           ${ipiPerc > 0 ? `<div style="font-size:11px;color:var(--orange)">+ ${ipiPerc}% IPI = R$ ${valorIpi.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : ''}
         </td>
         <td style="text-align:right;min-width:140px">
@@ -538,6 +536,11 @@ window.pedRenderCarrinho = function() {
               title="Preço de tabela: R$ ${tabelaBase.toLocaleString('pt-BR',{minimumFractionDigits:2})}">
           </div>
           ${abaixoTabela ? `<div style="font-size:10px;color:var(--red);text-align:right;margin-top:2px">⚠️ Abaixo da tabela — sujeito a aprovação</div>` : ''}
+        </td>
+        <td style="text-align:right;vertical-align:middle">
+          ${Number(item.desconto_perc) > 0
+            ? `<span style="font-size:13px;font-weight:600;color:var(--green)">${Number(item.desconto_perc).toFixed(Number(item.desconto_perc) % 1 === 0 ? 0 : 1)}%</span>`
+            : '<span style="color:var(--text-muted)">—</span>'}
         </td>
         <td>
           <div style="display:flex;align-items:center;gap:8px">
@@ -554,7 +557,7 @@ window.pedRenderCarrinho = function() {
   body.innerHTML = `
     <div class="table-card">
       <table class="data-table">
-        <thead><tr><th>Produto</th><th class="right">Preço unit.</th><th>Qtd</th><th class="right">Total c/ IPI</th><th></th></tr></thead>
+        <thead><tr><th>Produto</th><th class="right">Preço unit.</th><th class="right">Desc.%</th><th>Qtd</th><th class="right">Total c/ IPI</th><th></th></tr></thead>
         <tbody>${linhas}</tbody>
       </table>
     </div>`;
