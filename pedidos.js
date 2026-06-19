@@ -668,6 +668,8 @@ window.pedAdicionarProdutoId = function(id) {
   // Verifica ação comercial ativa para este produto
   const hoje = new Date().toISOString().split('T')[0];
   const acoes = window._catAcoes || [];
+  console.log('DEBUG acoes:', acoes.length, 'produto erp:', p.id_produto_erp, 'grupo:', p.id_grupo);
+  if (acoes.length > 0) console.log('DEBUG acao[0]:', JSON.stringify(acoes[0]));
   const acaoAtiva = acoes.find(a => {
     if (!a.ativa) return false;
     if (a.data_inicio && a.data_inicio > hoje) return false;
