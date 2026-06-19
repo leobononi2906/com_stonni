@@ -494,6 +494,20 @@ window.pedTrocarCliente = function() {
   document.getElementById('etapa-carrinho').style.display = 'none';
 };
 
+
+window.pedSetST = function(estado) {
+  _pedidoAtual.st_estado = estado; // null, 'SP' ou 'PR'
+  // Atualiza visual dos botões
+  ['nenhum','sp','pr'].forEach(s => {
+    const btn = document.getElementById('btn-st-' + s);
+    if (!btn) return;
+    const ativo = (s === 'nenhum' && !estado) || s === (estado||'').toLowerCase();
+    btn.style.background = ativo ? 'var(--blue-dark)' : 'var(--surface2)';
+    btn.style.color      = ativo ? '#fff' : 'var(--text-secondary)';
+    btn.style.borderColor= ativo ? 'var(--blue-dark)' : 'var(--border)';
+  });
+  pedAtualizarTotais();
+};
 window.pedRenderCarrinho = function() {
   const body = document.getElementById('ped-carrinho-body');
   const totaisCard = document.getElementById('ped-totais-card');
@@ -589,7 +603,13 @@ window.pedAtualizarTotais = function() {
   const valorMinimo = parseFloat(window._pedConfig?.pedido_valor_minimo||0);
   const freteGratis = parseFloat(window._pedConfig?.frete_gratis_acima||0);
   const freteVal  = _pedidoAtual.frete?.valor_escolhido || 0;
-  const total     = subtotalComDesconto + valorIPI + freteVal;
+  // ST — soma st_sp ou st_pr de cada item × quantidade
+  const stEstado  = _pedidoAtual.st_estado || null;
+  const valorST   = stEstado ? _pedidoAtual.itens.reduce((s,i) => {
+    const campo = stEstado === 'SP' ? (i.st_sp||0) : (i.st_pr||0);
+    return s + Number(campo) * Number(i.quantidade||1);
+  }, 0) : 0;
+  const total     = subtotalComDesconto + valorIPI + freteVal + valorST;
 
   // Salva no estado para usar no envio
   _pedidoAtual.valor_ipi = valorIPI;
@@ -598,6 +618,7 @@ window.pedAtualizarTotais = function() {
   linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Subtotal produtos</span><span class="mono" style="font-weight:600">R$ ' + subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
   if (valorDesconto > 0.01) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Desconto (' + _pedidoAtual.itens.filter(i=>i.desconto_perc>0).map(i=>i.regras_aplicadas?.[0]||i.desconto_perc+'%').filter((v,i,a)=>a.indexOf(v)===i).join(', ') + ')</span><span class="mono" style="color:var(--green)">- R$ ' + valorDesconto.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
   if (temIPI) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">IPI</span><span class="mono" style="color:var(--orange)">R$ ' + valorIPI.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
+  if (valorST > 0.01) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">ST (' + stEstado + ')</span><span class="mono" style="color:var(--text-secondary)">+ R$ ' + valorST.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
   if (freteVal > 0) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Frete (' + (_pedidoAtual.frete?.transportadora||'') + ')</span><span class="mono">R$ ' + freteVal.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
   if (freteGratis > 0 && subtotal >= freteGratis) linhas += '<div class="alert alert-success" style="padding:8px 12px"><span class="alert-icon">🎉</span>Frete grátis acima de R$ ' + freteGratis.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</div>';
   linhas += '<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;border-top:1px solid var(--border);padding-top:8px;margin-top:4px"><span>Total</span><span class="mono" style="color:var(--blue-dark)">R$ ' + total.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
@@ -722,6 +743,8 @@ window.pedAdicionarProdutoId = function(id) {
       comprimento_cm: p.comprimento_cm || null,
       // IPI
       ipi_perc: parseFloat(p.ipi_perc) || 0,
+      st_sp: parseFloat(p.st_sp) || 0,
+      st_pr: parseFloat(p.st_pr) || 0,
     });
     // Re-aplica regras de desconto em todo o carrinho
     if (window._pedRegras?.length) {
@@ -925,6 +948,8 @@ window.pedEnviar = async function(tipo) {
     prazo_frete_dias:   _pedidoAtual.frete?.prazo_frete_dias || null,
     obs:                _pedidoAtual.obs,
     valor_produtos:     _pedidoAtual.itens.reduce((s,i)=>s+(Number(i.preco_final||i.preco_unitario)*Number(i.quantidade)),0),
+    st_estado:          _pedidoAtual.st_estado || null,
+    valor_st:           valorST || 0,
     valor_desconto:     valorDesconto,
     valor_ipi:          valorIPI,
     valor_total:        total,
