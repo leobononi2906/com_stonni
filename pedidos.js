@@ -668,12 +668,13 @@ window.pedAdicionarProdutoId = function(id) {
   // Verifica ação comercial ativa para este produto
   const hoje = new Date().toISOString().split('T')[0];
   const acoes = window._catAcoes || [];
-  console.log('DEBUG acoes:', acoes.length, 'produto erp:', p.id_produto_erp, 'grupo:', p.id_grupo);
-  if (acoes.length > 0) console.log('DEBUG acao[0]:', JSON.stringify(acoes[0]));
   const acaoAtiva = acoes.find(a => {
     if (!a.ativa) return false;
-    if (a.data_inicio && a.data_inicio > hoje) return false;
-    if (a.data_fim   && a.data_fim   < hoje)  return false;
+    // Trunca para só a data (YYYY-MM-DD) para evitar problema com timezone
+    const di = a.data_inicio ? a.data_inicio.slice(0,10) : null;
+    const df = a.data_fim   ? a.data_fim.slice(0,10)   : null;
+    if (di && di > hoje) return false;
+    if (df && df < hoje) return false;
     if (a.escopo === 'produto') return String(a.id_produto) === String(p.id_produto_erp);
     if (a.escopo === 'grupo') {
       if (String(a.id_grupo) !== String(p.id_grupo)) return false;
