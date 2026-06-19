@@ -47,20 +47,21 @@ window.pedGerarPDF = async function(idPedido) {
   const valorTotal = valorProdutos - valorDesconto + valorIPI + valorFrete;
 
   // Monta linhas de itens
-  // Itens: usa preco_final (preço real negociado)
+  // Itens: mostra preço de TABELA + desconto separado (cliente vê o benefício)
   const linhasItens = (itens || []).map((it, i) => {
     const precoTabela  = Number(it.preco_unitario || 0);
     const precoFinal   = Number(it.preco_final || it.preco_unitario || 0);
     const ipi          = Number(it.ipi_perc || 0);
     const descPercReg  = Number(it.desconto_perc || 0);
 
-    // Desconto: por regra OU diferença manual (não confunde com IPI)
+    // Desconto efetivo: por regra OU diferença manual de preço
     const editadoManual = descPercReg === 0 && precoFinal < precoTabela * 0.999;
     const descExibido = descPercReg > 0 ? descPercReg
       : editadoManual ? Math.round((1 - precoFinal / precoTabela) * 10000) / 100
       : 0;
 
-    // Cálculo do total: preço_final × qtd + IPI (IPI sobre preço_final)
+    // Preço exibido: sempre o preço de TABELA (preco_unitario)
+    // O total é calculado com preco_final (após desconto)
     const subtotalItem = precoFinal * Number(it.quantidade);
     const valorIpiItem = subtotalItem * ipi / 100;
     const totalComIpi  = subtotalItem + valorIpiItem;
@@ -70,7 +71,7 @@ window.pedGerarPDF = async function(idPedido) {
         <td class="ref">${it.referencia || '—'}</td>
         <td class="nome">${it.nome_produto || '—'}</td>
         <td class="centro">${it.quantidade}</td>
-        <td class="centro mono">R$ ${fmtVal(precoFinal)}</td>
+        <td class="centro mono">R$ ${fmtVal(precoTabela)}</td>
         <td class="centro">${descExibido > 0 ? descExibido.toFixed(descExibido % 1 === 0 ? 0 : 1) + '%' : '—'}</td>
         <td class="centro">${ipi > 0 ? ipi + '%' : '—'}</td>
         <td class="centro mono">${valorIpiItem > 0 ? 'R$ ' + fmtVal(valorIpiItem) : '—'}</td>
