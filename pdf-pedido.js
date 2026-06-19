@@ -36,19 +36,31 @@ window.pedGerarPDF = async function(idPedido) {
   };
 
   // Totais do banco (fonte de verdade)
-  // Recalcula valor_produtos a partir dos itens com desconto e IPI corretos
-  const valorProdutosReal = (itens||[]).reduce((s,i) => {
-    const pt  = Number(i.preco_unitario || 0);
-    const dp  = Number(i.desconto_perc || 0);
-    const pcd = pt * (1 - dp/100);
-    const pf  = Number(i.preco_final || i.preco_unitario || 0);
-    // Se tem desconto_perc, usa precoComDesc; senão usa preco_final (editado manual)
-    const base = dp > 0 ? pcd : (pf < pt * 0.999 ? pf : pt);
-    return s + base * Number(i.quantidade);
+  // Recalcula totais a partir dos itens — evita duplo desconto
+  // subtotalTabela = preço de tabela × qtd (sem desconto)
+  // subtotalComDesc = preço com desconto × qtd
+  // valorDesconto = diferença entre os dois
+  const subtotalTabela = (itens||[]).reduce((s,i) => {
+    return s + Number(i.preco_unitario||0) * Number(i.quantidade||1);
   }, 0);
-  const valorProdutos = valorProdutosReal || Number(ped.valor_produtos || 0);
-  const valorDesconto = Number(ped.valor_desconto || 0);
-  const valorIPI      = Number(ped.valor_ipi || 0);
+  const subtotalComDesc = (itens||[]).reduce((s,i) => {
+    const pt  = Number(i.preco_unitario || 0);
+    const dp  = Number(i.desconto_perc  || 0);
+    const pf  = Number(i.preco_final    || pt);
+    const pcd = dp > 0 ? pt*(1-dp/100) : (pf < pt*0.999 ? pf : pt);
+    return s + pcd * Number(i.quantidade||1);
+  }, 0);
+  const valorDesconto = parseFloat((subtotalTabela - subtotalComDesc).toFixed(2));
+  // IPI calculado sobre subtotalComDesc (após desconto)
+  const valorIPI = (itens||[]).reduce((s,i) => {
+    const pt  = Number(i.preco_unitario || 0);
+    const dp  = Number(i.desconto_perc  || 0);
+    const pf  = Number(i.preco_final    || pt);
+    const pcd = dp > 0 ? pt*(1-dp/100) : (pf < pt*0.999 ? pf : pt);
+    return s + pcd * Number(i.quantidade||1) * (Number(i.ipi_perc)||0) / 100;
+  }, 0);
+  // valorProdutos exibido = preço de tabela (para mostrar "Subtotal R$ X, Desconto -R$ Y")
+  const valorProdutos = subtotalTabela;
   const valorFrete    = Number(ped.valor_frete || 0);
   // valor_total salvo no banco = valor_produtos + valor_frete (sem IPI no campo valor_total)
   // Calculamos o total real somando os 3 componentes
