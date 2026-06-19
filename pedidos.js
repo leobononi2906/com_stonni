@@ -658,7 +658,41 @@ window.pedFiltrarProdutos = function() {
 window.pedAdicionarProdutoId = function(id) {
   const p = (window._catProdutos||[]).find(p=>p.id===id);
   if (!p) return;
-  const { preco, descontoPerc, acaoAtiva } = catPrecoFinal(p);
+
+  // Calcula preço de tabela com markup
+  const tabela = window._pedTabela || window._catTabela || { markup_global: 0 };
+  const markup = Number(tabela.markup_global || 0);
+  let precoTabela = Number(p.preco_base || 0);
+  if (markup !== 0) precoTabela = parseFloat((precoTabela * (1 + markup / 100)).toFixed(2));
+
+  // Verifica ação comercial ativa para este produto
+  const hoje = new Date().toISOString().split('T')[0];
+  const acoes = window._catAcoes || [];
+  const acaoAtiva = acoes.find(a => {
+    if (!a.ativa) return false;
+    if (a.data_inicio && a.data_inicio > hoje) return false;
+    if (a.data_fim   && a.data_fim   < hoje)  return false;
+    if (a.escopo === 'produto') return String(a.id_produto) === String(p.id_produto_erp);
+    if (a.escopo === 'grupo') {
+      if (String(a.id_grupo) !== String(p.id_grupo)) return false;
+      if (a.id_subgrupo && String(a.id_subgrupo) !== String(p.id_subgrupo)) return false;
+      return true;
+    }
+    return false;
+  });
+
+  // Desconto da ação (sem alterar preço de tabela)
+  let descontoPerc = 0;
+  if (acaoAtiva) {
+    if (acaoAtiva.tipo === 'preco_fixo') {
+      const precoFixo = Number(acaoAtiva.valor);
+      descontoPerc = parseFloat(((1 - precoFixo / precoTabela) * 100).toFixed(2));
+    } else if (acaoAtiva.tipo === 'desconto') {
+      descontoPerc = Number(acaoAtiva.valor);
+    }
+  }
+
+  const preco = precoTabela;
 
   // Verifica se já está no carrinho
   const existente = _pedidoAtual.itens.find(i=>i.id_produto===id);
