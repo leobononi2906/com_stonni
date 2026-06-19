@@ -83,13 +83,13 @@ function catPrecoFinal(produto) {
   const acoes  = window._catAcoes || [];
   const hoje   = new Date().toISOString().split('T')[0];
 
-  let preco = produto.preco_base || 0;
-
-  // 1. Aplica markup da tabela
+  // 1. Preço de tabela (com markup)
+  let precoTabela = Number(produto.preco_base) || 0;
   const markup = tabela.markup_global || 0;
-  if (markup !== 0) preco = preco * (1 + markup / 100);
+  if (markup !== 0) precoTabela = precoTabela * (1 + markup / 100);
+  precoTabela = parseFloat(precoTabela.toFixed(2));
 
-  // 2. Verifica ação comercial ativa (produto específico primeiro, depois grupo)
+  // 2. Verifica ação comercial ativa
   const acaoAtiva = acoes.find(a => {
     if (!a.ativa) return false;
     if (a.data_inicio && a.data_inicio > hoje) return false;
@@ -103,18 +103,19 @@ function catPrecoFinal(produto) {
     return false;
   });
 
-  let precoOriginal = null;
+  // 3. Calcula desconto da ação — SEM alterar o preço de tabela
+  let descontoPerc = 0;
   if (acaoAtiva) {
     if (acaoAtiva.tipo === 'preco_fixo') {
-      precoOriginal = preco;
-      preco = Number(acaoAtiva.valor);
+      const precoFixo = Number(acaoAtiva.valor);
+      descontoPerc = parseFloat(((1 - precoFixo / precoTabela) * 100).toFixed(2));
     } else if (acaoAtiva.tipo === 'desconto') {
-      precoOriginal = preco;
-      preco = preco * (1 - acaoAtiva.valor / 100);
+      descontoPerc = Number(acaoAtiva.valor);
     }
   }
 
-  return { preco, precoOriginal, acaoAtiva };
+  // Sempre retorna preço de tabela — desconto aparece separado
+  return { preco: precoTabela, descontoPerc, acaoAtiva };
 }
 
 window.catFiltrar = function() {
