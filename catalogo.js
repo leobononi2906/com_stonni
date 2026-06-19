@@ -94,10 +94,10 @@ function catPrecoFinal(produto) {
     if (!a.ativa) return false;
     if (a.data_inicio && a.data_inicio > hoje) return false;
     if (a.data_fim   && a.data_fim   < hoje)  return false;
-    if (a.escopo === 'produto') return a.id_produto === produto.id_produto_erp;
+    if (a.escopo === 'produto') return String(a.id_produto) === String(produto.id_produto_erp);
     if (a.escopo === 'grupo') {
-      if (a.id_grupo !== produto.id_grupo) return false;
-      if (a.id_subgrupo && a.id_subgrupo !== produto.id_subgrupo) return false;
+      if (String(a.id_grupo) !== String(produto.id_grupo)) return false;
+      if (a.id_subgrupo && String(a.id_subgrupo) !== String(produto.id_subgrupo)) return false;
       return true;
     }
     return false;
@@ -107,7 +107,7 @@ function catPrecoFinal(produto) {
   if (acaoAtiva) {
     if (acaoAtiva.tipo === 'preco_fixo') {
       precoOriginal = preco;
-      preco = acaoAtiva.valor;
+      preco = Number(acaoAtiva.valor);
     } else if (acaoAtiva.tipo === 'desconto') {
       precoOriginal = preco;
       preco = preco * (1 - acaoAtiva.valor / 100);
