@@ -236,6 +236,7 @@ window.pedGerarPDF = async function(idPedido) {
           <th>Produto</th>
           <th style="text-align:center">Qtd</th>
           <th style="text-align:center">Preço Unit.</th>
+          <th style="text-align:center">Desc.</th>
           <th style="text-align:center">IPI %</th>
           <th style="text-align:center">Vl. IPI</th>
           <th style="text-align:right">Total</th>
