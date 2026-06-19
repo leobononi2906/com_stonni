@@ -658,7 +658,7 @@ window.pedFiltrarProdutos = function() {
 window.pedAdicionarProdutoId = function(id) {
   const p = (window._catProdutos||[]).find(p=>p.id===id);
   if (!p) return;
-  const { preco, acaoAtiva } = catPrecoFinal(p);
+  const { preco, descontoPerc, acaoAtiva } = catPrecoFinal(p);
 
   // Verifica se já está no carrinho
   const existente = _pedidoAtual.itens.find(i=>i.id_produto===id);
@@ -667,9 +667,10 @@ window.pedAdicionarProdutoId = function(id) {
     _pedidoAtual.itens.push({
       id_produto: p.id, id_produto_erp: p.id_produto_erp,
       referencia: p.referencia, nome: p.nome, grupo: p.grupo || null,
-      preco_unitario: p.preco_base,
-      desconto_perc: acaoAtiva?.tipo==='desconto' ? acaoAtiva.valor : 0,
-      preco_final: preco, quantidade: 1,
+      preco_unitario: preco,   // preço de TABELA
+      preco_final:    preco,   // igual — desconto aparece separado
+      desconto_perc:  descontoPerc || 0,
+      quantidade: 1,
       regras_aplicadas: acaoAtiva ? [acaoAtiva.nome] : [],
       // Dimensões para cálculo de frete
       peso_kg: p.peso_kg || null,
