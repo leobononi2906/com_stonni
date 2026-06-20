@@ -1004,6 +1004,8 @@ window.cfgEditarProduto = async function(id) {
     <div class="cfg-grid-2">
       <div class="form-field"><label>Preço base (R$)</label><input type="number" id="ep-preco" class="cfg-input" value="${p.preco_base||0}" step="0.01"></div>
       <div class="form-field"><label>IPI (%)</label><input type="number" id="ep-ipi" class="cfg-input" value="${p.ipi_perc||0}" step="0.01" min="0" max="100" placeholder="0"></div>
+      <div class="form-field"><label>ST SP (R$/un)</label><input type="number" id="ep-st-sp" class="cfg-input" value="${p.st_sp||0}" step="0.01" min="0" placeholder="0,00"></div>
+      <div class="form-field"><label>ST PR (R$/un)</label><input type="number" id="ep-st-pr" class="cfg-input" value="${p.st_pr||0}" step="0.01" min="0" placeholder="0,00"></div>
     </div>
     <div class="form-field"><label>Descrição</label><textarea id="ep-desc" class="cfg-input" rows="2">${p.descricao||''}</textarea></div>
     <div style="margin-top:4px;margin-bottom:12px">
@@ -1098,7 +1100,7 @@ window.cfgAtualizarProduto = async function(id) {
   console.log('cfgAtualizarProduto id:', id);
   const esgotadoCheck = document.getElementById('ep-esgotado-check');
   console.log('esgotado-check element:', esgotadoCheck, 'checked:', esgotadoCheck?.checked);
-  const patch = { sync_fotos: document.getElementById('ep-sync-fotos')?.checked !== false, sync_medidas: document.getElementById('ep-sync-medidas')?.checked !== false, nome: document.getElementById('ep-nome').value.trim(), referencia: document.getElementById('ep-ref').value.trim(), aplicacao: document.getElementById('ep-aplicacao').value.trim(), grupo: document.getElementById('ep-grupo').value.trim(), subgrupo: document.getElementById('ep-subgrupo').value.trim(), preco_base: parseFloat(document.getElementById('ep-preco').value) || 0, ipi_perc: parseFloat(document.getElementById('ep-ipi')?.value) || 0, descricao: document.getElementById('ep-desc').value.trim(), ativo: document.getElementById('ep-ativo').checked, esgotado: document.getElementById('ep-esgotado-check')?.checked || document.getElementById('ep-esgotado')?.checked || false, atualizado_em: new Date().toISOString() };
+  const patch = { sync_fotos: document.getElementById('ep-sync-fotos')?.checked !== false, sync_medidas: document.getElementById('ep-sync-medidas')?.checked !== false, nome: document.getElementById('ep-nome').value.trim(), referencia: document.getElementById('ep-ref').value.trim(), aplicacao: document.getElementById('ep-aplicacao').value.trim(), grupo: document.getElementById('ep-grupo').value.trim(), subgrupo: document.getElementById('ep-subgrupo').value.trim(), preco_base: parseFloat(document.getElementById('ep-preco').value) || 0, ipi_perc: parseFloat(document.getElementById('ep-ipi')?.value) || 0, st_sp: parseFloat(document.getElementById('ep-st-sp')?.value) || 0, st_pr: parseFloat(document.getElementById('ep-st-pr')?.value) || 0, descricao: document.getElementById('ep-desc').value.trim(), ativo: document.getElementById('ep-ativo').checked, esgotado: document.getElementById('ep-esgotado-check')?.checked || document.getElementById('ep-esgotado')?.checked || false, atualizado_em: new Date().toISOString() };
   const peso = parseFloat(document.getElementById('ep-peso')?.value);
   const altura = parseFloat(document.getElementById('ep-altura')?.value);
   const largura = parseFloat(document.getElementById('ep-largura')?.value);
