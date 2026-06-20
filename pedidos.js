@@ -177,6 +177,23 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
             </div>
           </div>
           <div class="form-field">
+            <label>Substituição Tributária</label>
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <button type="button" id="btn-st-nenhum" onclick="pedSetST(null)"
+                style="padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--blue-dark);color:#fff;font-size:12px;font-weight:600;cursor:pointer">
+                Nenhuma
+              </button>
+              <button type="button" id="btn-st-sp" onclick="pedSetST('SP')"
+                style="padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-secondary);font-size:12px;font-weight:600;cursor:pointer">
+                ST SP
+              </button>
+              <button type="button" id="btn-st-pr" onclick="pedSetST('PR')"
+                style="padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-secondary);font-size:12px;font-weight:600;cursor:pointer">
+                ST PR
+              </button>
+            </div>
+          </div>
+          <div class="form-field">
             <label>Observações</label>
             <textarea id="ped-obs" class="ped-input" rows="2" placeholder="Informações adicionais..." oninput="_pedidoAtual.obs=this.value"></textarea>
           </div>
