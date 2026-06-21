@@ -24,6 +24,7 @@ async function renderConfiguracoes(el) {
           <button class="cfg-tab" onclick="cfgAba('acoes',this)">🎯 Ações</button>
           <button class="cfg-tab" onclick="cfgAba('catalogo',this)">🛍️ Catálogo</button>
           <button class="cfg-tab" onclick="cfgAba('representantes',this)">👥 Equipe</button>
+    <button class="cfg-tab" onclick="cfgAba('logs',this)">📋 Logs</button>
         </div>
       </div>
       <div id="cfg-body"></div>
@@ -44,6 +45,7 @@ function cfgAba(aba, btn) {
     case 'catalogo':        cfgCarregarCatalogo(body); break;
     case 'representantes':  cfgCarregarRepresentantes(body); break;
     case 'status':           cfgCarregarStatus(body); break;
+    case 'logs':             cfgCarregarLogs(body); break;
   }
 }
 
@@ -1541,5 +1543,78 @@ window.cfgAtualizarStatus = async function(id) {
   window._pedidoStatus = null;
   fecharDrawer();
   cfgAba('status', null);
+};
+
+// ============================================================
+//  ABA LOGS — Ações e Erros
+// ============================================================
+async function cfgCarregarLogs(el) {
+  el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+
+  const tipoFiltro = window._logTipo || '';
+  const catFiltro  = window._logCat  || '';
+  const query = [
+    'order=criado_em.desc',
+    'limit=200',
+    tipoFiltro ? `tipo=eq.${tipoFiltro}` : '',
+    catFiltro  ? `categoria=eq.${catFiltro}` : '',
+  ].filter(Boolean).join('&');
+
+  const logs = await supa('app_logs', query) || [];
+
+  const iconeTipo = { acao: '✅', erro: '🔴' };
+  const corTipo   = { acao: 'var(--green)', erro: 'var(--red)' };
+  const categorias = [...new Set(logs.map(l=>l.categoria).filter(Boolean))].sort();
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="display:flex;gap:6px">
+        <button onclick="window._logTipo='';cfgAba('logs',document.querySelector('.cfg-tab.active'))" 
+          class="btn btn-sm ${!window._logTipo?'btn-primary':'btn-outline'}">Todos</button>
+        <button onclick="window._logTipo='acao';cfgAba('logs',document.querySelector('.cfg-tab.active'))" 
+          class="btn btn-sm ${window._logTipo==='acao'?'btn-primary':'btn-outline'}">✅ Ações</button>
+        <button onclick="window._logTipo='erro';cfgAba('logs',document.querySelector('.cfg-tab.active'))" 
+          class="btn btn-sm ${window._logTipo==='erro'?'btn-danger':'btn-outline'}">🔴 Erros</button>
+      </div>
+      <select class="cfg-input" style="width:160px;height:36px" 
+        onchange="window._logCat=this.value;cfgAba('logs',document.querySelector('.cfg-tab.active'))">
+        <option value="">Todas categorias</option>
+        ${categorias.map(c=>`<option value="${c}" ${window._logCat===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+      <span style="font-size:12px;color:var(--text-muted);margin-left:auto">${logs.length} registro(s)</span>
+      <button onclick="cfgLimparLogs()" class="btn btn-sm btn-outline" style="color:var(--red);border-color:var(--red)">
+        🗑️ Limpar erros
+      </button>
+    </div>
+
+    ${logs.length === 0 ? `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <h3>Nenhum log encontrado</h3>
+        <p>As ações e erros do sistema aparecerão aqui.</p>
+      </div>` : `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${logs.map(l => `
+        <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${corTipo[l.tipo]||'var(--border)'};border-radius:8px;padding:12px 14px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:14px">${iconeTipo[l.tipo]||'•'}</span>
+            <span style="font-size:13px;font-weight:600;flex:1">${l.descricao||''}</span>
+            ${l.categoria ? `<span style="font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:var(--text-muted)">${l.categoria}</span>` : ''}
+            <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">${new Date(l.criado_em).toLocaleString('pt-BR')}</span>
+          </div>
+          ${l.usuario ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px">👤 ${l.usuario}</div>` : ''}
+          ${l.detalhe ? `<details style="margin-top:8px">
+            <summary style="font-size:11px;color:var(--text-muted);cursor:pointer">Ver detalhes</summary>
+            <pre style="font-size:10px;background:var(--surface2);border-radius:4px;padding:8px;margin-top:4px;overflow-x:auto;white-space:pre-wrap;word-break:break-all">${l.detalhe}</pre>
+          </details>` : ''}
+        </div>`).join('')}
+    </div>`}
+  `;
+}
+
+window.cfgLimparLogs = async function() {
+  if (!confirm('Limpar todos os logs de ERRO? (ações são mantidas)')) return;
+  await fetch(`${SUPA_URL}/rest/v1/app_logs?tipo=eq.erro`, { method:'DELETE', headers: HEADERS });
+  cfgAba('logs', document.querySelector('.cfg-tab.active'));
 };
 
