@@ -301,6 +301,7 @@ window.gPedTab = function(tab, btn) {
 
 window.gPedAprovar = async function(id) {
   if (!confirm('Aprovar este pedido?')) return;
+  appLog('acao', `Pedido #${id} aprovado`, {categoria:'pedido'});
   await supaPatch('ped_pedidos', `id=eq.${id}`, { status:'APROVADO', aprovado_por: USUARIO.nome, aprovado_em: new Date().toISOString() });
   const statusAnterior = (await supa('ped_pedidos', `id=eq.${id}&select=status`))?.[0]?.status || 'ENVIADO';
   await supaInsert('ped_pedido_log', { id_pedido:id, status_de: statusAnterior, status_para:'APROVADO', usuario: USUARIO.nome });
@@ -337,6 +338,7 @@ window.gPedEditarCotacao = async function(id) {
 
 window.gPedCancelar = async function(id) {
   if (!confirm('Cancelar este pedido? Esta ação não pode ser desfeita.')) return;
+  appLog('acao', `Pedido #${id} cancelado (era APROVADO)`, {categoria:'pedido'});
   await supaPatch('ped_pedidos', `id=eq.${id}`, { status: 'CANCELADO' });
   await supaInsert('ped_pedido_log', { id_pedido: id, status_de: 'APROVADO', status_para: 'CANCELADO', usuario: USUARIO.nome });
   fecharDrawer();
@@ -345,6 +347,7 @@ window.gPedCancelar = async function(id) {
 
 window.gPedVoltarCotacao = async function(id) {
   if (!confirm('Voltar este pedido para Cotação? O representante poderá editá-lo novamente.')) return;
+  appLog('acao', `Pedido #${id} voltou para Cotação`, {categoria:'pedido'});
   const pedRes = await supa('ped_pedidos', `id=eq.${id}&select=status`);
   const statusAtual = pedRes?.[0]?.status || 'ENVIADO';
   await supaPatch('ped_pedidos', `id=eq.${id}`, { status: 'COTACAO' });
