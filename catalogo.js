@@ -433,16 +433,16 @@ window.catAbrirGerador = async function() {
       </div>
       <div class="form-field">
         <label>Filtrar por tag <span style="font-weight:400;color:var(--text-muted)">(desmarcado = todos)</span></label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px" id="gpdf-tags">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:6px" id="gpdf-tags">
           ${tags.length
-            ? tags.map(t=>`<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px"><input type="checkbox" value="${t.nome}" style="accent-color:#1A3A8F"> ${t.nome}</label>`).join('')
+            ? tags.map(t=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;min-height:40px"><input type="checkbox" value="${t.nome}" style="accent-color:#1A3A8F"> ${t.nome}</label>`).join('')
             : '<span style="font-size:12px;color:var(--text-muted)">Nenhuma tag cadastrada</span>'}
         </div>
       </div>
       <div class="form-field">
         <label>Filtrar por subgrupo <span style="font-weight:400;color:var(--text-muted)">(desmarcado = todos)</span></label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px" id="gpdf-subgrupos">
-          ${subgrupos.map(s=>`<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px"><input type="checkbox" value="${s.id}" style="accent-color:#1A3A8F"> ${s.nome}</label>`).join('')}
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:6px" id="gpdf-subgrupos">
+          ${subgrupos.map(s=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;min-height:40px"><input type="checkbox" value="${s.id}" style="accent-color:#1A3A8F"> ${s.nome}</label>`).join('')}
         </div>
       </div>
     </div>`;
