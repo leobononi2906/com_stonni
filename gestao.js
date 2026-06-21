@@ -46,7 +46,7 @@ function _renderListaPedidos(el, pedidos, isGestor) {
 
   el.innerHTML = `
     <div class="section-header" style="margin-bottom:16px">
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <input type="text" id="gped-busca" class="cfg-input" style="width:220px" placeholder="Buscar pedido/cliente..." oninput="gPedFiltrar()">
         <select id="gped-status" class="cfg-input" style="width:140px" onchange="gPedFiltrar()">
           ${statusOpts.map(s=>`<option value="${s}">${s||'Todos os status'}</option>`).join('')}
@@ -158,7 +158,7 @@ window.gPedAbrir = async function(id) {
   const acoesGestorHtml = isGestor && ['ENVIADO','AGUARDANDO','APROVADO'].includes(pedido.status) ? `
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-top:16px">
       <div style="font-size:13px;font-weight:600;margin-bottom:12px">⚙️ Ações do gestor</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="acoes-grid">
         ${['ENVIADO','AGUARDANDO'].includes(pedido.status) ? `
           <button class="btn btn-success" onclick="gPedAprovar(${id})">✅ Aprovar</button>
           <button class="btn btn-danger"  onclick="gPedReprovar(${id})">❌ Reprovar</button>
@@ -177,7 +177,7 @@ window.gPedAbrir = async function(id) {
   const acoesCotacaoHtml = pedido.status === 'COTACAO' ? `
     <div style="background:#faf5ff;border:1px solid #ddd6fe;border-radius:var(--radius-sm);padding:16px;margin-top:16px">
       <div style="font-size:13px;font-weight:600;color:#7c3aed;margin-bottom:12px">📋 Cotação</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-warning" onclick="gPedEditarCotacao(${id})">✏️ Editar</button>
         <button class="btn btn-outline" onclick="pedGerarPDF(${id})">🖨️ Gerar PDF</button>
         <button class="btn btn-primary" onclick="gPedConverterCotacao(${id})">📦 Converter em Pedido</button>
@@ -230,7 +230,7 @@ window.gPedAbrir = async function(id) {
   const downloadHtml = !isGestor && (pedido.nf_url || pedido.boleto_url) ? `
     <div style="background:var(--green-bg);border:1px solid var(--green);border-radius:var(--radius-sm);padding:16px;margin-top:16px">
       <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:10px">📎 Documentos disponíveis</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         ${pedido.nf_url ? `<a href="${pedido.nf_url}" target="_blank" class="btn btn-success">🧾 Baixar NF ${pedido.nf_numero?'('+pedido.nf_numero+')':''}</a>` : ''}
         ${pedido.boleto_url ? `<a href="${pedido.boleto_url}" target="_blank" class="btn btn-outline">📄 Baixar Boleto</a>` : ''}
       </div>
@@ -255,10 +255,10 @@ window.gPedAbrir = async function(id) {
     <div id="gped-tab-itens">
       ${btnPdfHtml}
       ${alertasHtml.join('')}
-      <table class="data-table" style="margin-bottom:16px">
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="data-table" style="margin-bottom:16px;min-width:380px">
         <thead><tr><th>Produto</th><th class="right">Qtd</th><th class="right">Preço unit.</th><th class="right">Total</th></tr></thead>
         <tbody>${itensHtml}</tbody>
-      </table>
+      </table></div>
       <div style="text-align:right;font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:var(--blue-dark)">
         Total: R$ ${(itens||[]).reduce((s,i)=>s+Number(i.preco_final||i.preco_unitario||0)*Number(i.quantidade||1),0).toLocaleString('pt-BR',{minimumFractionDigits:2})}
       </div>
