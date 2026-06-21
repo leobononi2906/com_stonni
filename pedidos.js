@@ -997,7 +997,7 @@ window.pedEnviar = async function(tipo) {
     idPedido = inserted?.[0]?.id;
   }
 
-  if (!idPedido) { alert('Erro ao salvar pedido. Tente novamente.'); return; }
+  if (!idPedido) { appLog('erro','Falha ao salvar pedido — idPedido nulo',{categoria:'pedido',detalhe:{pedido}}); alert('Erro ao salvar pedido. Tente novamente.'); return; }
 
   // Salva itens
   for (const item of _pedidoAtual.itens) {
@@ -1022,6 +1022,9 @@ window.pedEnviar = async function(tipo) {
   if (typeof catAtualizarBadge === 'function') catAtualizarBadge();
   window._tipoPedidoCarrinho = null;
   window._pedidosCache = null;
+
+  // Registra log
+  appLog('acao', `${ehCotacao?'Cotação':'Pedido'} ${codigo} salvo por ${USUARIO.nome}`, {categoria:'pedido', detalhe:{codigo, status: ehCotacao?'COTACAO':'ENVIADO', cliente:_pedidoAtual.cliente?.nome}});
 
   // Navega direto para meus-pedidos com toast de confirmação
   const msgSucesso = ehCotacao
