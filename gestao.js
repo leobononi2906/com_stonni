@@ -287,7 +287,7 @@ window.gPedAbrir = async function(id) {
     `${(pedido.nome_cliente||'')} · ${(pedido.criado_em ? new Date(pedido.criado_em).toLocaleDateString('pt-BR') : '')}`,
     bodyHtml, '', tabsHtml
   );
-  } catch(e) { console.error('gPedAbrir erro:', e.message, e.stack); alert('Erro: ' + e.message); }
+  } catch(e) { console.error('gPedAbrir erro:', e.message, e.stack); appLog('erro','Erro ao abrir pedido: '+e.message,{categoria:'pedido',detalhe:e.stack}); alert('Erro: ' + e.message); }
 };
 
 window.gPedTab = function(tab, btn) {
