@@ -727,6 +727,21 @@ function renderNav() {
   `).join('');
 }
 
+
+// ── Sistema de logs global ──
+window.appLog = async function(tipo, descricao, opcoes) {
+  const cat = (opcoes||{}).categoria || 'sistema';
+  const det = (opcoes||{}).detalhe   || null;
+  try {
+    await supaInsert('app_logs', {
+      tipo, descricao,
+      categoria: cat,
+      detalhe: det ? (typeof det==='string' ? det : JSON.stringify(det,null,2)) : null,
+      usuario: window.USUARIO?.nome || null
+    });
+  } catch(e) { /* silencioso */ }
+};
+
 function irPara(paginaId, params = {}) {
   // Remove active de todos
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
