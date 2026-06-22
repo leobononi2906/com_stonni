@@ -733,11 +733,22 @@ window.appLog = async function(tipo, descricao, opcoes) {
   const cat = (opcoes||{}).categoria || 'sistema';
   const det = (opcoes||{}).detalhe   || null;
   try {
-    await supaInsert('app_logs', {
-      tipo, descricao,
-      categoria: cat,
-      detalhe: det ? (typeof det==='string' ? det : JSON.stringify(det,null,2)) : null,
-      usuario: window.USUARIO?.nome || null
+    const token = window.HEADERS?.['Authorization']?.replace('Bearer ','') || '';
+    if (!token) return; // sem token não loga
+    await fetch(`${SUPA_URL}/rest/v1/app_logs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':        SUPA_KEY,
+        'Authorization': 'Bearer ' + token,
+        'Prefer':        'return=minimal'
+      },
+      body: JSON.stringify({
+        tipo, descricao,
+        categoria: cat,
+        detalhe: det ? (typeof det==='string' ? det : JSON.stringify(det,null,2)) : null,
+        usuario: window.USUARIO?.nome || null
+      })
     });
   } catch(e) { /* silencioso */ }
 };
