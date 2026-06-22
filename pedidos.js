@@ -666,7 +666,13 @@ window.pedRemoverItem = function(idx) {
 
 // ── Adicionar produto ──
 window.pedAdicionarProduto = async function() {
-  const produtos = window._catProdutos || await supa('ped_catalogo_produtos','ativo=eq.true&esgotado=eq.false&order=nome&select=*');
+  // Sempre busca fresh para garantir campos st_sp/st_pr atualizados
+  // Se _catProdutos existe mas não tem st_sp, rebusca
+  let produtos = window._catProdutos;
+  if (!produtos || !produtos[0]?.hasOwnProperty('st_sp')) {
+    produtos = await supa('ped_catalogo_produtos','ativo=eq.true&esgotado=eq.false&order=nome&select=*');
+    window._catProdutos = produtos; // atualiza cache com campos novos
+  }
   window._catProdutos = produtos;
 
   abrirDrawer('Adicionar Produto', 'Selecione o produto para adicionar ao pedido', `
