@@ -107,12 +107,42 @@ function _renderLinhasPedidos(lista, isGestor) {
   `).join('');
 }
 
+window._gPedFiltroAtivo = '';
+
+window.gPedSetFiltro = function(filtro) {
+  window._gPedFiltroAtivo = filtro;
+  // Atualiza visual dos botões
+  const mapa = { '':'todos', 'PEDIDOS':'pedidos', 'COTACAO':'cotacao', 'CANCELADOS':'cancelado' };
+  Object.entries(mapa).forEach(([f, id]) => {
+    const btn = document.getElementById('gped-f-' + id);
+    if (!btn) return;
+    const ativo = f === filtro;
+    btn.className = 'btn btn-sm ' + (ativo ? 'btn-primary' : 'btn-outline');
+  });
+  gPedFiltrar();
+};
+
 window.gPedFiltrar = function() {
   const busca  = document.getElementById('gped-busca')?.value.toLowerCase()||'';
-  const status = document.getElementById('gped-status')?.value||'';
+  const filtro = window._gPedFiltroAtivo || '';
   let lista = window._pedidosLista||[];
-  if (busca)  lista = lista.filter(p=>p.codigo?.toLowerCase().includes(busca)||p.nome_cliente?.toLowerCase().includes(busca)||p.cnpj_cliente?.includes(busca));
-  if (status) lista = lista.filter(p=>p.status===status);
+
+  // Filtro por grupo de status
+  if (filtro === 'PEDIDOS') {
+    lista = lista.filter(p => ['ENVIADO','AGUARDANDO','APROVADO','FATURADO'].includes(p.status));
+  } else if (filtro === 'COTACAO') {
+    lista = lista.filter(p => p.status === 'COTACAO');
+  } else if (filtro === 'CANCELADOS') {
+    lista = lista.filter(p => ['REPROVADO','CANCELADO'].includes(p.status));
+  }
+
+  // Busca por texto
+  if (busca) lista = lista.filter(p =>
+    p.codigo?.toLowerCase().includes(busca) ||
+    p.nome_cliente?.toLowerCase().includes(busca) ||
+    p.cnpj_cliente?.includes(busca)
+  );
+
   document.getElementById('gped-count').textContent = `${lista.length} pedido(s)`;
   document.getElementById('gped-tbody').innerHTML = _renderLinhasPedidos(lista, window._gPedIsGestor);
 };
