@@ -933,8 +933,13 @@ window.pedEnviar = async function(tipo) {
     const base = Number(i.preco_unitario) * Number(i.quantidade) * (1 - (Number(i.desconto_perc)||0)/100);
     return s + base * (parseFloat(i.ipi_perc)||0) / 100;
   }, 0);
-  const freteVal = _pedidoAtual.frete?.valor_escolhido || 0;
-  const total = subtotal - valorDesconto + valorIPI + freteVal;
+  const freteVal  = _pedidoAtual.frete?.valor_escolhido || 0;
+  const stEstado  = _pedidoAtual.st_estado || null;
+  const valorST   = stEstado ? _pedidoAtual.itens.reduce((s,i) => {
+    const campo = stEstado === 'SP' ? Number(i.st_sp||0) : Number(i.st_pr||0);
+    return s + campo * Number(i.quantidade||1);
+  }, 0) : 0;
+  const total = subtotal - valorDesconto + valorIPI + freteVal + valorST;
   const ano = new Date().getFullYear();
 
   // Gera código sequencial — busca o maior número existente para evitar colisão
