@@ -395,9 +395,14 @@ window.pedEditarPreco = function(idx, novoValor) {
   if (isNaN(preco) || preco < 0) return;
   const tabelaBase = Number(item.preco_unitario);
 
-  // Salva preço editado
-  item.preco_final   = preco;
-  item.preco_editado = true;
+  // Edição manual: atualiza preco_unitario para o novo valor
+  // (assim o cálculo de total usa o valor editado)
+  // Zera desconto_perc pois o desconto de regra não se aplica a preço editado
+  item.preco_unitario = preco;
+  item.preco_final    = preco;
+  item.desconto_perc  = 0;
+  item.regras_aplicadas = [];
+  item.preco_editado  = true;
 
   // Marca se está abaixo da tabela
   const abaixo = preco < tabelaBase * 0.999;
