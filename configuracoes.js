@@ -1029,8 +1029,7 @@ window.cfgEditarProduto = async function(id) {
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="ep-ativo" ${p.ativo?'checked':''} style="accent-color:var(--blue-dark)"> Ativo</label>
       <div style="display:flex;align-items:center;gap:10px">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
-          <input type="checkbox" id="ep-esgotado-check" ${p.esgotado?'checked':''} style="accent-color:var(--red)"
-            onchange="cfgToggleEsgotado(${p.id}, this.checked)"> Esgotado
+          <input type="checkbox" id="ep-esgotado-check" ${p.esgotado?'checked':''} style="accent-color:var(--red)"> Esgotado
         </label>
         <span style="font-size:11px;color:var(--text-muted)">(salva imediatamente)</span>
       </div>
@@ -1040,6 +1039,9 @@ window.cfgEditarProduto = async function(id) {
     <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
     <button class="btn btn-primary" onclick="cfgAtualizarProduto(${id})">Salvar</button>
   `);
+  // Listener confiável para esgotado — onchange inline não dispara corretamente em innerHTML
+  const _ec = document.getElementById('ep-esgotado-check');
+  if (_ec) _ec.addEventListener('change', function() { cfgToggleEsgotado(id, this.checked); });
 };
 
 window.cfgSincronizarBling = async function(id, sku) {
