@@ -62,8 +62,11 @@ window.pedGerarPDF = async function(idPedido) {
   // valorProdutos exibido = preço de tabela (para mostrar "Subtotal R$ X, Desconto -R$ Y")
   const valorProdutos = subtotalTabela;
   const valorFrete    = Number(ped.valor_frete || 0);
-  // valor_total salvo no banco = valor_produtos + valor_frete (sem IPI no campo valor_total)
-  // Calculamos o total real somando os 3 componentes
+  const stEstado      = ped.st_estado || null;
+  const valorST       = stEstado ? (itens||[]).reduce((s,i) => {
+    const campo = stEstado === 'SP' ? Number(i.st_sp||0) : Number(i.st_pr||0);
+    return s + campo * Number(i.quantidade||1);
+  }, 0) : Number(ped.valor_st || 0);
   const valorTotal = valorProdutos - valorDesconto + valorIPI + valorFrete + valorST;
 
   // Monta linhas de itens
