@@ -51,8 +51,9 @@ window.pedGerarPDF = async function(idPedido) {
     return s + pcd * Number(i.quantidade||1);
   }, 0);
   const valorDesconto = parseFloat((subtotalTabela - subtotalComDesc).toFixed(2));
-  // IPI calculado sobre subtotalComDesc (após desconto)
-  const valorIPI = (itens||[]).reduce((s,i) => {
+  // IPI calculado sobre subtotalComDesc (zerado quando ST ativo)
+  const stEstado      = ped.st_estado || null;
+  const valorIPI = stEstado ? 0 : (itens||[]).reduce((s,i) => {
     const pt  = Number(i.preco_unitario || 0);
     const dp  = Number(i.desconto_perc  || 0);
     const pf  = Number(i.preco_final    || pt);
@@ -62,7 +63,6 @@ window.pedGerarPDF = async function(idPedido) {
   // valorProdutos exibido = preço de tabela (para mostrar "Subtotal R$ X, Desconto -R$ Y")
   const valorProdutos = subtotalTabela;
   const valorFrete    = Number(ped.valor_frete || 0);
-  const stEstado      = ped.st_estado || null;
   const valorST       = stEstado ? (itens||[]).reduce((s,i) => {
     const campo = stEstado === 'SP' ? Number(i.st_sp||0) : Number(i.st_pr||0);
     return s + campo * Number(i.quantidade||1);
@@ -87,8 +87,8 @@ window.pedGerarPDF = async function(idPedido) {
     // Preço com desconto: base para IPI e total
     const precoComDesc = parseFloat((precoTabela * (1 - descExibido / 100)).toFixed(2));
     const subtotalItem = precoComDesc * Number(it.quantidade);
-    // IPI calculado APÓS o desconto
-    const valorIpiItem = subtotalItem * ipi / 100;
+    // IPI calculado APÓS o desconto (zerado quando ST ativo)
+    const valorIpiItem = stEstado ? 0 : subtotalItem * ipi / 100;
     const totalComIpi  = subtotalItem + valorIpiItem;
 
     return `
@@ -98,7 +98,7 @@ window.pedGerarPDF = async function(idPedido) {
         <td class="centro">${it.quantidade}</td>
         <td class="centro mono">R$ ${fmtVal(precoTabela)}</td>
         <td class="centro">${descExibido > 0 ? descExibido.toFixed(descExibido % 1 === 0 ? 0 : 1) + '%' : '—'}</td>
-        <td class="centro">${ipi > 0 ? ipi + '%' : '—'}</td>
+        <td class="centro">${ipi > 0 && !stEstado ? ipi + '%' : '—'}</td>
         <td class="centro mono">${valorIpiItem > 0 ? 'R$ ' + fmtVal(valorIpiItem) : '—'}</td>
         <td class="direita mono"><strong>R$ ${fmtVal(totalComIpi)}</strong></td>
       </tr>`;
