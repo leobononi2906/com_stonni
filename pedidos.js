@@ -561,7 +561,7 @@ window.pedRenderCarrinho = function() {
         <td>
           <div style="font-weight:500;font-size:13px">${item.nome}</div>
           <div style="font-size:11px;color:var(--text-muted)">Ref: ${item.referencia||'—'}</div>
-          ${ipiPerc > 0 ? `<div style="font-size:11px;color:var(--orange)">+ ${ipiPerc}% IPI = R$ ${valorIpi.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : ''}
+          ${ipiPerc > 0 && !_pedidoAtual?.st_estado ? `<div style="font-size:11px;color:var(--orange)">+ ${ipiPerc}% IPI = R$ ${valorIpi.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : ''}
         </td>
         <td style="text-align:right;min-width:140px">
           <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px">
@@ -616,8 +616,9 @@ window.pedAtualizarTotais = function() {
     return s + (descPerc > 0 ? Number(i.preco_unitario) * Number(i.quantidade) * descPerc / 100 : 0) + descManual;
   }, 0);
   const subtotalComDesconto = subtotal - valorDesconto;
-  // IPI sobre o valor com desconto
-  const valorIPI = _pedidoAtual.itens.reduce((s,i) => {
+  // IPI sobre o valor com desconto (zerado quando ST ativo)
+  const stEstado  = _pedidoAtual.st_estado || null;
+  const valorIPI  = stEstado ? 0 : _pedidoAtual.itens.reduce((s,i) => {
     const base = Number(i.preco_unitario) * Number(i.quantidade) * (1 - (Number(i.desconto_perc)||0)/100);
     return s + base * (parseFloat(i.ipi_perc)||0) / 100;
   }, 0);
@@ -626,7 +627,6 @@ window.pedAtualizarTotais = function() {
   const freteGratis = parseFloat(window._pedConfig?.frete_gratis_acima||0);
   const freteVal  = _pedidoAtual.frete?.valor_escolhido || 0;
   // ST — soma st_sp ou st_pr de cada item × quantidade
-  const stEstado  = _pedidoAtual.st_estado || null;
   const valorST   = stEstado ? _pedidoAtual.itens.reduce((s,i) => {
     const campo = stEstado === 'SP' ? (i.st_sp||0) : (i.st_pr||0);
     return s + Number(campo) * Number(i.quantidade||1);
@@ -934,12 +934,12 @@ window.pedEnviar = async function(tipo) {
   const valorDesconto = _pedidoAtual.itens.reduce((s,i) => {
     return s + Number(i.preco_unitario) * Number(i.quantidade) * (Number(i.desconto_perc)||0) / 100;
   }, 0);
-  const valorIPI = _pedidoAtual.itens.reduce((s,i) => {
+  const stEstado  = _pedidoAtual.st_estado || null;
+  const valorIPI  = stEstado ? 0 : _pedidoAtual.itens.reduce((s,i) => {
     const base = Number(i.preco_unitario) * Number(i.quantidade) * (1 - (Number(i.desconto_perc)||0)/100);
     return s + base * (parseFloat(i.ipi_perc)||0) / 100;
   }, 0);
   const freteVal  = _pedidoAtual.frete?.valor_escolhido || 0;
-  const stEstado  = _pedidoAtual.st_estado || null;
   const valorST   = stEstado ? _pedidoAtual.itens.reduce((s,i) => {
     const campo = stEstado === 'SP' ? Number(i.st_sp||0) : Number(i.st_pr||0);
     return s + campo * Number(i.quantidade||1);
