@@ -856,6 +856,16 @@ window.pedCotarFrete = async function() {
     const data = await r.json();
     const resultados = data?.resultados || [];
 
+    // Log quando API retorna mas sem resultados (CEP inválido, produto sem dimensões, etc)
+    if (!resultados.length) {
+      appLog('WARN', 'FRETE', 'pedCotarFrete', 'Cotação retornou sem resultados', {
+        cep: payload.cep_destino,
+        cliente: _pedidoAtual.cliente?.nome,
+        qtd_pacotes: pacotes.length,
+        erro_api: data?.erro || data?.message || null
+      });
+    }
+
     const freteGratis = parseFloat(window._pedConfig?.frete_gratis_acima||0);
     const isGratis = freteGratis > 0 && subtotal >= freteGratis;
 
@@ -891,6 +901,12 @@ window.pedCotarFrete = async function() {
     }
   } catch(e) {
     document.getElementById('ped-frete-resultado').innerHTML = '<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Erro ao cotar frete. Verifique a conexão.</div>';
+    appLog('ERROR', 'FRETE', 'pedCotarFrete', e.message || 'Erro desconhecido na cotação de frete', {
+      cep: payload?.cep_destino,
+      cliente: _pedidoAtual.cliente?.nome,
+      qtd_pacotes: pacotes?.length,
+      stack: e.stack?.slice(0, 300)
+    });
   }
 
   btn.textContent = '🚚 Recotar frete'; btn.disabled = false;
