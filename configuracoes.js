@@ -1652,8 +1652,7 @@ window.cfgExportarTabelaPreco = async function() {
 };
 
 window.cfgGerarXlsTabelaPreco = async function() {
-  const sel     = document.getElementById('exp-tabela-sel');
-  const idTabela = parseInt(sel.value);
+  const sel      = document.getElementById('exp-tabela-sel');
   const markup   = parseFloat(sel.options[sel.selectedIndex].dataset.markup) || 0;
   const nomeTab  = sel.options[sel.selectedIndex].text;
   const status   = document.getElementById('exp-status');
@@ -1666,18 +1665,6 @@ window.cfgGerarXlsTabelaPreco = async function() {
 
   status.textContent = `✅ ${produtos.length} produto(s) encontrado(s). Gerando XLS...`;
 
-  // Monta dados
-  const linhas = produtos.map(p => {
-    const preco = parseFloat(p.preco_base || 0);
-    const precoFinal = markup !== 0 ? parseFloat((preco * (1 + markup / 100)).toFixed(2)) : preco;
-    return {
-      'Referência': p.referencia || '—',
-      'Nome':       p.nome || '—',
-      'Preço (R$)': precoFinal,
-      'IPI %':      parseFloat(p.ipi_perc || 0)
-    };
-  });
-
   // Carrega SheetJS dinamicamente se não estiver disponível
   if (typeof XLSX === 'undefined') {
     await new Promise((resolve, reject) => {
@@ -1688,20 +1675,53 @@ window.cfgGerarXlsTabelaPreco = async function() {
     });
   }
 
+  const agora = new Date();
+  const dataEmissao = agora.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+  // Monta array de arrays: linha 1 = info emissão, linha 2 = cabeçalho, linha 3+ = dados
+  const aoa = [
+    [`Tabela de Preços: ${nomeTab}`, '', `Emissão: ${dataEmissao}`, ''],
+    ['Referência', 'Nome', 'Preço', 'IPI'],
+    ...produtos.map(p => {
+      const preco = parseFloat(p.preco_base || 0);
+      const precoFinal = markup !== 0 ? parseFloat((preco * (1 + markup / 100)).toFixed(2)) : preco;
+      const ipi = parseFloat(p.ipi_perc || 0);
+      return [p.referencia || '—', p.nome || '—', precoFinal, ipi / 100];
+    })
+  ];
+
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(linhas);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
 
   // Largura das colunas
   ws['!cols'] = [
     { wch: 14 }, // Referência
-    { wch: 50 }, // Nome
-    { wch: 14 }, // Preço
-    { wch: 8  }  // IPI%
+    { wch: 52 }, // Nome
+    { wch: 16 }, // Preço
+    { wch: 8  }  // IPI
+  ];
+
+  // Formato moeda BRL para coluna Preço (C3 em diante)
+  const fmtPreco = '"R$ "#,##0.00';
+  const fmtIpi   = '0%';
+  const totalLinhas = aoa.length;
+  for (let i = 2; i < totalLinhas; i++) {
+    const rowXlsx = i + 1; // aoa é 0-based, xlsx é 1-based
+    const celPreco = XLSX.utils.encode_cell({ r: i, c: 2 });
+    const celIpi   = XLSX.utils.encode_cell({ r: i, c: 3 });
+    if (ws[celPreco]) ws[celPreco].z = fmtPreco;
+    if (ws[celIpi])   ws[celIpi].z   = fmtIpi;
+  }
+
+  // Mescla linha 1: A1:B1 (título) e C1:D1 (data emissão)
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } },
+    { s: { r: 0, c: 2 }, e: { r: 0, c: 3 } }
   ];
 
   XLSX.utils.book_append_sheet(wb, ws, 'Tabela de Preços');
 
-  const nomArq = `tabela_precos_${nomeTab.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase()}_${new Date().toISOString().slice(0,10)}.xlsx`;
+  const nomArq = `tabela_precos_${nomeTab.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase()}_${agora.toISOString().slice(0,10)}.xlsx`;
   XLSX.writeFile(wb, nomArq);
 
   status.innerHTML = `✅ Download iniciado: <strong>${nomArq}</strong>`;
