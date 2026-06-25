@@ -1706,3 +1706,225 @@ window.cfgGerarXlsTabelaPreco = async function() {
 
   status.innerHTML = `✅ Download iniciado: <strong>${nomArq}</strong>`;
 };
+
+// ============================================================
+//  ABA LOGS — Atividade + Erros do Sistema
+// ============================================================
+window.cfgCarregarLogs = async function(el) {
+  el.innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px">
+      <button id="logs-sub-atividade" class="btn btn-sm btn-primary" onclick="cfgLogsSubAba('atividade')">📋 Atividade</button>
+      <button id="logs-sub-erros"     class="btn btn-sm btn-outline" onclick="cfgLogsSubAba('erros')">🔴 Erros do Sistema</button>
+    </div>
+    <div id="logs-body"></div>
+  `;
+  cfgLogsSubAba('atividade');
+};
+
+window.cfgLogsSubAba = function(aba) {
+  ['atividade','erros'].forEach(id => {
+    const btn = document.getElementById('logs-sub-' + id);
+    if (btn) btn.className = 'btn btn-sm ' + (id === aba ? 'btn-primary' : 'btn-outline');
+  });
+  if (aba === 'atividade') cfgLogsAtividade();
+  else cfgLogsErros();
+};
+
+window._logsPeriodo = 7;
+
+window.cfgLogsFiltroHtml = function(fnAtualizar) {
+  return `
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+      <span style="font-size:12px;color:var(--text-muted)">Período:</span>
+      ${[
+        {label:'Hoje', dias:0},
+        {label:'7 dias', dias:7},
+        {label:'30 dias', dias:30},
+        {label:'Tudo', dias:999}
+      ].map(p => `
+        <button class="btn btn-sm ${window._logsPeriodo===p.dias?'btn-primary':'btn-outline'}"
+          onclick="window._logsPeriodo=${p.dias};${fnAtualizar}()">${p.label}</button>
+      `).join('')}
+      <input type="text" id="logs-busca" class="cfg-input" style="width:200px;margin-left:8px"
+        placeholder="Buscar..." oninput="${fnAtualizar}()">
+    </div>
+  `;
+};
+
+window.cfgLogsAtividade = async function() {
+  const body = document.getElementById('logs-body');
+  body.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+
+  const dias = window._logsPeriodo ?? 7;
+  const desde = dias === 999 ? '2020-01-01' : new Date(Date.now() - dias * 86400000).toISOString().slice(0,10);
+
+  const [logs, pedidos] = await Promise.all([
+    supa('ped_pedido_log', `criado_em=gte.${desde}&order=criado_em.desc&select=*&limit=500`),
+    supa('ped_pedidos',    `select=id,codigo,nome_cliente`)
+  ]);
+
+  const mapPed = {};
+  (pedidos||[]).forEach(p => { mapPed[p.id] = p; });
+
+  window._logsAtividadeDados = (logs||[]).map(l => ({
+    ...l,
+    codigo:      mapPed[l.id_pedido]?.codigo      || '—',
+    nome_cliente: mapPed[l.id_pedido]?.nome_cliente || '—'
+  }));
+
+  body.innerHTML = cfgLogsFiltroHtml('cfgLogsAtividadeRender') + `<div id="logs-ativ-lista"></div>`;
+  cfgLogsAtividadeRender();
+};
+
+window.cfgLogsAtividadeRender = function() {
+  const busca = document.getElementById('logs-busca')?.value?.toLowerCase() || '';
+  let lista = window._logsAtividadeDados || [];
+  if (busca) lista = lista.filter(l =>
+    l.usuario?.toLowerCase().includes(busca) ||
+    l.codigo?.toLowerCase().includes(busca) ||
+    l.nome_cliente?.toLowerCase().includes(busca) ||
+    l.status_para?.toLowerCase().includes(busca)
+  );
+
+  const iconMap = {
+    'ENVIADO':'📤', 'COTACAO':'📋', 'APROVADO':'✅',
+    'FATURADO':'🧾', 'REPROVADO':'❌', 'CANCELADO':'❌', 'AGUARDANDO':'⏳'
+  };
+  const colorMap = {
+    'ENVIADO':'var(--blue-mid)', 'COTACAO':'var(--text-muted)', 'APROVADO':'var(--green)',
+    'FATURADO':'var(--blue-dark)', 'REPROVADO':'var(--red)', 'CANCELADO':'var(--red)', 'AGUARDANDO':'var(--orange)'
+  };
+
+  const el = document.getElementById('logs-ativ-lista');
+  if (!el) return;
+
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>Nenhuma atividade encontrada.</p></div>';
+    return;
+  }
+
+  el.innerHTML = `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${lista.length} registro(s)</div>
+    <div class="table-card">
+      <table class="data-table">
+        <thead><tr>
+          <th>Data/Hora</th>
+          <th>Usuário</th>
+          <th>Pedido</th>
+          <th>Cliente</th>
+          <th>Ação</th>
+          <th>Obs</th>
+        </tr></thead>
+        <tbody>
+          ${lista.map(l => {
+            const dt = new Date(l.criado_em);
+            const dtStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+            const icDe  = l.status_de  ? (iconMap[l.status_de]  || '•') : '';
+            const icPara = iconMap[l.status_para] || '•';
+            const cor   = colorMap[l.status_para] || 'var(--text-primary)';
+            const igual = l.status_de === l.status_para;
+            const acao  = igual
+              ? `<span style="color:${cor}">${icPara} ${l.status_para}</span>`
+              : `<span style="color:var(--text-muted);font-size:11px">${icDe} ${l.status_de||'novo'}</span> → <span style="color:${cor};font-weight:600">${icPara} ${l.status_para}</span>`;
+            return `<tr>
+              <td class="mono" style="font-size:11px;white-space:nowrap">${dtStr}</td>
+              <td style="font-size:12px">${l.usuario||'—'}</td>
+              <td class="mono" style="font-size:12px">${l.codigo}</td>
+              <td style="font-size:11px;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.nome_cliente}</td>
+              <td style="font-size:12px;white-space:nowrap">${acao}</td>
+              <td style="font-size:11px;color:var(--text-muted)">${l.obs||'—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+};
+
+window.cfgLogsErros = async function() {
+  const body = document.getElementById('logs-body');
+  body.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
+
+  const dias = window._logsPeriodo ?? 7;
+  const desde = dias === 999 ? '2020-01-01' : new Date(Date.now() - dias * 86400000).toISOString().slice(0,10);
+
+  const logs = await supa('app_logs', `criado_em=gte.${desde}&order=criado_em.desc&select=*&limit=300`) || [];
+  window._logsErrosDados = logs;
+
+  body.innerHTML = cfgLogsFiltroHtml('cfgLogsErrosRender') + `<div id="logs-err-lista"></div>`;
+  cfgLogsErrosRender();
+};
+
+window.cfgLogsErrosRender = function() {
+  const busca = document.getElementById('logs-busca')?.value?.toLowerCase() || '';
+  let lista = window._logsErrosDados || [];
+  if (busca) lista = lista.filter(l =>
+    l.modulo?.toLowerCase().includes(busca) ||
+    l.mensagem?.toLowerCase().includes(busca) ||
+    l.usuario?.toLowerCase().includes(busca) ||
+    l.funcao?.toLowerCase().includes(busca)
+  );
+
+  const el = document.getElementById('logs-err-lista');
+  if (!el) return;
+
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><p>Nenhum erro encontrado no período.</p></div>';
+    return;
+  }
+
+  const nivelCor = { ERROR:'var(--red)', WARN:'var(--orange)', INFO:'var(--blue-mid)' };
+  const nivelBg  = { ERROR:'var(--red-bg)', WARN:'rgba(255,160,0,.1)', INFO:'rgba(59,130,246,.08)' };
+
+  el.innerHTML = `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${lista.length} registro(s)</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${lista.map((l, i) => {
+        const dt = new Date(l.criado_em);
+        const dtStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+        const cor  = nivelCor[l.nivel] || 'var(--text-muted)';
+        const bg   = nivelBg[l.nivel]  || 'var(--surface2)';
+        const resolvido = l.resolvido;
+        return `
+          <div style="border:1px solid var(--border);border-radius:8px;padding:12px;background:${resolvido?'var(--surface)':bg};opacity:${resolvido?'.6':'1'}">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:11px;font-weight:700;color:${cor};background:${bg};padding:2px 8px;border-radius:12px;border:1px solid ${cor}">${l.nivel||'LOG'}</span>
+              <span style="font-size:11px;font-weight:600;color:var(--text-muted)">${l.modulo||'—'}</span>
+              ${l.funcao ? `<span style="font-size:11px;color:var(--text-muted)">· ${l.funcao}</span>` : ''}
+              <span style="font-size:11px;color:var(--text-muted);margin-left:auto">${dtStr}</span>
+              ${l.usuario ? `<span style="font-size:11px;color:var(--text-muted)">${l.usuario}</span>` : ''}
+            </div>
+            <div style="margin-top:6px;font-size:13px;font-weight:500">${l.mensagem||'—'}</div>
+            ${l.detalhe ? `
+              <div style="margin-top:6px">
+                <button class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px"
+                  onclick="const d=document.getElementById('log-det-${i}');d.style.display=d.style.display==='none'?'block':'none'">
+                  Ver detalhe
+                </button>
+                <pre id="log-det-${i}" style="display:none;margin-top:8px;font-size:10px;background:var(--surface2);padding:8px;border-radius:4px;overflow:auto;max-height:120px;white-space:pre-wrap">${l.detalhe.replace(/</g,'&lt;')}</pre>
+              </div>` : ''}
+            ${!resolvido ? `
+              <div style="margin-top:8px">
+                <button class="btn btn-sm btn-outline" style="font-size:11px;color:var(--green)"
+                  onclick="cfgLogsMarcarResolvido(${l.id})">✓ Marcar resolvido</button>
+              </div>` : `<div style="margin-top:6px;font-size:11px;color:var(--green)">✓ Resolvido${l.resolvido_por?' por '+l.resolvido_por:''}</div>`}
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+};
+
+window.cfgLogsMarcarResolvido = async function(id) {
+  await supaPatch('app_logs', `id=eq.${id}`, {
+    resolvido: true,
+    resolvido_em: new Date().toISOString(),
+    resolvido_por: USUARIO?.nome || 'admin'
+  });
+  // Atualiza localmente sem rebuscar
+  const idx = (window._logsErrosDados||[]).findIndex(l => l.id === id);
+  if (idx >= 0) {
+    window._logsErrosDados[idx].resolvido = true;
+    window._logsErrosDados[idx].resolvido_por = USUARIO?.nome || 'admin';
+  }
+  cfgLogsErrosRender();
+};
