@@ -858,11 +858,14 @@ window.pedCotarFrete = async function() {
 
     // Log quando API retorna mas sem resultados (CEP inválido, produto sem dimensões, etc)
     if (!resultados.length) {
-      appLog('WARN', 'FRETE', 'pedCotarFrete', 'Cotação retornou sem resultados', {
-        cep: payload.cep_destino,
-        cliente: _pedidoAtual.cliente?.nome,
-        qtd_pacotes: pacotes.length,
-        erro_api: data?.erro || data?.message || null
+      appLog('WARN', 'Cotação de frete sem resultados', {
+        categoria: 'FRETE',
+        detalhe: {
+          cep: payload.cep_destino,
+          cliente: _pedidoAtual.cliente?.nome,
+          qtd_pacotes: pacotes.length,
+          erro_api: data?.erro || data?.message || null
+        }
       });
     }
 
@@ -901,11 +904,14 @@ window.pedCotarFrete = async function() {
     }
   } catch(e) {
     document.getElementById('ped-frete-resultado').innerHTML = '<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Erro ao cotar frete. Verifique a conexão.</div>';
-    appLog('ERROR', 'FRETE', 'pedCotarFrete', e.message || 'Erro desconhecido na cotação de frete', {
-      cep: payload?.cep_destino,
-      cliente: _pedidoAtual.cliente?.nome,
-      qtd_pacotes: pacotes?.length,
-      stack: e.stack?.slice(0, 300)
+    appLog('ERROR', e.message || 'Erro desconhecido na cotação de frete', {
+      categoria: 'FRETE',
+      detalhe: {
+        cep: payload?.cep_destino,
+        cliente: _pedidoAtual.cliente?.nome,
+        qtd_pacotes: pacotes?.length,
+        stack: e.stack?.slice(0, 300)
+      }
     });
   }
 
