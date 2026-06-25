@@ -709,6 +709,7 @@ async function cfgCarregarCatalogo(el) {
       </div>
       <button class="btn btn-outline" onclick="cfgSincronizarTodos()" style="flex-shrink:0" id="btn-sync-todos">🔄 Sincronizar todos</button>
       <button class="btn btn-outline" onclick="cfgAbrirTags()" style="flex-shrink:0">🏷️ Tags</button>
+      <button class="btn btn-outline" onclick="cfgExportarTabelaPreco()" style="flex-shrink:0">📥 Tabela de Preços</button>
       <button class="btn btn-primary" onclick="cfgAdicionarProduto()" style="flex-shrink:0">+ Produto</button>
     </div>
     <div id="sync-todos-progress" style="display:none;margin-top:10px"></div>
@@ -1620,3 +1621,88 @@ window.cfgLimparLogs = async function() {
   cfgAba('logs', document.querySelector('.cfg-tab.active'));
 };
 
+// ============================================================
+//  EXPORTAR TABELA DE PREÇOS — XLS
+// ============================================================
+window.cfgExportarTabelaPreco = async function() {
+  const tabelas = await supa('ped_tabelas_preco', 'ativa=eq.true&order=nome&select=id,nome,markup_global') || [];
+  if (!tabelas.length) { alert('Nenhuma tabela de preço encontrada.'); return; }
+
+  const opcoesHtml = tabelas.map(t =>
+    `<option value="${t.id}" data-markup="${t.markup_global||0}">${t.nome}${t.markup_global ? ` (${t.markup_global > 0 ? '+' : ''}${t.markup_global}%)` : ''}</option>`
+  ).join('');
+
+  abrirDrawer('📥 Exportar Tabela de Preços', 'Gera arquivo XLS para impressão interna', `
+    <div style="display:flex;flex-direction:column;gap:16px;padding:4px 0">
+      <div class="form-field">
+        <label>Selecione a tabela de preço</label>
+        <select id="exp-tabela-sel" class="cfg-input">${opcoesHtml}</select>
+      </div>
+      <div class="alert alert-info" style="padding:10px 14px;font-size:13px">
+        <span class="alert-icon">ℹ️</span>
+        O arquivo incluirá: <strong>Referência, Nome, Preço e IPI%</strong> — ordenado por nome.
+        Produtos inativos não serão incluídos.
+      </div>
+      <div id="exp-status" style="font-size:13px;color:var(--text-muted)"></div>
+    </div>
+  `, `
+    <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
+    <button class="btn btn-primary" onclick="cfgGerarXlsTabelaPreco()">📥 Baixar XLS</button>
+  `);
+};
+
+window.cfgGerarXlsTabelaPreco = async function() {
+  const sel     = document.getElementById('exp-tabela-sel');
+  const idTabela = parseInt(sel.value);
+  const markup   = parseFloat(sel.options[sel.selectedIndex].dataset.markup) || 0;
+  const nomeTab  = sel.options[sel.selectedIndex].text;
+  const status   = document.getElementById('exp-status');
+
+  status.textContent = '⏳ Buscando produtos...';
+
+  const produtos = await supa('ped_catalogo_produtos', 'ativo=eq.true&order=nome&select=referencia,nome,preco_base,ipi_perc') || [];
+
+  if (!produtos.length) { status.textContent = '⚠️ Nenhum produto ativo encontrado.'; return; }
+
+  status.textContent = `✅ ${produtos.length} produto(s) encontrado(s). Gerando XLS...`;
+
+  // Monta dados
+  const linhas = produtos.map(p => {
+    const preco = parseFloat(p.preco_base || 0);
+    const precoFinal = markup !== 0 ? parseFloat((preco * (1 + markup / 100)).toFixed(2)) : preco;
+    return {
+      'Referência': p.referencia || '—',
+      'Nome':       p.nome || '—',
+      'Preço (R$)': precoFinal,
+      'IPI %':      parseFloat(p.ipi_perc || 0)
+    };
+  });
+
+  // Carrega SheetJS dinamicamente se não estiver disponível
+  if (typeof XLSX === 'undefined') {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(linhas);
+
+  // Largura das colunas
+  ws['!cols'] = [
+    { wch: 14 }, // Referência
+    { wch: 50 }, // Nome
+    { wch: 14 }, // Preço
+    { wch: 8  }  // IPI%
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Tabela de Preços');
+
+  const nomArq = `tabela_precos_${nomeTab.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase()}_${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, nomArq);
+
+  status.innerHTML = `✅ Download iniciado: <strong>${nomArq}</strong>`;
+};
