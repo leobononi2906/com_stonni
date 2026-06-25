@@ -42,17 +42,22 @@ async function renderPedidos(el) {
 function _renderListaPedidos(el, pedidos, isGestor) {
   window._pedidosLista = pedidos;
 
-  const statusOpts = ['', 'COTACAO', ...(window._pedidoStatus||['ENVIADO','APROVADO','FATURADO','REPROVADO','CANCELADO'])];
+  // Contagem por status para os botões
+  const _cnt = (statuses) => statuses ? pedidos.filter(p=>statuses.includes(p.status)).length : pedidos.length;
 
   el.innerHTML = `
     <div class="section-header" style="margin-bottom:16px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input type="text" id="gped-busca" class="cfg-input" style="width:220px" placeholder="Buscar pedido/cliente..." oninput="gPedFiltrar()">
-        <select id="gped-status" class="cfg-input" style="width:140px" onchange="gPedFiltrar()">
-          ${statusOpts.map(s=>`<option value="${s}">${s||'Todos os status'}</option>`).join('')}
-        </select>
-      </div>
+      <input type="text" id="gped-busca" class="cfg-input" style="width:220px" placeholder="Buscar pedido/cliente..." oninput="gPedFiltrar()">
       <span id="gped-count" style="font-size:12px;color:var(--text-muted)"></span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+      <button id="gped-f-todos"      class="btn btn-sm btn-primary" onclick="gPedSetFiltro('')">Todos <span style="opacity:.7">${_cnt(null)}</span></button>
+      <button id="gped-f-cotacao"    class="btn btn-sm btn-outline" onclick="gPedSetFiltro('COTACAO')">📋 Cotações <span style="opacity:.7">${_cnt(['COTACAO'])}</span></button>
+      <button id="gped-f-enviado"    class="btn btn-sm btn-outline" onclick="gPedSetFiltro('ENVIADO')">📤 Enviados <span style="opacity:.7">${_cnt(['ENVIADO'])}</span></button>
+      <button id="gped-f-aguardando" class="btn btn-sm btn-outline" onclick="gPedSetFiltro('AGUARDANDO')">⏳ Aguardando <span style="opacity:.7">${_cnt(['AGUARDANDO'])}</span></button>
+      <button id="gped-f-aprovado"   class="btn btn-sm btn-outline" onclick="gPedSetFiltro('APROVADO')">✅ Aprovados <span style="opacity:.7">${_cnt(['APROVADO'])}</span></button>
+      <button id="gped-f-faturado"   class="btn btn-sm btn-outline" onclick="gPedSetFiltro('FATURADO')">🧾 Faturados <span style="opacity:.7">${_cnt(['FATURADO'])}</span></button>
+      <button id="gped-f-cancelado"  class="btn btn-sm btn-outline" onclick="gPedSetFiltro('CANCELADOS')" style="color:var(--red)">❌ Cancelados <span style="opacity:.7">${_cnt(['REPROVADO','CANCELADO'])}</span></button>
     </div>
 
     <!-- Cards KPI (só gestor) -->
@@ -111,13 +116,17 @@ window._gPedFiltroAtivo = '';
 
 window.gPedSetFiltro = function(filtro) {
   window._gPedFiltroAtivo = filtro;
-  // Atualiza visual dos botões
-  const mapa = { '':'todos', 'PEDIDOS':'pedidos', 'COTACAO':'cotacao', 'CANCELADOS':'cancelado' };
+  const mapa = {
+    '':'todos', 'COTACAO':'cotacao', 'ENVIADO':'enviado',
+    'AGUARDANDO':'aguardando', 'APROVADO':'aprovado',
+    'FATURADO':'faturado', 'CANCELADOS':'cancelado'
+  };
   Object.entries(mapa).forEach(([f, id]) => {
     const btn = document.getElementById('gped-f-' + id);
     if (!btn) return;
     const ativo = f === filtro;
     btn.className = 'btn btn-sm ' + (ativo ? 'btn-primary' : 'btn-outline');
+    if (id === 'cancelado') btn.style.color = ativo ? '' : 'var(--red)';
   });
   gPedFiltrar();
 };
@@ -127,14 +136,13 @@ window.gPedFiltrar = function() {
   const filtro = window._gPedFiltroAtivo || '';
   let lista = window._pedidosLista||[];
 
-  // Filtro por grupo de status
-  if (filtro === 'PEDIDOS') {
-    lista = lista.filter(p => ['ENVIADO','AGUARDANDO','APROVADO','FATURADO'].includes(p.status));
-  } else if (filtro === 'COTACAO') {
-    lista = lista.filter(p => p.status === 'COTACAO');
-  } else if (filtro === 'CANCELADOS') {
-    lista = lista.filter(p => ['REPROVADO','CANCELADO'].includes(p.status));
-  }
+  // Filtro por status
+  if      (filtro === 'COTACAO')    lista = lista.filter(p => p.status === 'COTACAO');
+  else if (filtro === 'ENVIADO')    lista = lista.filter(p => p.status === 'ENVIADO');
+  else if (filtro === 'AGUARDANDO') lista = lista.filter(p => p.status === 'AGUARDANDO');
+  else if (filtro === 'APROVADO')   lista = lista.filter(p => p.status === 'APROVADO');
+  else if (filtro === 'FATURADO')   lista = lista.filter(p => p.status === 'FATURADO');
+  else if (filtro === 'CANCELADOS') lista = lista.filter(p => ['REPROVADO','CANCELADO'].includes(p.status));
 
   // Busca por texto
   if (busca) lista = lista.filter(p =>
