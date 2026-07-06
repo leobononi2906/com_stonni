@@ -741,7 +741,7 @@ function cfgRenderLinhasProduto(lista) {
     const status = !p.ativo ? 'inativo' : isEsgotado ? 'esgotado' : 'disponivel';
     const badgeMap = { inativo:'badge-cancelado', esgotado:'badge-esgotado', disponivel:'badge-disponivel' };
     const labelMap = { inativo:'Inativo', esgotado: p.esgotado_manual ? 'Fora de linha' : 'Esgotado', disponivel:'Disponível' };
-    return `<tr data-id="${p.id}"
+    return `<tr data-id="${p.id}">
       <td>${foto ? `<img src="${foto}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">` : `<div style="width:52px;height:52px;background:var(--surface2);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:20px;border:1px solid var(--border)">📦</div>`}</td>
       <td><div style="font-weight:500;font-size:13px">${p.nome}</div>${p.aplicacao ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">📍 ${p.aplicacao}</div>` : ''}</td>
       <td class="mono" style="font-size:12px">${p.referencia||'—'}</td>
