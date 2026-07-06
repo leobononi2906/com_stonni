@@ -133,8 +133,14 @@ window.catFiltrar = function() {
   if (grupo)        lista = lista.filter(p => p.id_grupo == grupo);
   const tagFiltro = document.getElementById('cat-tag')?.value||'';
   if (tagFiltro) lista = lista.filter(p => Array.isArray(p.tags) && p.tags.includes(tagFiltro));
-  if (disp==='disp') lista = lista.filter(p => !p.esgotado);
-  if (disp==='esg')  lista = lista.filter(p => p.esgotado);
+  if (disp==='disp') lista = lista.filter(p => !p.esgotado && !p.esgotado_manual);
+  if (disp==='esg')  lista = lista.filter(p => p.esgotado || p.esgotado_manual);
+  // Esgotados/fora de linha sempre no final
+  lista.sort((a, b) => {
+    const ea = (a.esgotado || a.esgotado_manual) ? 1 : 0;
+    const eb = (b.esgotado || b.esgotado_manual) ? 1 : 0;
+    return ea - eb;
+  });
 
   const count = document.getElementById('cat-count');
   if (count) count.textContent = `${lista.length} produto(s)`;
@@ -152,12 +158,12 @@ window.catFiltrar = function() {
     const { preco, precoOriginal, acaoAtiva } = catPrecoFinal(p);
 
     return `
-      <div class="cat-card ${p.esgotado ? 'cat-card-esgotado' : ''}" onclick="catAbrirProduto(${p.id})">
+      <div class="cat-card ${(p.esgotado||p.esgotado_manual) ? 'cat-card-esgotado' : ''}" onclick="catAbrirProduto(${p.id})">
         <div class="cat-card-foto">
           ${foto
             ? `<img src="${foto}" alt="${p.nome}" loading="lazy">`
             : `<div class="cat-card-sem-foto">📦</div>`}
-          ${p.esgotado ? `<div class="cat-card-badge-esg">ESGOTADO</div>` : ''}
+          ${p.esgotado_manual ? `<div class="cat-card-badge-esg">FORA DE LINHA</div>` : p.esgotado ? `<div class="cat-card-badge-esg">ESGOTADO</div>` : ''}
           ${acaoAtiva ? `<div class="cat-card-badge-promo">🎯 OFERTA</div>` : ''}
         </div>
         <div class="cat-card-body">
@@ -174,8 +180,8 @@ window.catFiltrar = function() {
           </div>
         </div>
         <div class="cat-card-footer">
-          ${p.esgotado
-              ? '<button class="btn btn-sm" style="width:100%;opacity:.5;cursor:not-allowed" disabled>Esgotado</button>'
+          ${(p.esgotado || p.esgotado_manual)
+              ? `<button class="btn btn-sm" style="width:100%;opacity:.5;cursor:not-allowed" disabled>${p.esgotado_manual ? 'Fora de linha' : 'Esgotado'}</button>`
               : `<div id="cat-ctrl-${p.id}" style="display:flex;align-items:center;gap:4px">
                   <button class="btn btn-primary btn-sm" style="flex:1" onclick="event.stopPropagation();catAdicionarCarrinho(${p.id})">+ Carrinho</button>
                 </div>`
