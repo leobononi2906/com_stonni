@@ -685,13 +685,16 @@ async function cfgCarregarCatalogo(el) {
   const estoqueMap = Object.fromEntries((estoques||[]).map(e=>[e.id_produto, e.estoque_total]));
   const updates = [];
   for (const p of (produtos||[])) {
-    const est = estoqueMap[p.id_produto_erp];
-    const deveEsgotar = est != null && est <= 1;
+    const estErp = estoqueMap[p.id_produto_erp];
+    // Estoque efetivo: manual prevalece sobre ERP
+    const estEfetivo = p.estoque_manual != null ? p.estoque_manual : (estErp ?? null);
+    const deveEsgotar = estEfetivo != null && estEfetivo < 5;
+    // Sync só toca em esgotado (auto) — nunca em esgotado_manual
     if (deveEsgotar !== p.esgotado) {
       updates.push(fetch(`${SUPA_URL}/rest/v1/ped_catalogo_produtos?id=eq.${p.id}`, { method: 'PATCH', headers: { ...HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify({ esgotado: deveEsgotar }) }).catch(()=>{}));
       p.esgotado = deveEsgotar;
     }
-    p.estoque_total = est;
+    p.estoque_total = estEfetivo;
   }
   if (updates.length) await Promise.all(updates);
   window._cfgProdutos = produtos || [];
@@ -734,10 +737,11 @@ function cfgRenderLinhasProduto(lista) {
   if (!lista.length) return `<tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon">🛍️</div><h3>Catálogo vazio</h3><p>Adicione produtos pelo SKU do ERP.</p></div></td></tr>`;
   return lista.map(p => {
     const foto = p.fotos?.[0] || null;
-    const status = !p.ativo ? 'inativo' : p.esgotado ? 'esgotado' : 'disponivel';
+    const isEsgotado = p.esgotado || p.esgotado_manual;
+    const status = !p.ativo ? 'inativo' : isEsgotado ? 'esgotado' : 'disponivel';
     const badgeMap = { inativo:'badge-cancelado', esgotado:'badge-esgotado', disponivel:'badge-disponivel' };
-    const labelMap = { inativo:'Inativo', esgotado:'Esgotado', disponivel:'Disponível' };
-    return `<tr data-id="${p.id}">
+    const labelMap = { inativo:'Inativo', esgotado: p.esgotado_manual ? 'Fora de linha' : 'Esgotado', disponivel:'Disponível' };
+    return `<tr data-id="${p.id}"
       <td>${foto ? `<img src="${foto}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">` : `<div style="width:52px;height:52px;background:var(--surface2);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:20px;border:1px solid var(--border)">📦</div>`}</td>
       <td><div style="font-weight:500;font-size:13px">${p.nome}</div>${p.aplicacao ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">📍 ${p.aplicacao}</div>` : ''}</td>
       <td class="mono" style="font-size:12px">${p.referencia||'—'}</td>
@@ -755,9 +759,10 @@ function cfgRenderCardsProduto(lista) {
   if (!lista.length) return `<div class="empty-state"><div class="empty-state-icon">🛍️</div><h3>Catálogo vazio</h3><p>Adicione produtos pelo SKU do ERP.</p></div>`;
   return lista.map(p => {
     const foto = p.fotos?.[0] || null;
-    const status = !p.ativo ? 'inativo' : p.esgotado ? 'esgotado' : 'disponivel';
+    const isEsgotado = p.esgotado || p.esgotado_manual;
+    const status = !p.ativo ? 'inativo' : isEsgotado ? 'esgotado' : 'disponivel';
     const badgeMap = { inativo:'badge-cancelado', esgotado:'badge-esgotado', disponivel:'badge-disponivel' };
-    const labelMap = { inativo:'Inativo', esgotado:'Esgotado', disponivel:'Disponível' };
+    const labelMap = { inativo:'Inativo', esgotado: p.esgotado_manual ? 'Fora de linha' : 'Esgotado', disponivel:'Disponível' };
     return `<div class="cfg-card-row" style="display:flex;gap:12px;align-items:flex-start">
       ${foto ? `<img src="${foto}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0">` : `<div style="width:56px;height:56px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid var(--border);flex-shrink:0">📦</div>`}
       <div style="flex:1;min-width:0">
@@ -791,8 +796,14 @@ window.cfgFiltrarCatalogo = function() {
   const filtro = document.getElementById('cat-filtro-status').value;
   let lista = window._cfgProdutos || [];
   if (busca)  lista = lista.filter(p => p.nome?.toLowerCase().includes(busca) || p.referencia?.toLowerCase().includes(busca) || p.aplicacao?.toLowerCase().includes(busca));
-  if (filtro === 'ativo')    lista = lista.filter(p => p.ativo && !p.esgotado);
-  if (filtro === 'esgotado') lista = lista.filter(p => p.esgotado);
+  if (filtro === 'ativo')    lista = lista.filter(p => p.ativo && !p.esgotado && !p.esgotado_manual);
+  if (filtro === 'esgotado') lista = lista.filter(p => p.esgotado || p.esgotado_manual);
+  // Esgotados sempre no final
+  lista.sort((a, b) => {
+    const ea = (a.esgotado || a.esgotado_manual) ? 1 : 0;
+    const eb = (b.esgotado || b.esgotado_manual) ? 1 : 0;
+    return ea - eb;
+  });
   if (filtro === 'inativo')  lista = lista.filter(p => !p.ativo);
   const tbody = document.getElementById('cat-tbody');
   const cards = document.getElementById('cat-cards');
@@ -1026,13 +1037,32 @@ window.cfgEditarProduto = async function(id) {
         <div class="form-field" style="margin:0"><label>Comprimento (cm)</label><input type="number" id="ep-comprimento" class="cfg-input" value="${p.comprimento_cm||''}" step="0.1" placeholder="Ex: 53"></div>
       </div>
     </div>
-    <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
+    <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;align-items:center">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="ep-ativo" ${p.ativo?'checked':''} style="accent-color:var(--blue-dark)"> Ativo</label>
-      <div style="display:flex;align-items:center;gap:10px">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
-          <input type="checkbox" id="ep-esgotado-check" ${p.esgotado?'checked':''} style="accent-color:var(--red)"> Esgotado
-        </label>
-        <span style="font-size:11px;color:var(--text-muted)">(salva imediatamente)</span>
+    </div>
+    <div style="margin-top:14px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">📦 Estoque & Disponibilidade</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;padding:8px 10px;background:${p.esgotado?'var(--red-bg)':'var(--surface)'};border:1px solid ${p.esgotado?'var(--red)':'var(--border)'};border-radius:6px">
+        <span style="font-size:18px">${p.esgotado ? '🔴' : '🟢'}</span>
+        <div>
+          <div style="font-size:12px;font-weight:600">${p.esgotado ? 'Esgotado no ERP' : 'Disponível no ERP'}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Estoque ERP: ${p.estoque_total != null ? Math.floor(p.estoque_total) + ' un.' : '—'} · Sincronização automática</div>
+        </div>
+      </div>
+      <div class="cfg-grid-2" style="margin-bottom:10px">
+        <div class="form-field" style="margin:0">
+          <label>Estoque manual (un.)</label>
+          <input type="number" id="ep-estoque-manual" class="cfg-input" value="${p.estoque_manual ?? ''}" min="0" placeholder="Vazio = usa ERP">
+          <span style="font-size:10px;color:var(--text-muted)">Quando preenchido, prevalece sobre o ERP</span>
+        </div>
+        <div class="form-field" style="margin:0">
+          <label style="display:block;margin-bottom:6px">Fora de linha (manual)</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px">
+            <input type="checkbox" id="ep-esgotado-check" ${p.esgotado_manual?'checked':''} style="accent-color:var(--red);width:18px;height:18px">
+            <span style="font-size:13px">🔒 Tirar de linha manualmente</span>
+          </label>
+          <span style="font-size:10px;color:var(--text-muted)">O sync não remove essa marcação</span>
+        </div>
       </div>
     </div>
   `, `
@@ -1080,7 +1110,8 @@ window.cfgSincronizarBling = async function(id, sku) {
 
 
 window.cfgToggleEsgotado = async function(id, esgotado) {
-  const status = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { esgotado, esgotado_manual: esgotado });
+  // Salva só esgotado_manual — sync nunca toca aqui
+  const status = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { esgotado_manual: esgotado });
   if (status !== 204 && status !== 200) {
     alert('Erro ao salvar. Tente novamente.');
     return;
@@ -1105,7 +1136,9 @@ window.cfgAtualizarProduto = async function(id) {
   console.log('cfgAtualizarProduto id:', id);
   const esgotadoCheck = document.getElementById('ep-esgotado-check');
   console.log('esgotado-check element:', esgotadoCheck, 'checked:', esgotadoCheck?.checked);
-  const patch = { sync_fotos: document.getElementById('ep-sync-fotos')?.checked !== false, sync_medidas: document.getElementById('ep-sync-medidas')?.checked !== false, nome: document.getElementById('ep-nome').value.trim(), referencia: document.getElementById('ep-ref').value.trim(), aplicacao: document.getElementById('ep-aplicacao').value.trim(), grupo: document.getElementById('ep-grupo').value.trim(), subgrupo: document.getElementById('ep-subgrupo').value.trim(), preco_base: parseFloat(document.getElementById('ep-preco').value) || 0, ipi_perc: parseFloat(document.getElementById('ep-ipi')?.value) || 0, st_sp: parseFloat(document.getElementById('ep-st-sp')?.value) || 0, st_pr: parseFloat(document.getElementById('ep-st-pr')?.value) || 0, descricao: document.getElementById('ep-desc').value.trim(), ativo: document.getElementById('ep-ativo').checked, esgotado: document.getElementById('ep-esgotado-check')?.checked || document.getElementById('ep-esgotado')?.checked || false, atualizado_em: new Date().toISOString() };
+  const patch = { sync_fotos: document.getElementById('ep-sync-fotos')?.checked !== false, sync_medidas: document.getElementById('ep-sync-medidas')?.checked !== false, nome: document.getElementById('ep-nome').value.trim(), referencia: document.getElementById('ep-ref').value.trim(), aplicacao: document.getElementById('ep-aplicacao').value.trim(), grupo: document.getElementById('ep-grupo').value.trim(), subgrupo: document.getElementById('ep-subgrupo').value.trim(), preco_base: parseFloat(document.getElementById('ep-preco').value) || 0, ipi_perc: parseFloat(document.getElementById('ep-ipi')?.value) || 0, st_sp: parseFloat(document.getElementById('ep-st-sp')?.value) || 0, st_pr: parseFloat(document.getElementById('ep-st-pr')?.value) || 0, descricao: document.getElementById('ep-desc').value.trim(), ativo: document.getElementById('ep-ativo').checked, esgotado_manual: document.getElementById('ep-esgotado-check')?.checked || false, atualizado_em: new Date().toISOString() };
+  const estoqueManualVal = document.getElementById('ep-estoque-manual')?.value;
+  patch.estoque_manual = estoqueManualVal !== '' && estoqueManualVal != null ? parseInt(estoqueManualVal) : null;
   const peso = parseFloat(document.getElementById('ep-peso')?.value);
   const altura = parseFloat(document.getElementById('ep-altura')?.value);
   const largura = parseFloat(document.getElementById('ep-largura')?.value);
