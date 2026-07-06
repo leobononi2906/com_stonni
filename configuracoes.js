@@ -750,7 +750,7 @@ function cfgRenderLinhasProduto(lista) {
       <td style="font-size:12px;color:var(--text-muted)">${p.estoque_total != null ? `${Math.floor(p.estoque_total)} un.${p.estoque_manual != null ? ' <span title="Estoque manual" style="color:var(--orange);font-weight:700">(!)</span>' : ''}` : '—'}</td>
       <td style="text-align:center">${p.peso_kg ? `<span title="Peso: ${p.peso_kg}kg · ${p.largura_cm||'?'}×${p.altura_cm||'?'}×${p.comprimento_cm||'?'}cm" style="font-size:16px;cursor:default">✅</span>` : `<span title="Medidas não cadastradas" style="font-size:16px;cursor:default;opacity:.35">⬜</span>`}</td>
       <td><span class="badge ${badgeMap[status]} badge-status">${labelMap[status]}</span></td>
-      <td style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id})}')" title="Excluir produto">✕</button></td>
+      <td><div style="display:flex;gap:6px;align-items:center;justify-content:flex-end"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id})" title="Excluir produto">✕</button></div></td>
     </tr>`;
   }).join('');
 }
