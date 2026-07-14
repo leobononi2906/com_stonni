@@ -451,6 +451,16 @@ window.catAbrirGerador = async function() {
           ${subgrupos.map(s=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;min-height:40px"><input type="checkbox" value="${s.id}" style="accent-color:#1A3A8F"> ${s.nome}</label>`).join('')}
         </div>
       </div>
+      <div class="form-field">
+        <label>Opções de exibição</label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
+          <input type="checkbox" id="gpdf-exibir-preco" style="accent-color:#1A3A8F;width:18px;height:18px">
+          <div>
+            <div style="font-size:13px;font-weight:600">💲 Exibir preços no catálogo</div>
+            <div style="font-size:11px;color:var(--text-muted)">Desmarcado = catálogo sem preços (padrão)</div>
+          </div>
+        </label>
+      </div>
     </div>`;
 
   abrirDrawer(
@@ -469,5 +479,6 @@ window.catExecutarGerador = function() {
   const subgruposFiltro = [...document.querySelectorAll('#gpdf-subgrupos input:checked')].map(el=>el.value);
   fecharDrawer();
   if (typeof window.catGerarPDF !== 'function') { alert('catalogo-pdf.js não carregado.'); return; }
-  window.catGerarPDF({ titulo, subtitulo: cfgs.catalogo_subtitulo||'@STONNI.OFICIAL', exibirPreco: false, tagsFiltro, subgruposFiltro, capaUrl: cfgs.catalogo_capa_url||'' });
+  const exibirPreco = document.getElementById('gpdf-exibir-preco')?.checked || false;
+  window.catGerarPDF({ titulo, subtitulo: cfgs.catalogo_subtitulo||'@STONNI.OFICIAL', exibirPreco, tagsFiltro, subgruposFiltro, capaUrl: cfgs.catalogo_capa_url||'' });
 };
