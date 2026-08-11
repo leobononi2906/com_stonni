@@ -237,8 +237,63 @@ window.catAbrirProduto = function(id) {
     ${p.esgotado ? `<div class="alert alert-danger"><span class="alert-icon">⚠️</span>Produto temporariamente esgotado.</div>` : ''}
   `, `
     <button class="btn btn-outline" onclick="fecharDrawer()">Fechar</button>
+    ${fotos.length ? `<button class="btn btn-outline" style="color:#128C7E;border-color:#128C7E" onclick="catShareFotos(${p.id})">📲 Enviar fotos</button>` : ''}
     ${!p.esgotado ? `<button class="btn btn-primary" onclick="fecharDrawer();catAdicionarAoPedido(${p.id})">+ Adicionar ao pedido</button>` : ''}
   `);
+};
+
+// ============================================================
+//  COMPARTILHAR FOTOS DO PRODUTO (WhatsApp) — usa waShare (wshare.js)
+// ============================================================
+window.catShareFotos = function(id) {
+  const p = (window._catProdutos || []).find(x => x.id === id);
+  if (!p) return;
+  const fotos = p.fotos || [];
+  if (!fotos.length) return;
+  const { preco } = catPrecoFinal(p);
+  const legenda = `${p.nome}\nRef: ${p.referencia || '—'}\nR$ ${preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  let ov = document.getElementById('cat-share-modal');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'cat-share-modal';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto';
+    ov.onclick = e => { if (e.target === ov) catShareFotosFechar(); };
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = `<div style="width:min(520px,100%);background:var(--surface);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-lg)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">📲</span><span style="font-size:15px;font-weight:700">Enviar fotos no WhatsApp</span></div>
+      <button onclick="catShareFotosFechar()" style="background:none;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="padding:16px 18px">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Toque para marcar/desmarcar as imagens:</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-bottom:12px">
+        ${fotos.map(f => `<label style="position:relative;cursor:pointer;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid var(--blue-mid);display:block">
+          <input type="checkbox" class="cat-share-foto" value="${f}" checked style="position:absolute;top:4px;left:4px;z-index:2;width:18px;height:18px;accent-color:#128C7E">
+          <img src="${f}" style="width:100%;height:100%;object-fit:cover" onclick="const c=this.previousElementSibling;c.checked=!c.checked;this.parentElement.style.borderColor=c.checked?'var(--blue-mid)':'var(--border)'">
+        </label>`).join('')}
+      </div>
+      <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Legenda</label>
+      <textarea id="cat-share-legenda" rows="3" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;background:var(--surface2);color:var(--text-primary);outline:none;resize:vertical;font-family:inherit;box-sizing:border-box">${legenda}</textarea>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;height:44px;margin-top:12px;background:#128C7E" onclick="catShareFotosEnviar()">📲 Enviar no WhatsApp</button>
+      <div id="cat-share-erro" style="font-size:12px;color:var(--red);margin-top:6px"></div>
+    </div>
+  </div>`;
+  ov.style.display = 'flex';
+};
+window.catShareFotosFechar = function() { const ov = document.getElementById('cat-share-modal'); if (ov) { ov.style.display = 'none'; ov.innerHTML = ''; } };
+window.catShareFotosEnviar = async function() {
+  const urls = [...document.querySelectorAll('.cat-share-foto:checked')].map(el => el.value);
+  const texto = document.getElementById('cat-share-legenda')?.value || '';
+  const erro = document.getElementById('cat-share-erro');
+  if (!urls.length) { if (erro) erro.textContent = 'Selecione ao menos uma imagem.'; return; }
+  if (erro) erro.textContent = '';
+  const btn = document.querySelector('#cat-share-modal button.btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Abrindo…'; }
+  const r = await waShare({ arquivos: urls, texto, linkFallback: urls[0] });
+  if (btn) { btn.disabled = false; btn.textContent = '📲 Enviar no WhatsApp'; }
+  if (r && r.ok && r.via !== 'cancel') catShareFotosFechar();
 };
 
 window.catAdicionarAoPedido = function(idProduto) {
