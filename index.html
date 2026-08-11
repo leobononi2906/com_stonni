@@ -733,10 +733,14 @@ function construirNav() {
     grupos.push({ grupo: 'PRINCIPAL', itens });
   }
 
-  // INTERNO — CRM / Info Técnica (módulo 'atacado'). Rep nunca vê.
+  // INTERNO — seções do CRM como itens da MESMA sidebar (dirigem o iframe). Rep nunca vê.
   if (ehInterno()) {
     grupos.push({ grupo: 'INTERNO', itens: [
-      { id: 'crm', icon: '📇', label: 'Info Técnica', breadcrumb: 'Interno · Info Técnica' },
+      { id: 'it-home',       icon: '🏠', label: 'Home',       breadcrumb: 'Interno · Home' },
+      { id: 'it-vendedores', icon: '👤', label: 'Vendedores', breadcrumb: 'Interno · Vendedores' },
+      { id: 'it-produtos',   icon: '📊', label: 'Produtos',   breadcrumb: 'Interno · Produtos' },
+      { id: 'it-crm',        icon: '📇', label: 'CRM',        breadcrumb: 'Interno · CRM' },
+      { id: 'it-prospeccao', icon: '🎯', label: 'Prospecção', breadcrumb: 'Interno · Prospecção' },
     ]});
   }
 
@@ -813,8 +817,22 @@ function irPara(paginaId, params = {}) {
 // ============================================================
 //  ROUTER — delega para módulos JS
 // ============================================================
+// Seções internas → telas do CRM dentro do iframe (mesma sidebar)
+const CRM_TABS = { 'it-home':'home', 'it-vendedores':'vendedores', 'it-produtos':'linhas', 'it-crm':'crm', 'it-prospeccao':'prospeccao' };
+
 function renderPagina(id, params) {
   const el = document.getElementById('page-content');
+
+  // Seção interna: reaproveita o MESMO iframe do CRM (troca de tela sem recarregar)
+  if (CRM_TABS[id]) {
+    const ifr = document.getElementById('crm-frame');
+    if (ifr && el.contains(ifr)) { if (window.crmGoto) window.crmGoto(CRM_TABS[id]); return; }
+    el.style.padding = '0';
+    el.innerHTML = '';
+    if (window.renderCRM) window.renderCRM(el, { tab: CRM_TABS[id] });
+    return;
+  }
+
   el.style.padding = ''; // restaura o padding padrão (o CRM zera p/ o iframe ocupar tudo)
   el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
 

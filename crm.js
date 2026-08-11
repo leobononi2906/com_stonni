@@ -18,6 +18,32 @@
   }
   window.podeVerCRM = podeVerCRM;
 
+  let _crmQueuedTab = null;
+
+  // Injeta CSS no iframe (same-origin) escondendo a barra interna do CRM —
+  // a navegação passa a vir da sidebar do Portal. Sidebar única.
+  function _crmInject(ifr) {
+    try {
+      const d = ifr.contentDocument;
+      if (d && d.head && !d.getElementById('crm-embed-style')) {
+        const s = d.createElement('style');
+        s.id = 'crm-embed-style';
+        s.textContent = '.sidebar{display:none!important}.menu-toggle{display:none!important}';
+        d.head.appendChild(s);
+      }
+    } catch (e) {}
+  }
+
+  // Troca a tela DENTRO do CRM chamando o gotoTab do iframe (same-origin).
+  function crmGoto(tab) {
+    const ifr = document.getElementById('crm-frame');
+    if (!ifr) { _crmQueuedTab = tab; return; }
+    const w = ifr.contentWindow;
+    if (w && typeof w.gotoTab === 'function') { try { w.gotoTab(tab); } catch (e) {} _crmQueuedTab = null; }
+    else { _crmQueuedTab = tab; }
+  }
+  window.crmGoto = crmGoto;
+
   function renderCRM(el, params) {
     try {
       // Trava de segurança no front (a trava REAL é a RLS por módulo 'atacado' — Fase 3).
@@ -31,15 +57,21 @@
         return;
       }
 
-      // CRM vendorizado em ./crm/ (cópia fiel do stonnidist-v2), embutido via
-      // iframe SAME-ORIGIN. Compartilha a sessão Supabase do localStorage → SSO
-      // (sem segundo login). Isolamento total: o CRM roda no seu próprio contexto,
-      // um erro nele não derruba o portal.
-      el.style.padding = '0';  // o iframe ocupa a área toda; CRM tem seu próprio layout
+      // CRM vendorizado em ./crm/ (cópia fiel), embutido via iframe SAME-ORIGIN.
+      // Barra interna escondida; navegação vem da sidebar do Portal (crmGoto).
+      const wanted = (params && params.tab) || _crmQueuedTab || 'crm';
+      el.style.padding = '0';
       el.innerHTML =
-        '<iframe title="CRM — Info Técnica" src="./crm/index.html" ' +
+        '<iframe id="crm-frame" title="CRM interno" src="./crm/index.html" ' +
         'style="display:block;width:100%;height:calc(100dvh - 60px);min-height:480px;border:0;background:var(--surface)" ' +
         'allow="clipboard-write"></iframe>';
+      const ifr = document.getElementById('crm-frame');
+      // Aplica CSS + tela desejada no load; repete pra sobreviver ao auto-login do CRM.
+      ifr.addEventListener('load', function () {
+        _crmInject(ifr); crmGoto(wanted);
+        setTimeout(function () { _crmInject(ifr); crmGoto(wanted); }, 600);
+        setTimeout(function () { crmGoto(wanted); }, 1500);
+      });
     } catch (err) {
       if (window.appLog) window.appLog('ERRO', 'LOAD_CRM', { categoria: 'crm', detalhe: { erro: err && err.message } });
       el.innerHTML =
