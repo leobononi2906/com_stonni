@@ -68,7 +68,7 @@ No banco (fase 3): RLS nas `atac_*` exigindo `auth.jwt()->'user_metadata'->'modu
 
 ### Fase 1 — Front + PWA
 - [ ] Portar o CRM (stonnidist-v2) como `crm.js` (área isolada, try/catch, Error State).
-- [ ] Materiais + IA como módulo compartilhado (já implementado no stonnidist-v2, trazer pra cá).
+- [x] Materiais + IA como módulo compartilhado (`materiais.js`). — commit 876af8e (smoke test: 14 itens, filtro, modal IA OK)
 - [ ] "Catálogo + Info por WhatsApp" (ação no módulo Catálogo).
 - [ ] Testar logado com conta admin lendo produção (vê tudo, sem mexer em RLS).
 - [ ] Comparar lado a lado com o CRM ao vivo até bater igual.
