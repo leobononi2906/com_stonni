@@ -55,46 +55,54 @@ function cfgAba(aba, btn) {
 async function cfgCarregarGeral(el) {
   const configs = await supa('ped_configuracoes', 'order=chave');
   const PDF_CHAVES = ['pdf_titulo','pdf_empresa_nome','pdf_empresa_cnpj','pdf_empresa_endereco','pdf_empresa_telefone','pdf_logo_url','pdf_rodape'];
-  const SKIP = ['bling_refresh_token','bling_api_token', ...PDF_CHAVES];
-  const visiveis = (configs || []).filter(c => !SKIP.includes(c.chave));
+  const BLING_AUTO = ['bling_access_token','bling_access_token_exp','bling_refresh_lock']; // gerenciados sozinhos → só leitura mascarada
+  const OCULTOS = ['bling_refresh_token','bling_api_token'];                               // segredos → nunca exibir
+  const byKey = Object.fromEntries((configs || []).map(c => [c.chave, c]));
   const cfgPDF = Object.fromEntries((configs || []).filter(c => PDF_CHAVES.includes(c.chave)).map(c => [c.chave, c.valor]));
 
+  const LABELS = {
+    catalogo_titulo: 'Título do catálogo', catalogo_subtitulo: 'Subtítulo / Instagram', catalogo_capa_url: 'URL da capa do catálogo',
+    empresa_padrao_pedido: 'Empresa que expede os pedidos', pedido_valor_minimo: 'Valor mínimo do pedido (R$)',
+    frete_gratis_acima: 'Frete grátis acima de (R$)', prazos_pagamento: 'Prazos de pagamento',
+    alerta_dias_sem_compra: 'Alerta: dias sem compra', permite_pedido_bloqueado: 'Permitir pedido com alerta financeiro',
+    bling_sync_ativo: 'Sincronização Bling ativa', bling_deposito_id: 'ID do depósito Bling',
+  };
+  const GRUPOS = [
+    { titulo: '📕 Catálogo', desc: 'Aparência do catálogo e da capa', chaves: ['catalogo_titulo','catalogo_subtitulo','catalogo_capa_url'] },
+    { titulo: '🛒 Pedido', desc: 'Regras do pedido do representante', chaves: ['empresa_padrao_pedido','pedido_valor_minimo','frete_gratis_acima','prazos_pagamento','alerta_dias_sem_compra','permite_pedido_bloqueado'] },
+    { titulo: '🔌 Integração Bling', desc: 'Sincronização de fotos e estoque com o Bling', chaves: ['bling_sync_ativo','bling_deposito_id'] },
+  ];
+  // Chaves ainda não classificadas caem em "Outros" (não some nada)
+  const usadas = new Set([...PDF_CHAVES, ...BLING_AUTO, ...OCULTOS, ...GRUPOS.flatMap(g => g.chaves)]);
+  const outras = (configs || []).filter(c => !usadas.has(c.chave));
+  if (outras.length) GRUPOS.push({ titulo: '⚙️ Outros', desc: '', chaves: outras.map(c => c.chave) });
+
+  const _item = (chave) => {
+    const c = byKey[chave]; if (!c) return '';
+    return `<div class="form-field"><label>${LABELS[chave] || c.descricao || chave}</label>${cfgInputPorTipo(c)}<span style="font-size:10.5px;color:var(--text-muted);font-family:'DM Mono',monospace">${chave}</span></div>`;
+  };
+  const _grupo = (g) => `<div class="cfg-section" style="margin-top:22px"><div style="font-size:13px;font-weight:700;color:var(--text-primary)">${g.titulo}</div>${g.desc ? `<div style="font-size:12px;color:var(--text-muted);margin:2px 0 12px">${g.desc}</div>` : '<div style="height:12px"></div>'}<div class="cfg-grid-2">${g.chaves.map(_item).join('')}</div></div>`;
+  const _mask = v => { const s = String(v || ''); return s.length > 10 ? s.slice(0, 6) + '••••' + s.slice(-4) : (s ? '••••' : '—'); };
+  const _blingAuto = BLING_AUTO.map(k => byKey[k]).filter(Boolean).map(c => `<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--border)"><code style="font-size:11px;color:var(--text-secondary)">${c.chave}</code><span style="font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace">${_mask(c.valor)}</span></div>`).join('');
+
   el.innerHTML = `
-    <div class="cfg-section">
-      <div class="section-header">
-        <span class="section-title">Configurações Gerais</span>
-        <button class="btn btn-primary" onclick="cfgSalvarGeral()">💾 Salvar</button>
-      </div>
-      <!-- desktop tabela -->
-      <div class="table-card hide-mobile">
-        <table class="data-table">
-          <thead><tr>
-            <th style="width:220px">Configuração</th>
-            <th>Descrição</th>
-            <th style="width:280px">Valor</th>
-          </tr></thead>
-          <tbody>
-            ${visiveis.map(c => `
-              <tr>
-                <td><code style="font-size:11px;color:var(--blue-mid)">${c.chave}</code></td>
-                <td style="color:var(--text-secondary);font-size:12px">${c.descricao || '—'}</td>
-                <td>${cfgInputPorTipo(c)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-      <!-- mobile cards -->
-      <div class="show-mobile cfg-cards-geral">
-        ${visiveis.map(c => `
-          <div class="cfg-card-item">
-            <div class="cfg-card-label">${c.descricao || c.chave}</div>
-            <div>${cfgInputPorTipo(c)}</div>
-          </div>
-        `).join('')}
-      </div>
-      <div id="cfg-geral-msg" style="margin-top:12px;font-size:13px;"></div>
+    <div class="section-header">
+      <span class="section-title">Configurações — Catálogo & Pedidos</span>
+      <button class="btn btn-primary" onclick="cfgSalvarGeral()">💾 Salvar</button>
     </div>
+    <div style="font-size:12px;color:var(--text-muted)">Ajustes do portal do representante. O CRM tem configuração própria (dentro de <strong>Info Técnica</strong>).</div>
+
+    ${GRUPOS.map(_grupo).join('')}
+
+    <details style="margin-top:18px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--text-muted)">🔒 Bling — tokens (gerenciados automaticamente)</summary>
+      <div style="margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px">
+        ${_blingAuto || '<span style="font-size:12px;color:var(--text-muted)">—</span>'}
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px">Renovados sozinhos pela integração — não precisa editar aqui.</div>
+      </div>
+    </details>
+
+    <div id="cfg-geral-msg" style="margin-top:12px;font-size:13px;"></div>
 
     <!-- SEÇÃO PDF -->
     <div class="cfg-section" style="margin-top:28px">
