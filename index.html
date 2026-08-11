@@ -733,12 +733,14 @@ function construirNav() {
     grupos.push({ grupo: 'PRINCIPAL', itens });
   }
 
-  // INTERNO — seções do CRM como itens da MESMA sidebar (dirigem o iframe). Rep nunca vê.
+  // INTERNO — seções do CRM na MESMA sidebar, agrupadas como no CRM original. Rep nunca vê.
   if (ehInterno()) {
-    grupos.push({ grupo: 'INTERNO', itens: [
+    grupos.push({ grupo: 'DASHBOARD', itens: [
       { id: 'it-home',       icon: '🏠', label: 'Home',       breadcrumb: 'Interno · Home' },
       { id: 'it-vendedores', icon: '👤', label: 'Vendedores', breadcrumb: 'Interno · Vendedores' },
       { id: 'it-produtos',   icon: '📊', label: 'Produtos',   breadcrumb: 'Interno · Produtos' },
+    ]});
+    grupos.push({ grupo: 'OPERACIONAL', itens: [
       { id: 'it-crm',        icon: '📇', label: 'CRM',        breadcrumb: 'Interno · CRM' },
       { id: 'it-prospeccao', icon: '🎯', label: 'Prospecção', breadcrumb: 'Interno · Prospecção' },
     ]});
