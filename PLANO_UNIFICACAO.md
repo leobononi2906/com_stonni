@@ -70,7 +70,11 @@ No banco (fase 3): RLS nas `atac_*` exigindo `auth.jwt()->'user_metadata'->'modu
 - [x] CRM (Info Técnica) **embutido via iframe same-origin** — vendorizado em `crm/` (cópia fiel do stonnidist-v2). Gated por `atacado`; SSO pela sessão do localStorage. Smoke test OK. **Decisão**: embed em vez de reescrever 5k linhas (Padrão 5.0: não refazer o que funciona). Nativizar telas específicas fica como opção futura, não obrigatório.
   - ⚠️ **Dívida de vendoring**: `crm/` é uma CÓPIA. Enquanto o `stonnidist-v2` receber deploys, re-sincronizar (`cp` de index.html/js/css). No futuro, quando o unificado virar a produção do CRM, aposentar o `stonnidist-v2`.
 - [x] Materiais + IA como módulo compartilhado (`materiais.js`). — commit 876af8e (smoke test: 14 itens, filtro, modal IA OK)
-- [ ] "Catálogo + Info por WhatsApp" (ação no módulo Catálogo).
+- [x] **Compartilhar no WhatsApp** (`wshare.js`, Web Share API c/ arquivos → anexa; fallback wa.me):
+  - Materiais: botão por card (PDF/imagem anexa, vídeo/link manda link).
+  - Fotos do produto: "Enviar fotos" no drawer, multi-seleção + legenda (nome/ref/preço).
+  - **Catálogos-modelo**: faixa no topo do Catálogo (reusa `prt_materiais` categoria≈Catálogo) c/ abrir + WhatsApp; some se vazia.
+  - **Salvar catálogo (admin)**: upload de PDF → Storage `prt-materiais/catalogos/` + registro. Permissões já existiam → **sem SQL/schema em produção**. Sem lib de PDF nova (evita CDN).
 - [ ] Testar logado com conta admin lendo produção (vê tudo, sem mexer em RLS).
 - [ ] Comparar lado a lado com o CRM ao vivo até bater igual.
 
