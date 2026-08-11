@@ -9,11 +9,13 @@ async function renderCatalogo(el) {
   window._catProdutos    = null;
   window._catProdutosAll = null;
 
-  const [produtos, acoes, tags, cfgRows] = await Promise.all([
+  const [produtos, acoes, tags, cfgRows, catalogos] = await Promise.all([
     supa('ped_catalogo_produtos', 'ativo=eq.true&order=subgrupo,nome&select=*'),
     supa('ped_acoes_comerciais',  `ativa=eq.true&select=*`),
     supa('ped_catalogo_tags',     'ativo=eq.true&order=nome&select=*'),
-    supa('ped_configuracoes',     'chave=like.catalogo_*&select=chave,valor')
+    supa('ped_configuracoes',     'chave=like.catalogo_*&select=chave,valor'),
+    // Catálogos-modelo salvos (decisão A: reusar prt_materiais). ~5 registros.
+    supa('prt_materiais',         'categoria=ilike.cat*logo&ativo=eq.true&order=ordem.asc,criado_em.desc&select=id,titulo,url,tipo,categoria')
   ]);
 
   // Tabela de preço do representante logado
@@ -26,11 +28,13 @@ async function renderCatalogo(el) {
   window._catTabela   = tabela;
   window._catTags     = tags || [];
   window._catConfigs  = Object.fromEntries((cfgRows||[]).map(c=>[c.chave,c.valor]));
+  window._catModelos  = catalogos || [];
 
   // Grupos disponíveis
   const grupos = [...new Map((produtos||[]).filter(p=>p.grupo).map(p=>[p.id_grupo,{id:p.id_grupo,nome:p.grupo}])).values()];
 
   el.innerHTML = `
+    ${catModelosStripHtml()}
     <!-- TOPBAR: linha 1 — busca + filtros -->
     <div class="cat-topbar">
       <div class="cat-filtros-row">
@@ -301,6 +305,36 @@ window.catAdicionarAoPedido = function(idProduto) {
   irPara('novo-pedido', { adicionarProduto: idProduto });
 };
 
+// ============================================================
+//  CATÁLOGOS-MODELO (faixa no topo) — reusa prt_materiais (categoria≈Catálogo)
+//  Abrir (nova aba) + Enviar no WhatsApp (waShare / wshare.js). ~5 registros.
+// ============================================================
+function catModelosStripHtml() {
+  const modelos = window._catModelos || [];
+  if (!modelos.length) return '';
+  return `
+    <div class="cat-modelos">
+      <div class="cat-modelos-head">📕 Catálogos <span>abra ou envie no WhatsApp</span></div>
+      <div class="cat-modelos-row">${modelos.map(catModeloCard).join('')}</div>
+    </div>`;
+}
+function catModeloCard(c) {
+  const nome = String(c.titulo || 'Catálogo').replace(/</g, '&lt;');
+  return `<div class="cat-modelo-card">
+    <div class="cat-modelo-thumb" onclick="window.open('${c.url}','_blank')" title="Abrir catálogo">📕</div>
+    <div class="cat-modelo-nome" title="${nome.replace(/"/g,'&quot;')}">${nome}</div>
+    <div class="cat-modelo-acoes">
+      <button class="btn btn-outline btn-sm" onclick="window.open('${c.url}','_blank')">Abrir</button>
+      <button class="btn btn-sm" style="background:#128C7E;color:#fff" onclick="catModeloShare(${c.id})" title="Enviar no WhatsApp">📲</button>
+    </div>
+  </div>`;
+}
+window.catModeloShare = function(id) {
+  const c = (window._catModelos || []).find(x => Number(x.id) === Number(id));
+  if (!c) return;
+  waShare({ arquivos: [c.url], texto: c.titulo || 'Catálogo Stonni', linkFallback: c.url });
+};
+
 // CSS do módulo
 (function() {
   if (document.getElementById('css-catalogo')) return;
@@ -337,6 +371,15 @@ window.catAdicionarAoPedido = function(idProduto) {
     .cat-detalhe-foto-principal { width:100%; border-radius:var(--radius); overflow:hidden; background:var(--surface2); margin-bottom:8px; }
     .cat-detalhe-foto-principal img { width:100%; max-height:280px; object-fit:contain; }
     .cat-detalhe-thumbs { display:flex; gap:8px; flex-wrap:wrap; }
+    .cat-modelos { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
+    .cat-modelos-head { font-size:12px; font-weight:700; color:var(--text-primary); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    .cat-modelos-head span { font-weight:500; font-size:11px; color:var(--text-muted); }
+    .cat-modelos-row { display:flex; gap:10px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; }
+    .cat-modelo-card { flex:0 0 auto; width:132px; border:1px solid var(--border); border-radius:10px; padding:10px; background:var(--surface2); display:flex; flex-direction:column; gap:6px; }
+    .cat-modelo-thumb { height:56px; display:flex; align-items:center; justify-content:center; font-size:30px; background:var(--surface); border-radius:8px; cursor:pointer; }
+    .cat-modelo-nome { font-size:11.5px; font-weight:600; color:var(--text-primary); line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:29px; }
+    .cat-modelo-acoes { display:flex; gap:6px; }
+    .cat-modelo-acoes .btn { flex:1; justify-content:center; padding:0 6px; }
     @media(max-width:768px) { .cat-grid { grid-template-columns:repeat(2,1fr); gap:10px; } .cat-topbar { flex-direction:column; align-items:stretch; } }
   `;
   document.head.appendChild(s);
