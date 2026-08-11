@@ -90,6 +90,31 @@ Hoje o com_stonni resolve perfil por `ped_gestores`/`ped_representantes`; o Hub 
 
 ---
 
+## 6. Migração p/ SERVIDOR INTERNO (diretriz Leo 11/08)
+
+O app unificado será hospedado num **servidor interno** (não Vercel público). Já foi
+construído pensando nisso — checklist do que garante a migração:
+
+- **Path-independent** ✅ — todos os caminhos são **relativos** (`./crm/index.html`,
+  `manifest.json`, `sw.js`, `css/`, `js/`). Roda em qualquer subpath (`http://intranet/stonni/`)
+  sem alteração. Nunca introduzir `src="/..."` absoluto.
+- **Same-origin preservado** ✅ — `crm/` é servido pelo mesmo host do portal → SSO por
+  `localStorage` continua funcionando no interno.
+- **PWA precisa de HTTPS** ⚠️ — service worker e "instalar app" só rodam em **contexto seguro**
+  (HTTPS ou localhost). Em HTTP puro o SW **não registra** — mas o app **degrada sozinho**
+  (registro em try/catch + guard `'serviceWorker' in navigator`): funciona normal, só sem
+  offline/instalação. Ideal: o servidor interno com HTTPS (certificado interno serve).
+- **Dependências de CDN (só quebram se o servidor for offline/air-gapped)**:
+  1. `supabase-js` — `cdn.jsdelivr.net/.../supabase-js@2` (usado pelo CRM em `crm/index.html`). **Crítico**: sem ele o CRM não sobe.
+  2. Google Fonts (DM Sans/Mono) — portal e CRM. **Cosmético**: cai pra fonte do sistema.
+  → Se o interno tiver internet: nada a fazer. Se for **offline**: vendorizar esses arquivos
+  localmente (`vendor/supabase.js` + fontes self-hosted) e apontar os `<script>`/`<link>` pra eles.
+- **Config que permanece**: `SUPA_URL`/`SUPA_KEY` (Supabase é nuvem, não migra) e a chave
+  `sb-vishxwdxqiygbxmtpfoy-auth-token` do localStorage. Independem do host.
+
+> Deploy hoje: branch `unificado-pwa` local. O com_stonni original é Vercel (`main`=prod), mas o
+> **alvo do unificado é o servidor interno** — reavaliar pipeline de deploy quando for subir.
+
 ## 5. Pendências / decisões em aberto
 - **Info Técnica** = apenas o novo rótulo do CRM (confirmado por Leo 11/08). Sem feature nova.
 - Ícones PWA definitivos (hoje usa `logo.png`).
