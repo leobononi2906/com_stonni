@@ -710,8 +710,9 @@ let paginaAtual = '';
 //  não para liberar áreas. Quem libera área é o Hub.
 // ============================================================
 function temMod(m) { return ((USUARIO && USUARIO.modulos) || []).includes(m); }
-function ehInterno() { return temMod('atacado'); }              // vê o CRM
-function temPortal() { return temMod('stonni') || temMod('atacado'); }
+function ehAdmin() { return !!(USUARIO && USUARIO.admin); }
+function ehInterno() { return temMod('atacado') || ehAdmin(); }              // vê o CRM (admin sempre vê)
+function temPortal() { return temMod('stonni') || temMod('atacado') || ehAdmin(); } // admin sempre vê o portal
 
 function construirNav() {
   const grupos = [];

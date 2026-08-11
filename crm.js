@@ -14,7 +14,7 @@
     // NÃO existe como window.USUARIO. Referência direta com guarda de TDZ.
     const u = (typeof USUARIO !== 'undefined') ? USUARIO : null;
     const mods = (u && u.modulos) || [];
-    return Array.isArray(mods) && mods.includes('atacado');
+    return (Array.isArray(mods) && mods.includes('atacado')) || !!(u && u.admin); // admin sempre vê
   }
   window.podeVerCRM = podeVerCRM;
 
