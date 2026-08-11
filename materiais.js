@@ -100,11 +100,15 @@
     } else {
       thumb = matThumbIcon('🔗', 'LINK', '#16a34a');
     }
-    return `<div onclick="matAbrir(${m.id})" title="Abrir" style="cursor:pointer;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface);transition:box-shadow .15s" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='none'">
-      ${thumb}
-      <div style="padding:10px 12px">
-        <div style="font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${titulo}</div>
-        ${sub ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px">${sub}</div>` : ''}
+    return `<div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface);transition:box-shadow .15s" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='none'">
+      <div onclick="matAbrir(${m.id})" title="Abrir" style="cursor:pointer">${thumb}
+        <div style="padding:10px 12px 6px">
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${titulo}</div>
+          ${sub ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px">${sub}</div>` : ''}
+        </div>
+      </div>
+      <div style="padding:0 12px 10px">
+        <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;color:#128C7E;border-color:#128C7E" onclick="matShare(${m.id}, event)">📲 Enviar no WhatsApp</button>
       </div>
     </div>`;
   }
@@ -113,6 +117,17 @@
       <span style="font-size:32px">${icon}</span>
       <span style="font-size:10px;font-weight:800;letter-spacing:1px;color:${cor}">${label}</span>
     </div>`;
+  }
+
+  function matShare(id, ev) {
+    if (ev) ev.stopPropagation();
+    const m = MAT.items.find(x => Number(x.id) === Number(id));
+    if (!m) return;
+    const tipo = (m.tipo || 'link').toLowerCase();
+    const texto = [m.titulo, m.descricao].filter(Boolean).join(' — ');
+    // PDF/imagem: anexa o arquivo. Vídeo/link: manda o link (não dá p/ anexar).
+    if (tipo === 'pdf' || tipo === 'imagem') waShare({ arquivos: [m.url], texto, linkFallback: m.url });
+    else waShare({ texto, linkFallback: m.url });
   }
 
   function matSetLinha(l) { MAT.linha = l; renderMateriais(document.getElementById('page-content')); }
@@ -242,6 +257,7 @@
   // Expor para os onclick inline e para o router
   window.renderMateriais = renderMateriais;
   window.matSetLinha = matSetLinha;
+  window.matShare = matShare;
   window.matBusca = matBusca;
   window.matAbrir = matAbrir;
   window.matFecharVisor = matFecharVisor;
