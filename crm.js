@@ -31,20 +31,15 @@
         return;
       }
 
-      // Placeholder da Fase 1 (as telas reais do CRM entram aqui).
+      // CRM vendorizado em ./crm/ (cópia fiel do stonnidist-v2), embutido via
+      // iframe SAME-ORIGIN. Compartilha a sessão Supabase do localStorage → SSO
+      // (sem segundo login). Isolamento total: o CRM roda no seu próprio contexto,
+      // um erro nele não derruba o portal.
+      el.style.padding = '0';  // o iframe ocupa a área toda; CRM tem seu próprio layout
       el.innerHTML =
-        '<div class="page-section">' +
-        '  <div class="alert alert-info">' +
-        '    <span class="alert-icon">🛠️</span>' +
-        '    <div><strong>Info Técnica (CRM)</strong> — área interna em construção. ' +
-        '    As telas de carteira, prospecção e ranking serão portadas do stonnidist-v2 nesta fase.</div>' +
-        '  </div>' +
-        '  <div class="empty-state">' +
-        '    <div class="empty-state-icon">📇</div>' +
-        '    <h3>CRM em migração</h3>' +
-        '    <p>Enquanto isso, o CRM atual segue no ar normalmente na URL de produção.</p>' +
-        '  </div>' +
-        '</div>';
+        '<iframe title="CRM — Info Técnica" src="./crm/index.html" ' +
+        'style="display:block;width:100%;height:calc(100dvh - 60px);min-height:480px;border:0;background:var(--surface)" ' +
+        'allow="clipboard-write"></iframe>';
     } catch (err) {
       if (window.appLog) window.appLog('ERRO', 'LOAD_CRM', { categoria: 'crm', detalhe: { erro: err && err.message } });
       el.innerHTML =

@@ -1,0 +1,670 @@
+// ═══ STONNI ATACADO — vendedores.js ═══
+// ══════════════════════════════════════════════════════════
+// ABA VENDEDORES — Ranking de Equipe + Painel Individual
+// ══════════════════════════════════════════════════════════
+
+// Chave de contagem por CARD (irmãos do mesmo card contam como 1 cliente)
+function _cardKey(id) { const c = S.cardOf && S.cardOf.get(id); return c != null ? 'k' + c : 'c' + id; }
+
+// ── Atribuição de contato Umbler ao vendedor: id_atendente → nome → TAG ──
+// A caixa geral "ATACADO" identifica quem atende pela TAG (ex.: "GUILHERME STONNI"),
+// não pelo campo atendente. Sem ler a tag, todo esse atendimento sumia do ranking.
+// Regra: credita quando dá pra identificar o atendente; sem atribuição, ignora.
+// Usado no ranking E no painel individual (têm que bater).
+function _umblerAttrib() {
+  const norm = s => (s==null?'':String(s)).normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().trim();
+  const idMap = new Map(), nomeMap = new Map(), first = [];
+  (S.umblerVendMap||[]).forEach(m => {
+    const vid = Number(m.id_vendedor_erp); if(!vid) return;
+    if(m.id_membro_umbler) idMap.set(m.id_membro_umbler, vid);
+    if(m.nome_vendedor_erp){
+      nomeMap.set(norm(m.nome_vendedor_erp), vid);
+      const ft = norm(m.nome_vendedor_erp).split(' ')[0];
+      if(ft && !first.some(x=>x.ft===ft&&x.id===vid)) first.push({ft, id:vid});
+    }
+  });
+  const resolve = c => {
+    if(c.id_atendente_umbler && idMap.has(c.id_atendente_umbler)) return idMap.get(c.id_atendente_umbler);
+    const nm = norm(c.nome_atendente);
+    if(nm && nomeMap.has(nm)) return nomeMap.get(nm);
+    const tags = Array.isArray(c.tags) ? c.tags : [];
+    for(const raw of tags){
+      const tg = norm(raw);
+      if(!/(STONNI|ATACADO)$/.test(tg)) continue;         // só tag de atendente (ex.: "GUILHERME STONNI")
+      const tok = tg.split(' ')[0]; if(tok.length<3) continue;
+      const hit = first.find(x=>x.ft.startsWith(tok));    // tag = apelido/abreviação do 1º nome do vendedor
+      if(hit) return hit.id;
+    }
+    return null;
+  };
+  // Agrega por vendedor: cli = cardKeys de clientes tocados; tot = distintos (cardKey de cliente | telefone de lead)
+  const byVend = new Map();
+  (S.contatosUmbler||[]).forEach(c => {
+    const vid = resolve(c); if(!vid) return;
+    if(!byVend.has(vid)) byVend.set(vid, {cli:new Set(), tot:new Set()});
+    const u = byVend.get(vid);
+    const idCli = S.telCliMap ? S.telCliMap.get(c.telefone) : null;
+    if(idCli!=null){ const k=_cardKey(idCli); u.cli.add(k); u.tot.add(k); }
+    else u.tot.add('t'+c.telefone);   // lead sem cadastro de cliente
+  });
+  return { resolve, byVend };
+}
+
+async function renderVendedores() {
+  const el = document.getElementById('vend-body');
+  if (!el) return;
+
+  if (F.vendedorId) {
+    renderVendedorIndividual(el);            // login do vendedor: entra travado
+  } else if (S.vendDrill) {
+    renderVendedorIndividual(el, S.vendDrill); // admin clicou numa linha do ranking
+  } else {
+    await renderVendedorTeam(el);
+  }
+}
+
+// Abrir / voltar do detalhe pelo clique no ranking
+function openVend(id) { S.vendDrill = id; renderVendedores(); window.scrollTo(0, 0); }
+function voltarTime() { S.vendDrill = null; renderVendedores(); }
+
+// Cor relativa à média do time (verde melhor, vermelho pior, neutro perto)
+function _relColor(v, avg, higherBetter) {
+  if (!avg || avg <= 0) return 'var(--text-secondary)';
+  const r = v / avg;
+  if (r >= 0.92 && r <= 1.08) return 'var(--text-secondary)';
+  const better = higherBetter ? v > avg : v < avg;
+  return better ? 'var(--green)' : 'var(--red)';
+}
+
+// ── MODE 1: Team Ranking ──────────────────────────────────
+async function renderVendedorTeam(el) {
+  el.innerHTML = '<div class="empty-msg"><span class="spin">&#x27F3;</span> Calculando ranking...</div>';
+
+  const allowedIds = new Set(S.vendedores.map(v => v.id_vendedor));
+  const vm = new Map();
+  S.docs.forEach(d => {
+    if (!allowedIds.has(d.id_vendedor)) return;
+    if (!vm.has(d.id_vendedor)) vm.set(d.id_vendedor, { id: d.id_vendedor, nome: d.nome_vendedor || '', fat: 0, cli: new Set(), ped: new Set() });
+    const v = vm.get(d.id_vendedor);
+    v.fat += docFat(d);
+    if (d.id_cliente) v.cli.add(_cardKey(d.id_cliente));
+    if (d.id_doc) v.ped.add(d.id_doc);
+  });
+
+  const vl = [...vm.values()]
+    .map(v => ({ ...v, clientes: v.cli.size, pedidos: v.ped.size, ticket: v.ped.size ? v.fat / v.ped.size : 0 }))
+    .sort((a, b) => b.fat - a.fat);
+
+  // Representantes (DISTRIBUICAO REPRESENTANTES) vendem mas nao trabalham a carteira
+  // no CRM. Ficam numa secao separada, sem metricas de carteira, e nao entram nas
+  // medias do time interno (senao puxam a cobertura pra baixo). Ex.: RACA (48746).
+  const repIds = new Set(S.vendedores
+    .filter(v => (v.departamento || '').trim().toUpperCase() === 'DISTRIBUICAO REPRESENTANTES')
+    .map(v => v.id_vendedor));
+  const vlInt = vl.filter(v => !repIds.has(v.id));
+  const vlRep = vl.filter(v => repIds.has(v.id));
+
+  const fatTot = vl.reduce((s, v) => s + v.fat, 0);
+  const fatTotInt = vlInt.reduce((s, v) => s + v.fat, 0);
+  const maxF = Math.max(...vl.map(v => v.fat), 1);
+
+  // Total do período = todos os docs (respeita o filtro do topo) = MESMO número da Home.
+  // fatTot cobre só quem é ranqueado (distribuidor ativo); a diferença são vendedores
+  // inativos ou fora do time de distribuição (ex.: representante desligado que faturou no mês).
+  const fatPeriodo = S.docs.reduce((s, d) => s + docFat(d), 0);
+  const fatOutros = fatPeriodo - fatTot;
+
+  // Saude carteira por vendedor
+  const crmH = new Map();
+  S.carteira.forEach(c => {
+    const vid = c.id_vendedor_responsavel;
+    if (!vid) return;
+    if (!crmH.has(vid)) crmH.set(vid, { a: 0, t: 0, r: 0 });
+    const h = crmH.get(vid);
+    const st = getStatus(c);
+    if (st === 'ATIVO') h.a++;
+    else if (st === 'ATENCAO') h.t++;
+    else if (st === 'PERDIDO') h.r++;
+  });
+
+  // Esforço por vendedor: cobertura, venda ativa, carteira parada
+  const buyersByV = new Map(), notaByV = new Map();
+  S.docs.forEach(d => { if(!d.id_cliente||!d.id_vendedor) return; if(!buyersByV.has(d.id_vendedor)) buyersByV.set(d.id_vendedor, new Set()); buyersByV.get(d.id_vendedor).add(d.id_cliente); });
+  (S.atividades||[]).forEach(a => { const v=a.id_vendedor_responsavel; if(!v||!a.id_cliente) return; if(!notaByV.has(v)) notaByV.set(v, new Set()); notaByV.get(v).add(a.id_cliente); });
+
+  // Atribuição Umbler (id → nome → tag), compartilhada com o painel individual
+  const { resolve: _resolveAtend, byVend: umblerV } = _umblerAttrib();
+  // Atendimentos (volume) = clientes/leads distintos atendidos = nota ∪ Umbler atribuído
+  const _atendCount = vid => {
+    const s = new Set();
+    const ns = notaByV.get(vid); if(ns) ns.forEach(idc => s.add(_cardKey(idc)));
+    const uv = umblerV.get(vid); if(uv) uv.tot.forEach(k => s.add(k));
+    return s.size;
+  };
+
+  const esforco = new Map(); // vid -> {cart, falados, ativa, passiva, parada, fatParada}
+  S.carteira.forEach(c => {
+    const v = c.id_vendedor_responsavel; if(!v) return;
+    if(!esforco.has(v)) esforco.set(v, {cart:0, falados:0, ativa:0, passiva:0, parada:0, fatParada:0});
+    const e = esforco.get(v); e.cart++;
+    // Card-level: compra/contato de qualquer irmão do card conta pro dono (senão vira falso "parada")
+    const ids = cardIds(c.id_cliente);
+    const bset = buyersByV.get(v), nset = notaByV.get(v), uset = umblerV.get(v);
+    const comprou = bset && ids.some(x => bset.has(x));
+    // "falou" só conta Umbler quando ELE é o atendente (contato dele em cliente da carteira),
+    // não toque de terceiros na caixa geral.
+    const falou = (nset && ids.some(x => nset.has(x))) || (uset && uset.cli.has(_cardKey(c.id_cliente)));
+    const fat = Number(c.faturamento_total) || 0;
+    if(falou) e.falados++;
+    if(falou && comprou) e.ativa++;
+    else if(!falou && comprou) e.passiva++;
+    else if(!falou && !comprou) { e.parada++; e.fatParada += fat; }
+  });
+
+  // Médias do time (a "régua" de comparação)
+  const _mCob = [], _mAtiva = [];
+  let _sumParada = 0, _sumTicket = 0, _sumFal = 0, _sumProsp = 0, _cntParadaCli = 0, _sumAtend = 0;
+  vlInt.forEach(v => {
+    const e = esforco.get(v.id) || { cart:0, falados:0, ativa:0, passiva:0, parada:0, fatParada:0 };
+    _mCob.push(e.cart ? e.falados / e.cart * 100 : 0);
+    const cv = e.ativa + e.passiva;
+    if (cv > 0) _mAtiva.push(e.ativa / cv * 100);
+    _sumParada += e.fatParada; _cntParadaCli += e.parada;
+    _sumFal += e.falados; _sumProsp += Math.max(0, e.falados - e.ativa);
+    _sumTicket += v.ticket;
+    _sumAtend += _atendCount(v.id);
+  });
+  const nV = vlInt.length || 1;
+  const avg = {
+    fat:      fatTotInt / nV,
+    cob:      Math.round(_mCob.reduce((s, x) => s + x, 0) / nV),
+    ativa:    _mAtiva.length ? Math.round(_mAtiva.reduce((s, x) => s + x, 0) / _mAtiva.length) : 0,
+    parada:   _sumParada / nV,
+    falados:  _sumFal / nV,
+    prospec:  _sumProsp / nV,
+    atend:    _sumAtend / nV,
+    ticket:   _sumTicket / nV,
+  };
+  const totParadaFat = _sumParada, totParadaCli = _cntParadaCli;
+
+  // Ritmo de atividade por semana (dentro do período): nota + Umbler
+  const _ms = 86400000;
+  const _wStart = new Date(F.dtStart + 'T00:00:00');
+  const _wEnd = new Date(F.dtEnd + 'T00:00:00');
+  const nWeeks = Math.min(12, Math.max(1, Math.ceil(((_wEnd - _wStart) / _ms + 1) / 7)));
+  const _wIdx = ds => {
+    if (!ds) return -1;
+    const d = new Date(String(ds).slice(0, 10) + 'T00:00:00');
+    const idx = Math.floor((d - _wStart) / _ms / 7);
+    return (idx >= 0 && idx < nWeeks) ? idx : -1;
+  };
+  const ritmo = new Map(); // vid -> number[nWeeks]
+  const _addRitmo = (vid, ds) => {
+    if (!vid) return; const wi = _wIdx(ds); if (wi < 0) return;
+    if (!ritmo.has(vid)) ritmo.set(vid, new Array(nWeeks).fill(0));
+    ritmo.get(vid)[wi]++;
+  };
+  (S.atividades || []).forEach(a => _addRitmo(a.id_vendedor_responsavel, a.data_criacao));
+  // Umbler: mesma atribuição do esforço (id_atendente → nome → tag), inclui a caixa geral
+  (S.contatosUmbler || []).forEach(c => { const vid = _resolveAtend(c); if (vid) _addRitmo(vid, c.ultimo_contato); });
+  const ritmoMax = Math.max(1, ...[...ritmo.values()].flatMap(a => a));
+  const _sparkline = vid => {
+    const arr = ritmo.get(vid) || new Array(nWeeks).fill(0);
+    return `<div style="display:inline-flex;align-items:flex-end;gap:2px;height:26px" title="Atividades por semana (nota + Umbler)">${arr.map((v, k) => {
+      const h = v ? Math.max(3, Math.round(v / ritmoMax * 24)) : 1;
+      return `<div style="width:6px;height:${h}px;background:${v ? 'var(--blue-mid)' : 'var(--border)'};border-radius:1px" title="Sem ${k + 1}: ${v}"></div>`;
+    }).join('')}</div>`;
+  };
+  // Mini-barra horizontal (cobertura / venda ativa): percentual + cor relativa a media
+  const _miniBar = (pct, color) => {
+    const w = Math.max(0, Math.min(100, Math.round(pct || 0)));
+    return `<div style="height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;width:80px;flex-shrink:0"><div style="height:100%;width:${w}%;background:${color}"></div></div>`;
+  };
+
+  el.innerHTML = `
+    <div class="kgrid">
+      ${kc('\u{1F4B0}', 'Faturamento', fmtK(fatPeriodo), 'kc-b')}
+      ${kc('\u{1F464}', 'Vendedores', vl.length, 'kc-p')}
+      ${kc('\u{1F465}', 'Clientes', new Set(S.docs.filter(d => allowedIds.has(d.id_vendedor) && d.id_cliente).map(d => _cardKey(d.id_cliente))).size, 'kc-g')}
+      ${kc('\u{1F6D2}', 'Pedidos', new Set(S.docs.filter(d => allowedIds.has(d.id_vendedor)).map(d => d.id_doc).filter(Boolean)).size, 'kc-y')}
+    </div>
+
+    ${vl.length ? `<div class="scard">
+      <div class="scard-title">\u{1F4D0} Régua da Equipe — referência pra comparar</div>
+      <div class="kgrid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+        ${kc('\u{1F465}', 'Cobertura média', avg.cob + '%', 'kc-b')}
+        ${kc('\u{1F3AF}', 'Venda ativa média', avg.ativa + '%', 'kc-g')}
+        ${kc('\u{1F534}', 'Carteira parada (time)', fmtK(totParadaFat), 'kc-y')}
+        ${kc('\u{1F9FE}', 'Ticket médio', fmtK(avg.ticket), 'kc-p')}
+      </div>
+      <div style="font-size:11.5px;color:var(--text-muted);margin-top:10px">
+        \u{1F7E2} acima da média do time · \u{1F534} abaixo · ${totParadaCli} clientes parados que já faturaram · <b>clique num vendedor</b> pra abrir o detalhe.
+      </div>
+    </div>` : ''}
+
+    <div class="scard">
+      <div class="scard-title">\u{1F4CA} Ranking de Vendedores</div>
+      ${vl.length ? `<div style="overflow-x:auto"><table class="data-table">
+        <thead><tr>
+          <th>Vendedor</th>
+          <th class="r" title="Faturamento no per\u00edodo \u00b7 ticket m\u00e9dio embaixo">Vendeu</th>
+          <th title="% da carteira dele que ele atendeu no per\u00edodo (nota ou Umbler) \u00b7 n\u00famero de clientes embaixo">Carteira trabalhada</th>
+          <th class="r" title="Volume total de atendimentos no per\u00edodo (nota + Umbler), incluindo leads novos fora da carteira">Atendimentos</th>
+          <th title="% da carteira que ainda compra (venda ativa) \u00b7 faturamento parado embaixo">Sa\u00fade da carteira</th>
+          <th class="r" title="Atividades por semana no per\u00edodo (nota + Umbler) \u2014 constante vs em rajada">Ritmo</th>
+        </tr></thead>
+        <tbody>
+          <tr style="background:var(--surface2)">
+            <td style="font-weight:700;color:var(--text-secondary);white-space:nowrap">\u{1F4CF} M\u00e9dia da equipe</td>
+            <td class="r"><div class="mono" style="font-weight:700;color:var(--text-secondary)">${fmtK(avg.fat)}</div><div style="font-size:11px;color:var(--text-muted)">tkt ${fmtK(avg.ticket)}</div></td>
+            <td><div class="mono" style="font-weight:700;color:var(--text-secondary)">${avg.cob}%</div><div style="font-size:11px;color:var(--text-muted)">${Math.round(avg.falados)} clientes</div></td>
+            <td class="r mono" style="font-weight:700;color:var(--text-secondary)">${Math.round(avg.atend)}</td>
+            <td><div class="mono" style="font-weight:700;color:var(--text-secondary)">${avg.ativa}%</div><div style="font-size:11px;color:var(--text-muted)">${fmtK(avg.parada)} parada</div></td>
+            <td class="r" style="font-size:10px;color:var(--text-muted);text-align:right">${nWeeks} sem</td>
+          </tr>
+          ${vlInt.map((v, i) => {
+            const medal = i === 0 ? '\u{1F947}' : i === 1 ? '\u{1F948}' : i === 2 ? '\u{1F949}' : '';
+            const e = esforco.get(v.id) || { cart:0, falados:0, ativa:0, passiva:0, parada:0, fatParada:0 };
+            const cob = e.cart ? Math.round(e.falados / e.cart * 100) : 0;
+            const compV = e.ativa + e.passiva;
+            const pAtiva = compV ? Math.round(e.ativa / compV * 100) : 0;
+            const falados = e.falados;
+            const atend = _atendCount(v.id);
+            const cobColor = _relColor(cob, avg.cob, true);
+            const ativaColor = compV ? _relColor(pAtiva, avg.ativa, true) : 'var(--text-muted)';
+            return `<tr class="cl" onclick="openVend(${v.id})" title="Ver detalhe">
+              <td style="font-weight:600;color:var(--text-primary);white-space:nowrap">${i + 1}. ${sN(v.nome)} ${medal} <span style="color:var(--text-muted);font-weight:400">\u203A</span></td>
+              <td class="r"><div class="mono" style="font-weight:700;color:var(--text-primary)">${fmtK(v.fat)}</div><div style="font-size:11px;color:var(--text-muted)">tkt ${fmtK(v.ticket)}</div></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">${_miniBar(cob, cobColor)}<span class="mono" style="font-weight:700;color:${cobColor}">${cob}%</span></div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${falados} clientes</div>
+              </td>
+              <td class="r mono" style="color:${_relColor(atend, avg.atend, true)};font-weight:600">${atend}<div style="font-size:11px;color:var(--text-muted);font-weight:400">a\u00e7\u00f5es</div></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">${_miniBar(compV?pAtiva:0, ativaColor)}<span class="mono" style="font-weight:700;color:${ativaColor}">${compV?pAtiva+'%':'\u2014'}</span></div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${e.fatParada>0?fmtK(e.fatParada)+' parada':'sem parada'}</div>
+              </td>
+              <td class="r">${_sparkline(v.id)}</td>
+            </tr>`;
+          }).join('')}
+          ${vlRep.length ? `<tr style="background:var(--surface2)"><td colspan="6" style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;padding-top:12px">Representantes \u2014 vendem, sem carteira no CRM</td></tr>
+          ${vlRep.map(v => `<tr class="cl" onclick="openVend(${v.id})" title="Ver detalhe">
+              <td style="font-weight:600;color:var(--text-primary);white-space:nowrap">${sN(v.nome)} <span style="color:var(--text-muted);font-weight:400">\u203a</span></td>
+              <td class="r"><div class="mono" style="font-weight:700;color:var(--text-primary)">${fmtK(v.fat)}</div><div style="font-size:11px;color:var(--text-muted)">tkt ${fmtK(v.ticket)}</div></td>
+              <td style="text-align:center;color:var(--text-muted)">\u2014</td>
+              <td class="r mono" style="color:var(--text-muted)">\u2014</td>
+              <td style="text-align:center;color:var(--text-muted)">\u2014</td>
+              <td class="r" style="color:var(--text-muted)">\u2014</td>
+            </tr>`).join('')}` : ''}
+          ${fatOutros > 1 ? `<tr style="color:var(--text-muted)" title="Faturamento de vendedores inativos ou fora do time de distribui\u00e7\u00e3o \u2014 entra no total da Home, mas n\u00e3o \u00e9 ranqueado aqui">
+            <td style="white-space:nowrap">Inativos / outros</td>
+            <td class="r mono" style="font-weight:600">${fmtK(fatOutros)}</td>
+            <td colspan="4" style="font-size:11px;color:var(--text-muted)">n\u00e3o ranqueado</td>
+          </tr>` : ''}
+        </tbody>
+      </table></div>` : '<div class="empty-msg">Sem faturamento no per\u00edodo selecionado</div>'}
+    </div>`;
+}
+
+// quadrante da matriz Trabalhou × Comprou
+function _vquad(cor, bg, titulo, n, sub) {
+  return `<div style="background:${bg};border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+    <div style="font-size:11px;font-weight:700;color:${cor};margin-bottom:4px">${titulo}</div>
+    <div style="font-size:26px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text-primary);line-height:1">${n}</div>
+    <div style="font-size:11px;color:var(--text-secondary);margin-top:3px">${sub}</div>
+  </div>`;
+}
+
+// ── MODE 2: Individual Panel ──────────────────────────────
+function renderVendedorIndividual(el, vidOverride) {
+  const vid = vidOverride || F.vendedorId;
+  const isDrill = !F.vendedorId && vidOverride;  // admin clicou no ranking (não é login travado)
+  const vInfo = S.vendedores.find(v => v.id_vendedor === vid);
+  const nomeVend = vInfo ? vInfo.nome_vendedor : '';
+
+  // Docs filtrados por vendedor
+  const myDocs = S.docs.filter(d => d.id_vendedor === vid);
+  const myItens = S.itens.filter(i => i.id_vendedor === vid);
+  const myItensPrev = S.itensPrev.filter(i => i.id_vendedor === vid);
+  const myCarteira = S.carteira.filter(c => c.id_vendedor_responsavel === vid);
+
+  // KPIs basicos
+  const fatTotal = myDocs.reduce((s, d) => s + docFat(d), 0);
+  const pedidoSet = new Set(myDocs.map(d => d.id_doc).filter(Boolean));
+  const pedidos = pedidoSet.size;
+  const clienteSet = new Set(myDocs.filter(d => d.id_cliente).map(d => _cardKey(d.id_cliente)));
+  const clientesAtendidos = clienteSet.size;
+  const ticketMedio = pedidos ? fatTotal / pedidos : 0;
+  const carteiraTotal = myCarteira.length;
+
+  // Novos clientes (vinculo_em dentro do periodo)
+  const dtS = F.dtStart ? new Date(F.dtStart + 'T00:00:00') : null;
+  const dtE = F.dtEnd ? new Date(F.dtEnd + 'T23:59:59') : null;
+  const novosClientes = myCarteira.filter(c => {
+    if (!c.vinculo_em) return false;
+    const dv = new Date(c.vinculo_em);
+    return (!dtS || dv >= dtS) && (!dtE || dv <= dtE);
+  }).length;
+
+  // Saude da carteira
+  let hAtivos = 0, hAtencao = 0, hRisco = 0;
+  myCarteira.forEach(c => {
+    const st = getStatus(c);
+    if (st === 'ATIVO') hAtivos++;
+    else if (st === 'ATENCAO') hAtencao++;
+    else if (st === 'PERDIDO') hRisco++;
+  });
+  const semContato30 = myCarteira.filter(c => c.dias_sem_interacao > 30).length;
+
+  // Metricas CRM
+  const myAtividades = S.atividades.filter(a => a.id_vendedor_responsavel === vid);
+  const atividadesTotal = myAtividades.length;
+  const tarefasResolvidas = myAtividades.filter(a => a.tipo === 'TAREFA' && a.resolvido === true).length;
+
+  // Contatos Umbler — MESMA atribuição do ranking (id_atendente → nome → tag), pra os números baterem
+  const umblerMap = (S.umblerVendMap || []).find(m => m.id_vendedor_erp === vid);
+  const nomeVendErp = umblerMap ? umblerMap.nome_vendedor_erp : nomeVend;
+  const { resolve: _umResolve, byVend: _umByVend } = _umblerAttrib();
+  const _myUmbler = _umByVend.get(vid) || { cli: new Set(), tot: new Set() };
+  const _isMyUmbler = c => _umResolve(c) === vid;
+  const contatosUmbler = _myUmbler.tot.size;   // distintos (clientes da carteira + leads) atendidos por ele
+
+  // Clientes sem venda (prospeccao ativa)
+  const clientesSemVenda = myCarteira.filter(c => c.status_crm === 'PROSPECCAO').length;
+
+  // Faturamento por Linha (grupo)
+  const grupoMap = new Map();
+  myItens.forEach(it => {
+    const g = it.grupo || 'Sem grupo';
+    if (!grupoMap.has(g)) grupoMap.set(g, 0);
+    grupoMap.set(g, grupoMap.get(g) + (Number(it.total_item) || 0));
+  });
+  const grupoArr = [...grupoMap.entries()]
+    .map(([nome, val]) => ({ nome, val }))
+    .sort((a, b) => b.val - a.val);
+  const grupoMax = Math.max(...grupoArr.map(g => g.val), 1);
+  const grupoTotal = grupoArr.reduce((s, g) => s + g.val, 0);
+
+  // Top 10 Clientes
+  const cliMap = new Map();
+  myDocs.forEach(d => {
+    if (!d.id_cliente) return;
+    if (!cliMap.has(d.id_cliente)) cliMap.set(d.id_cliente, { id: d.id_cliente, nome: d.nome_cliente, fat: 0 });
+    cliMap.get(d.id_cliente).fat += docFat(d);
+  });
+  // Fat previo por cliente
+  const cliPrevMap = new Map();
+  myItensPrev.forEach(it => {
+    if (!it.id_cliente) return;
+    if (!cliPrevMap.has(it.id_cliente)) cliPrevMap.set(it.id_cliente, 0);
+    cliPrevMap.set(it.id_cliente, cliPrevMap.get(it.id_cliente) + (Number(it.total_item) || 0));
+  });
+  const topClientes = [...cliMap.values()].sort((a, b) => b.fat - a.fat).slice(0, 10);
+  const topCliMax = Math.max(...topClientes.map(c => c.fat), 1);
+
+  // Clientes sem contato > 30 dias
+  const semContato = myCarteira
+    .filter(c => c.dias_sem_interacao > 30)
+    .sort((a, b) => b.dias_sem_interacao - a.dias_sem_interacao)
+    .slice(0, 10);
+
+  // ── Matriz Trabalhou × Comprou ──
+  // "Falou" = teve nota OU contato Umbler atribuído a ele no período (a VENDA não conta como contato).
+  // "Comprou" = teve pedido no período.
+  const buyerSet = new Set(myDocs.map(d => d.id_cliente).filter(Boolean));
+  const notaSet  = new Set(myAtividades.map(a => a.id_cliente).filter(Boolean));
+  // Card-level: compra/contato de qualquer irmão do card conta pro dono
+  const _comprou = c => cardIds(c.id_cliente).some(x => buyerSet.has(x));
+  // "falou" via Umbler só quando ELE é o atendente (contato dele no card), não toque de terceiros
+  const _falou   = c => cardIds(c.id_cliente).some(x => notaSet.has(x)) || _myUmbler.cli.has(_cardKey(c.id_cliente));
+  let mAtiva = 0, mPassiva = 0, mProspec = 0, mParada = 0, mFatPassiva = 0, mFatParada = 0;
+  const paradaList = [];
+  myCarteira.forEach(c => {
+    const comprou = _comprou(c);
+    const falou = _falou(c);
+    const fat = Number(c.faturamento_total) || 0;
+    if (falou && comprou) mAtiva++;
+    else if (!falou && comprou) { mPassiva++; mFatPassiva += fat; }
+    else if (falou && !comprou) mProspec++;
+    else { mParada++; mFatParada += fat; paradaList.push(c); }
+  });
+  paradaList.sort((a, b) => (Number(b.faturamento_total) || 0) - (Number(a.faturamento_total) || 0));
+  const mFalados = mAtiva + mProspec;
+  const mCompraram = mAtiva + mPassiva;
+  const mCobertura = myCarteira.length ? Math.round(mFalados / myCarteira.length * 100) : 0;
+  const mPctAtiva = mCompraram ? Math.round(mAtiva / mCompraram * 100) : 0;
+
+  el.innerHTML = `
+    <!-- Header -->
+    <div style="margin-bottom:20px">
+      ${isDrill ? `<button onclick="voltarTime()" style="display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--text-secondary);cursor:pointer;margin-bottom:10px">\u2039 Voltar pro ranking</button>` : ''}
+      <h2 style="margin:0;font-size:22px;font-weight:700;color:var(--text-primary)">${sN(nomeVend) !== '\u2014' ? nomeVend : 'Vendedor'}</h2>
+      ${vInfo && vInfo.departamento ? `<span style="font-size:13px;color:var(--text-muted)">${vInfo.departamento}</span>` : ''}
+    </div>
+
+    <!-- KPIs 2x3 -->
+    <div class="kgrid" style="grid-template-columns:repeat(3,1fr)">
+      ${kc('\u{1F4B0}', 'Faturamento', fmtK(fatTotal), 'kc-b')}
+      ${kc('\u{1F6D2}', 'Pedidos', pedidos, 'kc-y')}
+      ${kc('\u{1F465}', 'Clientes atendidos', clientesAtendidos, 'kc-g')}
+      ${kc('\u{1F3AF}', 'Ticket M\u00e9dio', fmtK(ticketMedio), 'kc-p')}
+      ${kc('\u{1F4CB}', 'Carteira total', carteiraTotal, 'kc-b')}
+      ${kc('\u{1F195}', 'Novos clientes', novosClientes, 'kc-g')}
+    </div>
+
+    <!-- Matriz Trabalhou x Comprou -->
+    <div class="scard">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <div class="scard-title" style="margin-bottom:0">\u{1F3AF} Registro × Comprou — no período</div>
+        <div style="font-size:12px;color:var(--text-secondary)">
+          Cobertura <b style="color:var(--blue-mid)">${mCobertura}%</b> (${mFalados}/${myCarteira.length}) ·
+          Venda ativa <b style="color:${mPctAtiva>=50?'var(--green)':'var(--orange)'}">${mPctAtiva}%</b>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:78px 1fr 1fr;gap:10px;align-items:stretch">
+        <div></div>
+        <div style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted)">\u{1F6D2} Comprou</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted)">\u{1F6AB} Não comprou</div>
+        <div style="display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-secondary);text-align:center">\u{1F4AC} Tem registro</div>
+        ${_vquad('var(--green)','var(--green-bg)','\u{1F7E2} Venda ativa',mAtiva,'ele acompanhou a venda')}
+        ${_vquad('var(--blue-mid)','var(--blue-pale)','\u{1F535} Em aberto',mProspec,'trabalhando, sem venda')}
+        <div style="display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-secondary);text-align:center">\u{1F515} Sem registro</div>
+        ${_vquad('var(--orange)','var(--orange-bg)','\u{1F7E1} Venda sem registro',mPassiva,'recompra ou registro faltando · '+fmtK(mFatPassiva))}
+        ${_vquad('var(--red)','var(--red-bg)','\u{1F534} Carteira parada',mParada,'sem toque · '+fmtK(mFatParada))}
+      </div>
+      ${mParada>0 && paradaList.some(c=>(Number(c.faturamento_total)||0)>0) ? `<div style="margin-top:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:6px">⚠ Carteira parada que já faturou — sem contato nem compra no período</div>
+        ${paradaList.filter(c=>(Number(c.faturamento_total)||0)>0).slice(0,5).map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary)">${sN(c.nome_cliente)}</span>
+          <span class="mono" style="color:var(--text-secondary);flex-shrink:0;margin-left:8px;font-weight:600">${fmtK(Number(c.faturamento_total)||0)}${c.dias_sem_compra!=null?` · ${c.dias_sem_compra}d`:''}</span>
+        </div>`).join('')}
+      </div>`:''}
+    </div>
+
+    <!-- Saude da Carteira -->
+    <div class="scard">
+      <div class="scard-title">\u{1F3E5} Sa\u00fade da Carteira</div>
+      <div class="hgrid">
+        <div class="hbox ha"><div class="n">${hAtivos}</div><div class="l">Ativos</div></div>
+        <div class="hbox ht"><div class="n">${hAtencao}</div><div class="l">Aten\u00e7\u00e3o</div></div>
+        <div class="hbox hr"><div class="n">${hRisco}</div><div class="l">Em Risco</div></div>
+      </div>
+      ${semContato30 > 0 ? `<div style="margin-top:12px;padding:8px 12px;background:var(--yellow-pale,#FFF8E1);border-radius:8px;font-size:12.5px;color:var(--text-secondary)">
+        \u26A0 <strong>${semContato30}</strong> clientes sem contato h\u00e1 mais de 30 dias
+      </div>` : ''}
+    </div>
+
+    <!-- Metricas CRM -->
+    <div class="scard">
+      <div class="scard-title">\u{1F4C8} M\u00e9tricas de Atividade CRM</div>
+      <div class="kgrid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+        ${kc('\u{1F4DD}', 'Atividades registradas', atividadesTotal, 'kc-b')}
+        ${kc('\u2705', 'Tarefas resolvidas', tarefasResolvidas, 'kc-g')}
+        ${kc('\u{1F4AC}', 'Contatos Umbler', contatosUmbler, 'kc-p')}
+        ${kc('\u{1F50D}', 'Clientes sem venda', clientesSemVenda, 'kc-y')}
+      </div>
+    </div>
+
+    <!-- Atividade Diária / Semanal -->
+    ${_renderAtividadeDiaria(myAtividades, S.contatosUmbler || [], _isMyUmbler)}
+
+    <!-- Faturamento por Linha -->
+    <div class="scard">
+      <div class="scard-title">\u{1F4CA} Faturamento por Linha</div>
+      ${grupoArr.length ? grupoArr.map(g => {
+        const pct = grupoTotal ? Math.round(g.val / grupoTotal * 100) : 0;
+        const barW = Math.round(g.val / grupoMax * 100);
+        return `<div class="bar-row">
+          <span style="flex:1;font-size:12.5px;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.nome}</span>
+          <span class="mono bar-val" style="flex-shrink:0;margin:0 8px;font-size:12px">${fmtK(g.val)} (${pct}%)</span>
+          <div class="bar-track" style="width:120px;flex-shrink:0"><div class="bar-fill" style="width:${barW}%"></div></div>
+        </div>`;
+      }).join('') : '<div class="empty-msg">Sem dados no per\u00edodo</div>'}
+    </div>
+
+    <!-- Top 10 Clientes -->
+    <div class="scard">
+      <div class="scard-title">\u{1F3C6} Top 10 Clientes do Vendedor</div>
+      ${topClientes.length ? topClientes.map((c, i) => {
+        const prevFat = cliPrevMap.get(c.id) || 0;
+        const delta = prevFat > 0 ? Math.round((c.fat / prevFat - 1) * 100) : null;
+        const deltaHtml = delta !== null
+          ? `<span class="${delta >= 0 ? 'delta-pos' : 'delta-neg'}" style="flex-shrink:0;margin-left:6px">${delta > 0 ? '+' : ''}${delta}%</span>`
+          : '';
+        const barW = Math.round(c.fat / topCliMax * 100);
+        return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <span style="width:20px;height:20px;border-radius:6px;background:var(--surface2);color:var(--text-secondary);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i + 1}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sN(c.nome)}</div>
+            <div class="bar-track" style="height:4px;margin-top:4px"><div class="bar-fill" style="width:${barW}%"></div></div>
+          </div>
+          <span class="mono" style="font-size:12.5px;font-weight:700;color:var(--text-primary);flex-shrink:0">${fmtK(c.fat)}</span>
+          ${deltaHtml}
+        </div>`;
+      }).join('') : '<div class="empty-msg">Sem pedidos no per\u00edodo</div>'}
+    </div>
+
+    <!-- Clientes sem contato > 30 dias -->
+    ${semContato.length ? `<div class="scard">
+      <div class="scard-title">\u{1F6A8} Clientes sem contato &gt; 30 dias</div>
+      <div style="max-height:400px;overflow-y:auto">
+        ${semContato.map(c => {
+          const st = getStatus(c);
+          const bdgCls = st === 'ATIVO' ? 'bdg-a' : st === 'ATENCAO' ? 'bdg-t' : 'bdg-r';
+          const stLabel = st === 'ATIVO' ? 'Ativo' : st === 'ATENCAO' ? 'Aten\u00e7\u00e3o' : st === 'PERDIDO' ? 'Perdido' : st;
+          return `<div class="cl" onclick="selCliente(${c.id_cliente});gotoTab('crm')" style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border);cursor:pointer">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12.5px;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sN(c.nome_cliente)}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">\u00dalt. compra: ${c.faturamento_total ? fmtK(c.faturamento_total) : '\u2014'}</div>
+            </div>
+            <span style="font-size:11px;font-weight:600;color:var(--red-mid,#E53935);flex-shrink:0">${c.dias_sem_interacao} dias</span>
+            <span class="bdg ${bdgCls}" style="flex-shrink:0">${stLabel}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
+  `;
+}
+
+// ── Atividade Diária / Semanal ────────────────────────────
+function _renderAtividadeDiaria(atividades, contatosUmbler, umblerPred) {
+  // Agrupar atividades CRM por dia
+  const porDia = new Map();
+  atividades.forEach(a => {
+    const dia = (a.data_criacao || '').substring(0, 10);
+    if (!dia) return;
+    if (!porDia.has(dia)) porDia.set(dia, { notas: 0, tarefas: 0, followups: 0, ligacoes: 0, resolvidas: 0, clientes: new Set() });
+    const d = porDia.get(dia);
+    d.notas++;
+    if (a.tipo === 'TAREFA') d.tarefas++;
+    if (a.tipo === 'FOLLOWUP') d.followups++;
+    if (a.tipo === 'LIGACAO') d.ligacoes++;
+    if (a.resolvido) d.resolvidas++;
+    if (a.id_cliente) d.clientes.add(a.id_cliente);
+  });
+
+  // Agrupar contatos Umbler por dia
+  const umblerPorDia = new Map();
+  if (umblerPred) {
+    contatosUmbler.filter(umblerPred).forEach(c => {
+      const dia = (c.ultimo_contato || '').substring(0, 10);
+      if (!dia) return;
+      umblerPorDia.set(dia, (umblerPorDia.get(dia) || 0) + 1);
+    });
+  }
+
+  // Unificar dias e ordenar desc
+  const todosDias = new Set([...porDia.keys(), ...umblerPorDia.keys()]);
+  const diasArr = [...todosDias].sort((a, b) => b.localeCompare(a));
+
+  if (!diasArr.length) return '';
+
+  // Agrupar por semana (ISO week)
+  function _getWeek(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00');
+    const oneJan = new Date(d.getFullYear(), 0, 1);
+    const weekNum = Math.ceil(((d - oneJan) / 86400000 + oneJan.getDay() + 1) / 7);
+    return `${d.getFullYear()}-S${String(weekNum).padStart(2, '0')}`;
+  }
+
+  const porSemana = new Map();
+  diasArr.forEach(dia => {
+    const sem = _getWeek(dia);
+    if (!porSemana.has(sem)) porSemana.set(sem, { notas: 0, resolvidas: 0, umbler: 0, clientes: new Set(), dias: 0 });
+    const s = porSemana.get(sem);
+    const dd = porDia.get(dia);
+    if (dd) { s.notas += dd.notas; s.resolvidas += dd.resolvidas; dd.clientes.forEach(c => s.clientes.add(c)); }
+    s.umbler += (umblerPorDia.get(dia) || 0);
+    s.dias++;
+  });
+
+  const semanasArr = [...porSemana.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+  const maxNotas = Math.max(...diasArr.map(d => (porDia.get(d)?.notas || 0) + (umblerPorDia.get(d) || 0)), 1);
+
+  // Tabela diária (últimos 14 dias)
+  const dias14 = diasArr.slice(0, 14);
+  const tabelaDia = dias14.map(dia => {
+    const dd = porDia.get(dia) || { notas: 0, tarefas: 0, followups: 0, ligacoes: 0, resolvidas: 0, clientes: new Set() };
+    const umb = umblerPorDia.get(dia) || 0;
+    const total = dd.notas + umb;
+    const barW = Math.round((total / maxNotas) * 100);
+    const dtLabel = new Date(dia + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+    return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;color:var(--text-muted);width:80px;flex-shrink:0">${dtLabel}</span>
+      <div class="bar-track" style="flex:1;height:10px"><div class="bar-fill" style="width:${barW}%;background:var(--blue-mid)"></div></div>
+      <span style="font-size:10px;color:var(--text-secondary);width:25px;text-align:right;font-weight:700">${total}</span>
+      <span style="font-size:9px;color:var(--text-muted);width:80px;flex-shrink:0;text-align:right">${dd.tarefas?dd.tarefas+'T ':''}${dd.followups?dd.followups+'F ':''}${dd.ligacoes?dd.ligacoes+'L ':''}${umb?umb+'U':''}</span>
+      <span style="font-size:9px;color:var(--green);width:35px;flex-shrink:0;text-align:right">${dd.clientes.size?dd.clientes.size+' cli':''}</span>
+    </div>`;
+  }).join('');
+
+  // Resumo semanal
+  const tabelaSem = semanasArr.slice(0, 8).map(([sem, s]) => {
+    const mediaDia = s.dias ? (s.notas / s.dias).toFixed(1) : '0';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;font-weight:600;color:var(--text-primary);width:60px;flex-shrink:0">${sem}</span>
+      <span style="font-size:10px;color:var(--text-muted);width:35px;text-align:right">${s.notas} reg</span>
+      <span style="font-size:10px;color:var(--green);width:35px;text-align:right">${s.resolvidas} \u2713</span>
+      <span style="font-size:10px;color:var(--purple);width:35px;text-align:right">${s.umbler} umb</span>
+      <span style="font-size:10px;color:var(--text-secondary);width:35px;text-align:right">${s.clientes.size} cli</span>
+      <span style="font-size:10px;color:var(--text-muted);width:50px;text-align:right">${mediaDia}/dia</span>
+    </div>`;
+  }).join('');
+
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="scard" style="margin-bottom:0">
+      <div class="scard-title">\u{1F4C5} Atividade Di\u00e1ria (\u00falt. 14 dias)</div>
+      <div style="font-size:9px;color:var(--text-muted);margin-bottom:6px">T=Tarefa F=Follow-up L=Liga\u00e7\u00e3o U=Umbler</div>
+      ${tabelaDia || '<div class="empty-msg">Sem atividade no per\u00edodo</div>'}
+    </div>
+    <div class="scard" style="margin-bottom:0">
+      <div class="scard-title">\u{1F4CA} Resumo Semanal</div>
+      ${tabelaSem || '<div class="empty-msg">Sem dados</div>'}
+    </div>
+  </div>`;
+}
+
+function toggleVend(id) {
+  S.expandVend = S.expandVend === id ? null : id;
+  renderVendedores();
+}

@@ -663,6 +663,19 @@ async function fazerLogin() {
       return;
     }
 
+    // Persiste a sessão no formato do supabase-js. Isso: (1) mantém o login após
+    // reload; (2) dá SSO para o CRM embutido (crm/ usa supabase-js e lê esta chave).
+    try {
+      localStorage.setItem('sb-vishxwdxqiygbxmtpfoy-auth-token', JSON.stringify({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: data.expires_at || (Math.floor(Date.now() / 1000) + (data.expires_in || 3600)),
+        expires_in: data.expires_in || 3600,
+        token_type: data.token_type || 'bearer',
+        user: data.user
+      }));
+    } catch (e) {}
+
     await carregarUsuario(data.user, data.access_token);
   } catch (e) {
     erroEl.textContent = 'Erro de conexão. Tente novamente.';
@@ -801,6 +814,7 @@ function irPara(paginaId, params = {}) {
 // ============================================================
 function renderPagina(id, params) {
   const el = document.getElementById('page-content');
+  el.style.padding = ''; // restaura o padding padrão (o CRM zera p/ o iframe ocupar tudo)
   el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
 
   switch (id) {

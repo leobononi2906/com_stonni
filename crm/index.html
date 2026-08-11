@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stonni — Atacado CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- Auth loading -->
+<div class="auth-loading" id="auth-loading">
+  <div class="spinner"></div>
+  <p>Verificando acesso...</p>
+</div>
+
+<!-- Login -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-brand-icon">❄️</div>
+      <div>
+        <div class="login-brand-name">Stonni Atacado</div>
+        <div class="login-brand-sub">Dashboard & CRM · Grupo Bononi</div>
+      </div>
+    </div>
+    <div class="login-h1">Entrar</div>
+    <div class="login-sub">Acesse o painel comercial</div>
+    <div class="login-erro" id="login-erro"></div>
+    <label class="login-label">E-mail</label>
+    <input class="login-input" type="email" id="l-email" placeholder="seu@email.com" autocomplete="email"/>
+    <label class="login-label">Senha</label>
+    <input class="login-input" type="password" id="l-senha" placeholder="••••••••" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')fazerLogin()"/>
+    <button class="login-btn" id="l-btn" onclick="fazerLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- App shell -->
+<div class="app-shell" id="app-shell" style="display:none">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-row">
+        <div class="brand-icon">❄️</div>
+        <div>
+          <div class="brand-name">Stonni Atacado</div>
+          <div class="brand-sub">Bononi Acessórios</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Dashboard</div>
+      <div class="nav-item" id="si-home" onclick="gotoTab('home')">
+        <span class="nav-icon">🏠</span> Home
+      </div>
+      <div class="nav-item" id="si-vendedores" onclick="gotoTab('vendedores')">
+        <span class="nav-icon">👤</span> Vendedores
+      </div>
+      <div class="nav-item" id="si-linhas" onclick="gotoTab('linhas')">
+        <span class="nav-icon">📊</span> Produtos
+      </div>
+      <div class="nav-separator"></div>
+      <div class="nav-section-label">Operacional</div>
+      <div class="nav-item active" id="si-crm" onclick="gotoTab('crm')">
+        <span class="nav-icon">💼</span> CRM
+        <span id="umbl-cnt" class="nav-badge hidden">0</span>
+      </div>
+      <div class="nav-item" id="si-prospeccao" onclick="gotoTab('prospeccao')">
+        <span class="nav-icon">⛏️</span> Prospecção
+        <span id="prosp-cnt" class="nav-badge hidden" style="background:#0077CC">0</span>
+      </div>
+      <div class="nav-item" id="si-materiais" onclick="gotoTab('materiais')">
+        <span class="nav-icon">📚</span> Materiais
+      </div>
+      <div class="nav-separator"></div>
+      <div class="nav-item" id="si-config" onclick="gotoTab('config')">
+        <span class="nav-icon">⚙️</span> Configurações
+      </div>
+      <div class="nav-separator"></div>
+      <div class="nav-item" onclick="window.open('https://bononi-hub.vercel.app/','_blank')"
+        style="color:rgba(255,255,255,0.3);font-size:12px">
+        <span class="nav-icon" style="font-size:12px">↩</span> Portal Bononi ↗
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="user-avatar">S</div>
+        <div>
+          <div class="user-name" id="user-name">...</div>
+          <div class="user-role">Atacado CRM</div>
+        </div>
+      </div>
+      <div class="sidebar-actions">
+        <button class="sidebar-action-btn danger" onclick="sair()">↩ Sair</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <!-- Topbar com filtros globais -->
+    <header class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title" id="topbar-title-area">
+        <div class="page-title" id="page-title">CRM</div>
+        <div class="page-breadcrumb" id="page-breadcrumb">Stonni Atacado · CRM</div>
+      </div>
+      <!-- Filtros globais -->
+      <div class="topbar-filters" id="topbar-filters">
+        <span class="tf-label">Período</span>
+        <select id="f-period" class="filter-select" onchange="onPeriodChange(this.value)">
+          <option value="ult_7d">Últimos 7 dias</option>
+          <option value="ult_30d">Últimos 30 dias</option>
+          <option value="ult_90d">Últimos 90 dias</option>
+          <option value="mes_atual">Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+          <option value="ult_3m">Últimos 3M</option>
+          <option value="ult_6m">Últimos 6M</option>
+          <option value="ano_atual">Ano Atual</option>
+          <option value="custom">📅 Escolher datas…</option>
+        </select>
+        <input id="f-start" type="date" class="filter-input hidden" onchange="onCustomDate()"/>
+        <span id="f-sep" class="tf-label hidden">até</span>
+        <input id="f-end" type="date" class="filter-input hidden" onchange="onCustomDate()"/>
+        <span class="tf-label" data-tf="vend">Vendedor</span>
+        <select id="f-vend" class="filter-select" onchange="onVendChange(this.value)" style="min-width:130px">
+          <option value="">Todos</option>
+        </select>
+        <span class="tf-label">Empresa</span>
+        <select id="f-emp" class="filter-select" onchange="onEmpChange(this.value)" style="min-width:110px">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div class="topbar-right">
+        <span class="last-update" id="last-update"></span>
+        <button class="btn-refresh" onclick="onRefresh()">↻ Atualizar</button>
+      </div>
+    </header>
+
+    <div class="loading-bar" id="loading-bar"></div>
+
+    <div class="content-area">
+
+      <!-- HOME -->
+      <div id="pg-home" class="pg"><div id="home-body">
+        <div class="empty-msg"><div class="spinner" style="margin:0 auto 12px"></div>Carregando...</div>
+      </div></div>
+
+      <!-- VENDEDORES -->
+      <div id="pg-vendedores" class="pg"><div id="vend-body">
+        <div class="empty-msg"><div class="spinner" style="margin:0 auto 12px"></div>Carregando...</div>
+      </div></div>
+
+      <!-- LINHAS -->
+      <div id="pg-linhas" class="pg"><div id="linhas-body">
+        <div class="empty-msg"><div class="spinner" style="margin:0 auto 12px"></div>Carregando...</div>
+      </div></div>
+
+      <!-- CRM -->
+      <div id="pg-crm" class="pg-crm active">
+
+        <!-- AGENDA PANEL (oculto por padrão) -->
+        <div id="crm-agenda-panel" style="display:none;flex:1;overflow:hidden;flex-direction:column"></div>
+
+        <!-- WRAP PRINCIPAL lista + drawer -->
+        <div id="crm-inner-wrap" style="display:flex;flex:1;overflow:hidden">
+
+          <!-- Lista esquerda -->
+          <div class="cl-panel">
+            <!-- Umbler pendentes — acima da busca -->
+            <div id="umbl-wrap" class="umbl-wrap" style="flex-shrink:0;overflow:hidden"></div>
+            <div class="cl-controls">
+              <div class="sbox">
+                <span class="si-icon">🔍</span>
+                <input type="text" placeholder="Buscar nome, CNPJ, cidade..." oninput="handleSearch(this.value)"/>
+              </div>
+              <div class="tabs-row">
+                <button id="tab-c" class="tb-btn on" onclick="setMainTab('carteira')">Carteira</button>
+                <button id="tab-a" class="tb-btn" onclick="setMainTab('agenda')">📋 Agenda</button>
+              </div>
+              <div id="ctrl-c" class="frow">
+                <button data-sf="todos" class="fb on" onclick="setSub('todos')">Todos</button>
+                <button data-sf="ativo" class="fb" onclick="setSub('ativo')">Ativo</button>
+                <button data-sf="atencao" class="fb" onclick="setSub('atencao')">Atenção</button>
+                <button data-sf="em_risco" class="fb" onclick="setSub('em_risco')">Em Risco</button>
+                <button data-sf="sem_compra" class="fb" onclick="setSub('sem_compra')" title="Assumidos que ainda não compraram ou não compram há mais de 180 dias">Sem compra</button>
+                <select id="csort" onchange="setCSort(this.value)" style="font-size:11px;padding:4px 8px;height:28px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;margin-left:auto;width:auto">
+                    <option value="contato_ant" selected>💬 Último contato ↑ antiga</option>
+                    <option value="contato_rec">💬 Último contato ↓ recente</option>
+                    <option value="compra_rec">🛒 Última compra ↓ recente</option>
+                    <option value="compra_ant">🛒 Última compra ↑ antiga</option>
+                    <option value="fat_desc">🏆 Faturamento</option>
+                    <option value="nome_az">Nome A-Z</option>
+                </select>
+              </div>
+              <div id="ctrl-p" style="display:none;flex-direction:column;gap:6px">
+                <div id="ctrl-pp" class="frow">
+                  <button data-psub="todos" class="fb on" onclick="setPSub('todos')">Todos</button>
+                  <button data-psub="comprou" class="fb" onclick="setPSub('comprou')" title="Já comprou nos últimos 180 dias">Comprou &le;180d</button>
+                  <button data-psub="sem_compra" class="fb" onclick="setPSub('sem_compra')" title="Nunca comprou ou não compra há mais de 180 dias">Sem compra</button>
+                  <select id="psort" onchange="setPSort(this.value)" style="width:auto;font-size:11px;padding:4px 8px;height:28px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;margin-left:auto">
+                    <option value="nome_az" selected>Nome A-Z</option>
+                    <option value="fat_desc">🏆 Faturamento</option>
+                    <option value="compra_rec">🛒 Última compra ↓ recente</option>
+                    <option value="compra_ant">🛒 Última compra ↑ antiga</option>
+                    <option value="contato_rec">💬 Último contato ↓ recente</option>
+                    <option value="contato_ant">💬 Último contato ↑ antiga</option>
+                    <option value="vendedor_az">Ex-vendedor A-Z</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Alertas CRM (substitui today-wrap) -->
+            <div id="crm-alertas" style="flex-shrink:0"></div>
+            <!-- Lista -->
+            <div id="cl-list" class="cl-list">
+              <div class="empty-msg"><div class="spinner" style="margin:0 auto"></div></div>
+            </div>
+          </div>
+
+          <!-- Detalhe direita -->
+          <div class="cd-panel">
+            <div class="cd-placeholder" id="cd-ph">
+              <div class="cd-ph-inner">
+                <span class="cd-ph-icon">👥</span>
+                <p>Selecione um cliente para ver detalhes</p>
+              </div>
+            </div>
+            <div id="drawer">
+              <div class="dw-head">
+                <button class="dw-back" onclick="closeDrawer()">←</button>
+                <span class="dw-title" id="dw-title">Ficha</span>
+                <a id="dw-wa" class="dw-wa" href="#" target="_blank">💬 WhatsApp</a>
+              </div>
+              <div id="dw-body" class="dw-body"></div>
+            </div>
+          </div>
+
+        </div><!-- crm-inner-wrap -->
+      </div><!-- pg-crm -->
+
+      <!-- CONFIG -->
+      <div id="pg-config" class="pg"><div id="cfg-body"></div></div>
+
+      <!-- MATERIAIS -->
+      <div id="pg-materiais" class="pg"><div id="materiais-body">
+        <div class="empty-msg"><div class="spinner" style="margin:0 auto 12px"></div>Carregando...</div>
+      </div></div>
+
+    </div><!-- content-area -->
+  </div><!-- main-area -->
+</div><!-- app-shell -->
+
+<!-- MODAL: Vincular cliente -->
+<!-- Modal: resolver erro do log -->
+<div id="modal-resolve-erro" class="modal-ov">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-head">
+      <h3>✓ Marcar erro como resolvido</h3>
+      <button onclick="fecharResolverErro()" style="background:none;border:none;font-size:18px;color:var(--text-muted);cursor:pointer">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700;letter-spacing:0.8px;margin-bottom:4px">Assinatura</p>
+      <p id="re-assinatura" style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text-primary);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;word-break:break-word;margin-bottom:12px"></p>
+      <p style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700;letter-spacing:0.8px;margin-bottom:4px">O que foi feito (opcional)</p>
+      <input id="re-obs" placeholder="Ex: corrigido no crm.js — setTab trocado por setMainTab">
+      <p style="font-size:11px;color:var(--text-secondary);margin-top:10px;line-height:1.5">
+        Marca todas as ocorrências deste erro como resolvidas. Se o erro voltar a acontecer depois de agora, ele reaparece aqui como <strong style="color:var(--orange)">🔁 Regressão</strong>.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button onclick="fecharResolverErro()" style="padding:8px 14px;background:var(--surface2);color:var(--text-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer">Cancelar</button>
+      <button id="re-btn" onclick="confirmarResolverErro()" style="padding:8px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer">Marcar como resolvido</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-vinc" class="modal-ov">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Vincular a um Cliente</h3>
+      <button class="btn-mc" onclick="closeVinc()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input id="vinc-search" type="text" placeholder="Buscar nome, CNPJ, cidade..." oninput="searchVinc()"/>
+      <div id="vinc-results" class="modal-res">
+        <p class="empty-msg">Digite para buscar...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Vincular Umbler ↔ Vendedor -->
+<div id="modal-uv" class="modal-ov">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-head">
+      <h3 id="uv-title">Vínculo Umbler → Vendedor</h3>
+      <button class="btn-mc" onclick="closeUV()">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:10px">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Vendedor ERP *</label>
+        <select id="uv-vend" style="height:36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;font-size:13px;background:var(--surface2);color:var(--text-primary);outline:none;width:100%"><option value="">Selecione...</option></select>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Usuário Umbler (nome do atendente) *</label>
+        <input id="uv-umbler" type="text" placeholder="ex: JOAO CLAUDIO ALVES BUENO"
+          style="height:36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;font-size:13px;background:var(--surface2);outline:none;width:100%"/>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">
+          ID Membro Umbler
+          <span style="font-size:10px;font-weight:400;color:var(--text-muted)"> — campo LastOrganizationMember.Id do webhook</span>
+        </label>
+        <input id="uv-id-membro" type="text" placeholder="ex: aTx3jZJ3Ikm5jZTU"
+          style="height:36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;font-size:13px;font-family:'DM Mono',monospace;background:var(--surface2);outline:none;width:100%"/>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:3px">Encontre em: Configurações → Contatos Umbler Recentes → coluna Atendente (debug)</p>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Inbox Umbler</label>
+        <input id="uv-inbox" type="text" placeholder="ex: NAO OFICIAL - Atacado Stonni"
+          style="height:36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;font-size:13px;background:var(--surface2);outline:none;width:100%"/>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+        <input id="uv-ativo" type="checkbox" checked style="width:16px;height:16px;cursor:pointer"/>
+        <label style="font-size:13px;color:var(--text-primary);cursor:pointer" for="uv-ativo">Ativo — contatos deste atendente serão atribuídos ao vendedor</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeUV()">Cancelar</button>
+      <button class="btn-sv" style="width:auto;padding:8px 20px" onclick="saveUV()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Novo Contato Umbler → Prospecção -->
+<div id="modal-novo-contato" class="modal-ov">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-head">
+      <h3>Criar Novo Cliente a partir do Contato</h3>
+      <button class="btn-mc" onclick="fecharNovoContato()">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:var(--blue-pale);border:1px solid rgba(0,119,204,0.2);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--blue-dark)">
+        📌 O cliente será criado em <strong>atac_clientes</strong> (origem: UMBLER) e adicionado à prospecção automaticamente.
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Nome *</label>
+        <input id="nc-nome" type="text" placeholder="Nome do cliente" />
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Telefone</label>
+        <input id="nc-tel" type="text" placeholder="Telefone" readonly style="background:var(--surface2);color:var(--text-muted)" />
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">CNPJ / CPF</label>
+        <input id="nc-cnpj" type="text" placeholder="Opcional" />
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1">
+          <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Cidade</label>
+          <input id="nc-cidade" type="text" placeholder="Opcional" />
+        </div>
+        <div style="width:80px">
+          <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">UF</label>
+          <input id="nc-uf" type="text" placeholder="PR" maxlength="2" style="text-transform:uppercase" />
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Vendedor responsável</label>
+        <select id="nc-vend"><option value="">Sem vendedor (Prospecção Geral)</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="fecharNovoContato()">Cancelar</button>
+      <button id="nc-btn" class="btn-sv" style="width:auto;padding:8px 20px" onclick="salvarNovoContato()">Criar Cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Alterar Vendedor -->
+<div id="modal-alterar-vendedor" class="modal-ov">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-head">
+      <h3 id="av-title">Alterar Vendedor</h3>
+      <button class="btn-mc" onclick="fecharModalVendedor()">✕</button>
+    </div>
+    <div class="modal-body" style="padding-bottom:4px">
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px">Vendedor Responsável</label>
+      <select id="av-vend" style="width:100%;height:38px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;font-size:13px;background:var(--surface2);color:var(--text-primary);outline:none">
+        <option value="">Sem vendedor (Prospecção Geral)</option>
+      </select>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:8px">
+        💡 Remover o vendedor devolve o cliente para a Prospecção Geral
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="fecharModalVendedor()">Cancelar</button>
+      <button id="av-btn" class="btn-sv" style="width:auto;padding:8px 20px" onclick="salvarModalVendedor()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Nova Atividade (agenda) -->
+<div id="modal-nova-ativ" class="modal-ov">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-head">
+      <h3>Nova Atividade</h3>
+      <button class="btn-mc" onclick="fecharNovaAtividade()">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:10px">
+      <div class="row2">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Tipo</label>
+          <select id="na-tipo" style="height:36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;font-size:13px;background:var(--surface2);color:var(--text-primary);outline:none;width:100%">
+            <option value="TAREFA">Tarefa</option>
+            <option value="FOLLOWUP">Follow-up</option>
+            <option value="LIGACAO">Ligação</option>
+            <option value="OBSERVACAO">Observação</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Data</label>
+          <input id="na-data" type="date" style="height:36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;font-size:13px;background:var(--surface2);color:var(--text-primary);outline:none;width:100%"/>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Cliente *</label>
+        <input id="na-cliente" type="text" placeholder="Nome do cliente" style="height:36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;font-size:13px;background:var(--surface2);color:var(--text-primary);outline:none;width:100%"/>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Descrição *</label>
+        <textarea id="na-texto" rows="2" placeholder="Descreva a atividade..." style="border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;background:var(--surface2);color:var(--text-primary);outline:none;width:100%;resize:none;font-family:inherit"></textarea>
+      </div>
+      <div class="row2">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Criado por 🔒</label>
+          <input id="na-criado" type="text" readonly title="Vem do seu login" style="height:36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;font-size:13px;background:var(--surface2);color:var(--text-primary);outline:none;width:100%;opacity:.7;cursor:not-allowed"/>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px">Vendedor</label>
+          <select id="na-vend" style="height:36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;font-size:13px;background:var(--surface2);color:var(--text-primary);outline:none;width:100%">
+            <option value="">Sem vendedor</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="fecharNovaAtividade()">Cancelar</button>
+      <button id="na-btn" class="btn-sv" style="width:auto;padding:8px 20px" onclick="salvarNovaAtividade()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Vincular ao ERP -->
+<div id="modal-vinc-erp" class="modal-ov">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-head">
+      <h3 id="erp-title">Vincular ao ERP</h3>
+      <button class="btn-mc" onclick="fecharVincularERP()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--blue-pale);border:1px solid rgba(0,119,204,.2);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--blue-dark);margin-bottom:10px">
+        🔗 Vincule este cliente a um ou mais clientes reais do ERP.<br>
+        Os pedidos e datas serão sempre o mais recente entre todos os vínculos.
+      </div>
+      <input id="erp-search" type="text" placeholder="Buscar por nome, CNPJ ou código ERP..."
+        oninput="searchVincERP()"
+        style="height:38px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0 12px;font-size:13px;background:var(--surface2);color:var(--text-primary);outline:none;width:100%;transition:border-color .15s"/>
+      <div id="erp-results" class="modal-res">
+        <p class="empty-msg">Digite para buscar clientes do ERP...</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="fecharVincularERP()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+'use strict';
+
+const SUPA_URL = 'https://vishxwdxqiygbxmtpfoy.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpc2h4d2R4cWl5Z2J4bXRwZm95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0Njg2MjIsImV4cCI6MjA4ODA0NDYyMn0.J647m3ieDHahNQYBWMRESl0aPFXsT_zt_7ZcDvyB-SA';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+window.SUPA_URL = SUPA_URL;
+window.SUPA_KEY = SUPA_KEY;
+window.sb = sb;
+
+const PAGINAS = {
+  home:       { title:'Home',          breadcrumb:'Stonni Atacado · Home' },
+  vendedores: { title:'Vendedores',    breadcrumb:'Stonni Atacado · Vendedores' },
+  linhas:     { title:'Produtos',      breadcrumb:'Stonni Atacado · Produtos' },
+  crm:        { title:'CRM',           breadcrumb:'Stonni Atacado · CRM · Carteira' },
+  prospeccao: { title:'Prospecção',   breadcrumb:'Stonni Atacado · Prospecção · balcão de garimpo' },
+  config:     { title:'Configurações', breadcrumb:'Stonni Atacado · Configurações' },
+  materiais:  { title:'Materiais',      breadcrumb:'Stonni Atacado · Materiais & IA' },
+};
+
+function setPageInfo(tab) {
+  const p = PAGINAS[tab] || {};
+  document.getElementById('page-title').textContent = p.title || tab;
+  document.getElementById('page-breadcrumb').textContent = p.breadcrumb || '';
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+
+function showLoading() { document.getElementById('loading-bar').classList.add('show'); }
+function hideLoading() { document.getElementById('loading-bar').classList.remove('show'); }
+
+function onRefresh() {
+  showLoading();
+  if (window.APP && window.APP.refresh) window.APP.refresh();
+  setTimeout(hideLoading, 800);
+  const el = document.getElementById('last-update');
+  if(el) el.textContent = `Atualizado ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
+}
+
+async function fazerLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const senha  = document.getElementById('l-senha').value;
+  const erro   = document.getElementById('login-erro');
+  const btn    = document.getElementById('l-btn');
+  erro.style.display = 'none';
+  if (!email || !senha) { erro.textContent='Preencha e-mail e senha.'; erro.style.display='block'; return; }
+  btn.textContent = 'Verificando...'; btn.disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+  btn.textContent = 'Entrar'; btn.disabled = false;
+  if (error) {
+    erro.textContent = error.message.includes('Invalid') ? 'E-mail ou senha incorretos.' : error.message;
+    erro.style.display = 'block'; return;
+  }
+  await iniciarApp();
+}
+
+async function sair() {
+  await sb.auth.signOut();
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('login-wrap').classList.add('show');
+}
+
+async function iniciarApp() {
+  const { data:{ session } } = await sb.auth.getSession();
+  document.getElementById('auth-loading').style.display = 'none';
+  if (!session) { document.getElementById('login-wrap').classList.add('show'); return; }
+  const meta = session.user.user_metadata || {};
+  if (!meta.admin && !(meta.modulos||[]).includes('atacado')) {
+    await sb.auth.signOut();
+    document.getElementById('login-wrap').classList.add('show');
+    document.getElementById('login-erro').textContent = 'Sem acesso ao módulo Atacado.';
+    document.getElementById('login-erro').style.display = 'block';
+    return;
+  }
+  // Mostrar app
+  document.getElementById('login-wrap').classList.remove('show');
+  document.getElementById('app-shell').style.display = 'flex';
+  // Preencher nome
+  const nome = meta.nome || session.user.email || '';
+  document.getElementById('user-name').textContent = nome;
+  document.getElementById('user-avatar').textContent = nome.charAt(0).toUpperCase();
+  // Iniciar CRM
+  function tryInit() {
+    if (window.APP && window.APP.init) window.APP.init();
+    else setTimeout(tryInit, 60);
+  }
+  tryInit();
+}
+
+// Verifica sessão ao carregar
+sb.auth.getSession().then(({ data:{ session } }) => {
+  if (!session) {
+    document.getElementById('auth-loading').style.display = 'none';
+    document.getElementById('login-wrap').classList.add('show');
+    return;
+  }
+  iniciarApp();
+});
+
+// Expor para módulos JS
+window.setPageInfo = setPageInfo;
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;
+</script>
+<!-- Módulos JS (substituem crm.js monolítico) -->
+<script src="js/config.js?v=20260727a"></script>
+<script src="js/supabase.js?v=20260727a"></script>
+<script src="js/ui.js?v=20260727a"></script>
+<script src="js/data.js?v=20260727a"></script>
+<script src="js/home.js?v=20260727a"></script>
+<script src="js/linhas.js?v=20260727a"></script>
+<script src="js/vendedores.js?v=20260727a"></script>
+<script src="js/crm.js?v=20260727a"></script>
+<script src="js/drawer.js?v=20260727a"></script>
+<script src="js/umbler.js?v=20260727a"></script>
+<script src="js/erp.js?v=20260727a"></script>
+<script src="js/vendedor-modal.js?v=20260727a"></script>
+<script src="js/agenda.js?v=20260727a"></script>
+<script src="js/config-page.js?v=20260727a"></script>
+<script src="js/exports.js?v=20260727a"></script>
+<script src="js/materiais.js?v=20260807a"></script>
+
+<!-- MODAL EDITAR VÍNCULO ERP -->
+<div id="modal-edit-vinc-erp" class="modal-ov">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-head">
+      <h3>✎ Editar Vínculo ERP</h3>
+      <button class="btn-mc" onclick="fecharEditVincERP()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+        Corrija o nome ou CNPJ do cliente ERP vinculado. Não altera o ID do ERP.
+      </p>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Nome do Cliente ERP</label>
+        <input id="ev-nome" type="text" placeholder="Nome do cliente..."
+          style="width:100%;padding:8px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">CNPJ/CPF</label>
+        <input id="ev-cnpj" type="text" placeholder="00.000.000/0000-00"
+          style="width:100%;padding:8px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;box-sizing:border-box">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="fecharEditVincERP()">Cancelar</button>
+      <button class="btn-pri" onclick="salvarEditVincERP()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR CLIENTE CRM -->
+<div id="modal-edit-cliente" class="modal-ov">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-head">
+      <h3>✎ Editar Cliente</h3>
+      <button class="btn-mc" onclick="fecharEditarCliente()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+        Edita os dados cadastrais do cliente no CRM. Clientes vinculados ao ERP têm dados atualizados automaticamente pelo sync.
+      </p>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Nome</label>
+        <input id="ec-nome" type="text" placeholder="Nome do cliente..."
+          style="width:100%;padding:8px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;box-sizing:border-box">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 80px;gap:8px;margin-bottom:12px">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Cidade</label>
+          <input id="ec-cidade" type="text" placeholder="Cidade..."
+            style="width:100%;padding:8px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">UF</label>
+          <input id="ec-uf" type="text" placeholder="PR" maxlength="2"
+            style="width:100%;padding:8px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">CNPJ/CPF</label>
+        <input id="ec-cnpj" type="text" placeholder="00.000.000/0000-00"
+          style="width:100%;padding:8px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:6px">
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">E-mail</label>
+        <input id="ec-email" type="email" placeholder="email@empresa.com"
+          style="width:100%;padding:8px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;box-sizing:border-box">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="fecharEditarCliente()">Cancelar</button>
+      <button class="btn-pri" onclick="salvarEditarCliente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL REAGENDAR -->
+<div id="modal-reagendar" class="modal-ov">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-head">
+      <h3>↻ Reagendar Tarefa</h3>
+      <button class="btn-mc" onclick="fecharReagendar()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">A tarefa ficará marcada como reagendada no histórico.</p>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Nova Data</label>
+        <input id="reag-data" type="date" style="width:100%;padding:8px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;box-sizing:border-box">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="fecharReagendar()">Cancelar</button>
+      <button class="btn-pri" onclick="salvarReagendar()">Reagendar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRÓXIMO CONTATO -->
+<div id="modal-proximo-contato" class="modal-ov">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-head">
+      <h3>📅 Agendar Próximo Contato</h3>
+      <button class="btn-mc" onclick="fecharProximoContato()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Tarefa resolvida para:</p>
+      <p id="pc-nome" style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:14px"></p>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Data (+21 dias sugerido)</label>
+        <input id="pc-data" type="date" style="width:100%;padding:8px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">O que fazer</label>
+        <textarea id="pc-texto" placeholder="Ex: Verificar se houve reposição de estoque..." rows="3" style="width:100%;padding:8px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;box-sizing:border-box;resize:vertical"></textarea>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Vendedor</label>
+        <select id="pc-vend" style="width:100%;padding:8px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;box-sizing:border-box"></select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="fecharProximoContato()">Pular</button>
+      <button id="pc-btn" class="btn-pri" onclick="salvarProximoContato()">Agendar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL CONFIRMAR DESCARTAR -->
+<div id="modal-confirmar-descartar" class="modal-ov">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-head">
+      <h3>✕ Descartar Cliente</h3>
+      <button class="btn-mc" id="cd-btn-cancel">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-primary);margin-bottom:4px">Tem certeza que deseja descartar:</p>
+      <p id="cd-nome" style="font-size:14px;font-weight:700;color:var(--red);margin-bottom:14px"></p>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">O cliente será removido da prospecção. Esta ação pode ser revertida pelo administrador.</p>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Motivo *</label>
+        <select id="cd-motivo" style="width:100%;padding:8px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;box-sizing:border-box">
+          <option value="">-- Selecione --</option>
+          <option value="Não tem interesse">Não tem interesse</option>
+          <option value="Fora de área">Fora de área</option>
+          <option value="Duplicado">Duplicado</option>
+          <option value="Cliente inativo">Cliente inativo</option>
+          <option value="Sem potencial">Sem potencial</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" id="cd-btn-cancel2" onclick="document.getElementById('modal-confirmar-descartar').classList.remove('open')">Cancelar</button>
+      <button id="cd-btn-ok" style="padding:8px 20px;background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer">Descartar</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
