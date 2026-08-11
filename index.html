@@ -685,48 +685,64 @@ async function fazerLogout() {
 // ============================================================
 //  NAV — menus por perfil
 // ============================================================
-const NAV_REPRESENTANTE = [
-  { grupo: 'PRINCIPAL', itens: [
-    { id: 'catalogo',      icon: '🛍️', label: 'Catálogo',       breadcrumb: 'Portal · Catálogo' },
-    { id: 'novo-pedido',   icon: '➕', label: 'Novo Pedido',     breadcrumb: 'Portal · Novo Pedido' },
-    { id: 'meus-pedidos',  icon: '📋', label: 'Meus Pedidos',    breadcrumb: 'Portal · Meus Pedidos' },
-  ]},
-];
-
-const NAV_GESTOR = [
-  { grupo: 'OPERACIONAL', itens: [
-    { id: 'catalogo',      icon: '🛍️', label: 'Catálogo',         breadcrumb: 'Gestão · Catálogo' },
-    { id: 'novo-pedido',   icon: '➕', label: 'Novo Pedido',       breadcrumb: 'Gestão · Novo Pedido' },
-    { id: 'pedidos',       icon: '📦', label: 'Pedidos',           breadcrumb: 'Gestão · Pedidos' },
-  ]},
-  { grupo: 'ADMINISTRAÇÃO', itens: [
-    { id: 'configuracoes', icon: '⚙️', label: 'Configurações',     breadcrumb: 'Gestão · Configurações' },
-  ]},
-];
-
-const NAV_ADMIN = [
-  { grupo: 'OPERACIONAL', itens: [
-    { id: 'catalogo',      icon: '🛍️', label: 'Catálogo',          breadcrumb: 'Admin · Catálogo' },
-    { id: 'novo-pedido',   icon: '➕', label: 'Novo Pedido',        breadcrumb: 'Admin · Novo Pedido' },
-    { id: 'pedidos',       icon: '📦', label: 'Pedidos',            breadcrumb: 'Admin · Pedidos' },
-  ]},
-  { grupo: 'ADMINISTRAÇÃO', itens: [
-    { id: 'configuracoes', icon: '⚙️', label: 'Configurações',      breadcrumb: 'Admin · Configurações' },
-  ]},
-];
-
 let paginaAtual = '';
 
-function getNav() {
-  if (USUARIO.perfil === 'admin') return NAV_ADMIN;
-  if (USUARIO.perfil === 'gestor') return NAV_GESTOR;
-  return NAV_REPRESENTANTE;
+// ============================================================
+//  ACESSO DIRIGIDO PELO HUB (user_metadata.modulos + admin)
+//  'stonni'  → portal (catálogo/pedidos)
+//  'atacado' → CRM interno (Info Técnica)
+//  admin     → Configurações
+//  A identidade de negócio (id_representante / tabela de preço / gestor) continua
+//  vindo de ped_representantes/ped_gestores — serve só para a lógica de pedidos,
+//  não para liberar áreas. Quem libera área é o Hub.
+// ============================================================
+function temMod(m) { return ((USUARIO && USUARIO.modulos) || []).includes(m); }
+function ehInterno() { return temMod('atacado'); }              // vê o CRM
+function temPortal() { return temMod('stonni') || temMod('atacado'); }
+
+function construirNav() {
+  const grupos = [];
+
+  // PRINCIPAL — portal (catálogo + pedidos). Interno também vê.
+  if (temPortal()) {
+    const itens = [
+      { id: 'catalogo',    icon: '🛍️', label: 'Catálogo',    breadcrumb: 'Portal · Catálogo' },
+      { id: 'novo-pedido', icon: '➕', label: 'Novo Pedido',  breadcrumb: 'Portal · Novo Pedido' },
+    ];
+    // Rep vê só os pedidos dele; interno/gestor/admin vê todos.
+    if (ehInterno() || USUARIO.perfil === 'gestor' || USUARIO.admin) {
+      itens.push({ id: 'pedidos', icon: '📦', label: 'Pedidos', breadcrumb: 'Portal · Pedidos' });
+    } else {
+      itens.push({ id: 'meus-pedidos', icon: '📋', label: 'Meus Pedidos', breadcrumb: 'Portal · Meus Pedidos' });
+    }
+    grupos.push({ grupo: 'PRINCIPAL', itens });
+  }
+
+  // INTERNO — CRM / Info Técnica (módulo 'atacado'). Rep nunca vê.
+  if (ehInterno()) {
+    grupos.push({ grupo: 'INTERNO', itens: [
+      { id: 'crm', icon: '📇', label: 'Info Técnica', breadcrumb: 'Interno · Info Técnica' },
+    ]});
+  }
+
+  // ADMINISTRAÇÃO — só admin do Hub.
+  if (USUARIO.admin) {
+    grupos.push({ grupo: 'ADMINISTRAÇÃO', itens: [
+      { id: 'configuracoes', icon: '⚙️', label: 'Configurações', breadcrumb: 'Admin · Configurações' },
+    ]});
+  }
+
+  return grupos;
 }
 
 function renderNav() {
-  const nav = getNav();
+  const nav = construirNav();
   const el = document.getElementById('sidebar-nav');
-  let html = nav.map(grupo => `
+  if (!nav.length) {
+    el.innerHTML = `<div style="padding:20px;color:rgba(255,255,255,0.6);font-size:12px;line-height:1.5">Sem áreas liberadas para o seu usuário. Fale com o administrador.</div>`;
+    return;
+  }
+  el.innerHTML = nav.map(grupo => `
     <div class="nav-group-label">${grupo.grupo}</div>
     ${grupo.itens.map(item => `
       <div class="nav-item" id="nav-${item.id}" onclick="irPara('${item.id}')" data-breadcrumb="${item.breadcrumb}">
@@ -735,19 +751,6 @@ function renderNav() {
       </div>
     `).join('')}
   `).join('');
-
-  // Área INTERNA (CRM / Info Técnica) — só aparece para quem tem o módulo 'atacado'.
-  // Representante (só 'stonni') nunca vê. Trava real = RLS por módulo (Fase 3).
-  if (window.podeVerCRM && window.podeVerCRM()) {
-    html += `
-      <div class="nav-group-label">INTERNO</div>
-      <div class="nav-item" id="nav-crm" onclick="irPara('crm')" data-breadcrumb="Interno · Info Técnica">
-        <span class="nav-icon">📇</span>
-        <span>Info Técnica</span>
-      </div>`;
-  }
-
-  el.innerHTML = html;
 }
 
 
@@ -890,9 +893,10 @@ function iniciarApp() {
 
   renderNav();
 
-  // Página inicial conforme perfil
-  const paginaInicial = (USUARIO.perfil === 'representante') ? 'catalogo' : 'pedidos';
-  irPara(paginaInicial);
+  // Página inicial = primeira área liberada pelo Hub
+  const nav = construirNav();
+  const paginaInicial = nav.length ? nav[0].itens[0].id : null;
+  if (paginaInicial) irPara(paginaInicial);
 }
 
 // ============================================================

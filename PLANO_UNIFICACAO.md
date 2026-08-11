@@ -61,9 +61,9 @@ No banco (fase 3): RLS nas `atac_*` exigindo `auth.jwt()->'user_metadata'->'modu
 ### Fase 0 — Sandbox invisível  ⏳ EM ANDAMENTO
 - [x] Branch local `unificado-pwa` (sem push).
 - [x] Este plano.
-- [ ] Casca PWA (manifest + service worker versionado + registro + meta tags).
-- [ ] Porteiro: carregar `USUARIO.modulos` e `USUARIO.admin` do metadata.
-- [ ] Aba **Info Técnica (CRM)** no nav, gated por `atacado`; módulo `crm.js` isolado (stub).
+- [x] Casca PWA (manifest + service worker versionado + registro + meta tags). — commit d257e34
+- [x] Porteiro: carregar `USUARIO.modulos` e `USUARIO.admin` do metadata. — commit d257e34
+- [x] Aba **Info Técnica (CRM)** no nav, gated por `atacado`; módulo `crm.js` isolado (stub). — commit d257e34
 - [ ] (quando for expor) chave de módulo nova no Hub p/ o app de teste, liberada só p/ admin — **requer OK explícito**.
 
 ### Fase 1 — Front + PWA

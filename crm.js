@@ -10,7 +10,10 @@
   'use strict';
 
   function podeVerCRM() {
-    const mods = (window.USUARIO && window.USUARIO.modulos) || [];
+    // USUARIO é um `let` global do script inline (compartilhado entre <script>),
+    // NÃO existe como window.USUARIO. Referência direta com guarda de TDZ.
+    const u = (typeof USUARIO !== 'undefined') ? USUARIO : null;
+    const mods = (u && u.modulos) || [];
     return Array.isArray(mods) && mods.includes('atacado');
   }
   window.podeVerCRM = podeVerCRM;
