@@ -84,13 +84,23 @@ Hoje o com_stonni resolve perfil por `ped_gestores`/`ped_representantes`; o Hub 
 (a) dar módulo `atacado` + tratar nav por módulos; (b) cadastrá-lo como gestor no portal.
 → resolver antes de portar o CRM de vez.
 
-### Fase 3 — A parede (sensível, por último)
-- [ ] RLS nas `atac_*` e `ped_pedidos` exigindo `atacado`/dono, validada em conta-rep de teste.
-- [ ] Remover leitura `anon` ampla das `atac_*` (conferir que todo usuário do CRM loga).
-- [ ] Rollback pronto antes de tocar produção. **Requer OK explícito.**
+### Fase 3 — RLS → PROJETO SEPARADO, FORA DO CAMINHO CRÍTICO (decisão Leo 11/08)
+**Desacoplada do lançamento.** Racional:
+- Hoje **todos** os apps leem com a chave anon e a RLS é frouxa (anon lê tudo). O rep **já tem a
+  anon** (é pública) → os dados do CRM já são tecnicamente legíveis hoje, em qualquer app.
+- O app unificado **não entrega dado do CRM ao rep**: aba gated por módulo + iframe checa módulo.
+  A unificação **não aumenta a exposição** — a proteção é a mesma que todo app do grupo usa hoje.
+- Ligar RLS "no braço" nas `atac_*` **quebraria** CRM de produção, crons, webhooks (Umbler) e
+  outros apps que leem essas tabelas com anon. É mexer no alicerce do grupo inteiro.
 
-### Fase 4 — Virar a chave
-- [ ] Só quando 1–3 provados. Deploy cuidadoso; CRM antigo permanece como fallback até validação.
+→ Fechar o "anon lê tudo" é **iniciativa de segurança do grupo**, tratada sozinha: mapear quem lê
+`atac_*` (apps/crons/webhooks), testar em **branch do Supabase**, tabela por tabela. Primeiro
+passo, quando começar: **mapa de leitura (só SELECT, sem tocar nada)**. NÃO bloqueia o PWA.
+
+### Fase 4 — Migrar p/ servidor interno
+- [ ] Deploy no interno (ver seção 6). Enquanto isso, `com_stonni` na **Vercel serve de test bed
+  live** (baixo risco — portal pouco usado; 1 dia fora não é problema). CRM crítico segue no
+  `stonnidist-v2` intocado.
 
 ---
 
