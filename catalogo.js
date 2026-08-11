@@ -64,6 +64,7 @@ async function renderCatalogo(el) {
           <span class="badge badge-b" style="font-size:11px">${tabela.nome}${tabela.markup_global?` ${tabela.markup_global>0?'+':''}${tabela.markup_global}%`:''}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
+          ${USUARIO.admin ? `<button onclick="catAbrirGerenciarCatalogos()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text-secondary);font-size:13px;cursor:pointer;padding:6px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'">📕 Catálogos</button>` : ''}
           <button onclick="catAbrirGerador()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text-secondary);font-size:13px;cursor:pointer;padding:6px 8px;border-radius:6px;white-space:nowrap" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'">
             📄 Catálogo PDF
           </button>
@@ -333,6 +334,71 @@ window.catModeloShare = function(id) {
   const c = (window._catModelos || []).find(x => Number(x.id) === Number(id));
   if (!c) return;
   waShare({ arquivos: [c.url], texto: c.titulo || 'Catálogo Stonni', linkFallback: c.url });
+};
+
+// ── Gerenciador (ADMIN): sobe PDF pronto → Storage prt-materiais + registro ──
+window.catAbrirGerenciarCatalogos = function() {
+  if (!USUARIO.admin) return;
+  const modelos = window._catModelos || [];
+  const lista = modelos.length
+    ? modelos.map(c => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:22px">📕</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${String(c.titulo || '').replace(/</g, '&lt;')}</div>
+          <a href="${c.url}" target="_blank" style="font-size:11px;color:var(--blue-mid)">abrir PDF</a>
+        </div>
+        <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="catExcluirCatalogo(${c.id})">Excluir</button>
+      </div>`).join('')
+    : '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">Nenhum catálogo salvo ainda.</div>';
+
+  abrirDrawer('📕 Catálogos', 'Suba PDFs prontos — aparecem no topo do Catálogo p/ todos', `
+    <div style="margin-bottom:16px">${lista}</div>
+    <div style="border-top:1px solid var(--border);padding-top:14px">
+      <div class="form-field"><label>Nome do catálogo</label><input type="text" id="cat-up-nome" placeholder="Ex: Catálogo Motor Home 2026"></div>
+      <div class="form-field"><label>Arquivo PDF</label><input type="file" id="cat-up-file" accept="application/pdf"></div>
+      <div id="cat-up-status" style="font-size:12px;color:var(--text-muted);min-height:16px;margin-top:4px"></div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px">💡 Gere o PDF em “📄 Catálogo PDF” (Imprimir → Salvar em PDF) e suba o arquivo aqui.</div>
+    </div>
+  `, `<button class="btn btn-outline" onclick="fecharDrawer()">Fechar</button>
+      <button class="btn btn-primary" onclick="catUploadCatalogo()">⬆️ Salvar catálogo</button>`);
+};
+
+window.catUploadCatalogo = async function() {
+  const nome = (document.getElementById('cat-up-nome')?.value || '').trim();
+  const file = document.getElementById('cat-up-file')?.files?.[0];
+  const st = document.getElementById('cat-up-status');
+  const setSt = (msg, cor) => { if (st) { st.textContent = msg; st.style.color = cor || 'var(--text-muted)'; } };
+  if (!nome) return setSt('Dê um nome ao catálogo.', 'var(--red)');
+  if (!file) return setSt('Selecione o arquivo PDF.', 'var(--red)');
+  if (file.type && file.type !== 'application/pdf') return setSt('O arquivo precisa ser PDF.', 'var(--red)');
+  setSt('Enviando…');
+  try {
+    const slug = nome.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50) || 'catalogo';
+    const path = `catalogos/${Date.now()}-${slug}.pdf`;
+    const auth = (typeof HEADERS !== 'undefined' && HEADERS['Authorization']) || ('Bearer ' + SUPA_KEY);
+    const up = await fetch(`${SUPA_URL}/storage/v1/object/prt-materiais/${path}`, {
+      method: 'POST',
+      headers: { apikey: SUPA_KEY, Authorization: auth, 'Content-Type': 'application/pdf', 'x-upsert': 'true' },
+      body: file
+    });
+    if (!up.ok) throw new Error('upload HTTP ' + up.status);
+    const url = `${SUPA_URL}/storage/v1/object/public/prt-materiais/${path}`;
+    const ordem = (window._catModelos || []).length + 1;
+    await supaInsert('prt_materiais', { titulo: nome, categoria: 'Catálogo', tipo: 'pdf', url, ativo: true, ordem });
+    setSt('Catálogo salvo!', 'var(--green)');
+    await renderCatalogo(document.getElementById('page-content'));
+    catAbrirGerenciarCatalogos();
+  } catch (e) {
+    setSt('Erro ao salvar: ' + (e.message || 'tente de novo'), 'var(--red)');
+  }
+};
+
+window.catExcluirCatalogo = async function(id) {
+  await supaPatch('prt_materiais', `id=eq.${id}`, { ativo: false }); // soft-delete (some da faixa)
+  await renderCatalogo(document.getElementById('page-content'));
+  catAbrirGerenciarCatalogos();
 };
 
 // CSS do módulo
