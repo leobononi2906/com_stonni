@@ -7,6 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1A3A8F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stonni">
+<link rel="apple-touch-icon" href="logo.png">
 <style>
 /* ============================================================
    DESIGN SYSTEM BONONI / STONNI
@@ -573,6 +580,9 @@ async function carregarUsuario(user, token) {
     email: user.email,
     nome: meta.nome || user.email.split('@')[0],
     perfil: meta.admin ? 'admin' : (meta.perfil || 'representante'),
+    // Porteiro do Hub: módulos liberados e flag admin (base da parede "rep não vê CRM")
+    modulos: Array.isArray(meta.modulos) ? meta.modulos : [],
+    admin: !!meta.admin,
     token
   };
 
@@ -716,7 +726,7 @@ function getNav() {
 function renderNav() {
   const nav = getNav();
   const el = document.getElementById('sidebar-nav');
-  el.innerHTML = nav.map(grupo => `
+  let html = nav.map(grupo => `
     <div class="nav-group-label">${grupo.grupo}</div>
     ${grupo.itens.map(item => `
       <div class="nav-item" id="nav-${item.id}" onclick="irPara('${item.id}')" data-breadcrumb="${item.breadcrumb}">
@@ -725,6 +735,19 @@ function renderNav() {
       </div>
     `).join('')}
   `).join('');
+
+  // Área INTERNA (CRM / Info Técnica) — só aparece para quem tem o módulo 'atacado'.
+  // Representante (só 'stonni') nunca vê. Trava real = RLS por módulo (Fase 3).
+  if (window.podeVerCRM && window.podeVerCRM()) {
+    html += `
+      <div class="nav-group-label">INTERNO</div>
+      <div class="nav-item" id="nav-crm" onclick="irPara('crm')" data-breadcrumb="Interno · Info Técnica">
+        <span class="nav-icon">📇</span>
+        <span>Info Técnica</span>
+      </div>`;
+  }
+
+  el.innerHTML = html;
 }
 
 
@@ -781,6 +804,7 @@ function renderPagina(id, params) {
     case 'novo-pedido':    renderNovoPedido(el, params); break;
     case 'meus-pedidos':   renderMeusPedidos(el, params); break;
     case 'pedidos':        renderPedidos(el, params); break;
+    case 'crm':            renderCRM(el, params); break;
     case 'configuracoes':  renderConfiguracoes(el, params); break;
     case 'representantes': renderConfiguracoes(el, params); break;
     default: el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🚧</div><h3>Em construção</h3><p>Módulo "${id}" em desenvolvimento.</p></div>`;
@@ -969,5 +993,15 @@ function renderRepresentantes(el, params) {
 <script src="pedidos.js"></script>
 <script src="pdf-pedido.js"></script>
 <script src="gestao.js"></script>
+<script src="crm.js"></script>
+
+<!-- PWA: registra o service worker (network-first; ver sw.js) -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
 </body>
 </html>
