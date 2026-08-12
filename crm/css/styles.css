@@ -267,6 +267,9 @@ input,select,textarea { width:100%; }
 /* drawer */
 #drawer { position:absolute; inset:0; background:var(--surface); display:flex; flex-direction:column; transform:translateX(100%); transition:transform 0.25s ease; z-index:5; }
 #drawer.open { transform:translateX(0); }
+/* Mobile: o painel de detalhe fica com largura 0 (a lista ocupa 100%); o drawer
+   vira overlay FIXO de tela cheia p/ realmente aparecer ao selecionar um cliente. */
+@media(max-width:900px){ #drawer { position:fixed; inset:0; z-index:500; } }
 .dw-head { display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--surface); }
 .dw-back { font-size:18px; color:var(--text-muted); padding:0 4px; background:none; border:none; cursor:pointer; transition:color 0.15s; line-height:1; }
 .dw-back:hover { color:var(--text-primary); }
