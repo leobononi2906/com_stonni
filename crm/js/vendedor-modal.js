@@ -178,11 +178,14 @@ async function descartarCliente(id, nome) {
     detalhe: { motivo: motivo || 'não informado' }
   });
   toast(`${nome} descartado`);
-  // Remove da lista local imediatamente
-  S.prospeccao = S.prospeccao.filter(c => c.id_cliente !== id);
-  S.prospGeral = S.prospGeral.filter(c => c.id_cliente !== id);
+  // Se o cliente descartado estava aberto no drawer, fecha.
+  if (S.selId === id) closeDrawer();
+  // Recarrega carteira + prospecção e re-renderiza. A view atac_crm_clientes já
+  // exclui descartados (nao_comercial=true), então some da tela após o reload.
+  // Antes só filtrava prospeccao/prospGeral local e NUNCA a carteira — por isso
+  // descartar pela aba Carteira do CRM não fazia o cliente sumir.
+  await Promise.all([loadCarteira(), loadProspeccao()]);
   renderLista();
-  loadProspeccao();
 }
 
 // ── ASSUMIR CLIENTE (Prospecção Geral → Carteira do Vendedor) ──
