@@ -1,8 +1,13 @@
 # PLANO — Unificação Portal (com_stonni) + CRM Atacado (stonnidist-v2) em PWA único
 
 > Iniciado em 11/08/2026. Documento vivo — mapa de trabalho da unificação.
-> **Regra de ferro durante a construção:** tudo em branch `unificado-pwa`, **NADA em produção**.
-> Sem push na `main`, sem criar chave no Hub, sem mexer em RLS até estar provado.
+>
+> **STATUS (12/08/2026): NO AR** em https://com-stonni.vercel.app como **test bed live**
+> (portal pouco usado, baixo risco). O `stonnidist-v2` (CRM de produção) segue **intocado**.
+> `main` = produção da Vercel; push liberado p/ o Claude. Alvo final = **servidor interno**.
+>
+> **Regra que continua valendo:** o **CRM crítico (stonnidist-v2) não se toca** — só se copia
+> pra `crm/`. **RLS** fica fora do caminho (projeto à parte). Detalhe do estado em `docs/STATUS.md`.
 
 ---
 
