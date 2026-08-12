@@ -255,9 +255,6 @@ window.catShareFotos = function(id) {
   if (!p) return;
   const fotos = p.fotos || [];
   if (!fotos.length) return;
-  const { preco } = catPrecoFinal(p);
-  const legenda = `${p.nome}\nRef: ${p.referencia || '—'}\nR$ ${preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-
   let ov = document.getElementById('cat-share-modal');
   if (!ov) {
     ov = document.createElement('div');
@@ -279,9 +276,7 @@ window.catShareFotos = function(id) {
           <img src="${f}" style="width:100%;height:100%;object-fit:cover" onclick="const c=this.previousElementSibling;c.checked=!c.checked;this.parentElement.style.borderColor=c.checked?'var(--blue-mid)':'var(--border)'">
         </label>`).join('')}
       </div>
-      <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Legenda</label>
-      <textarea id="cat-share-legenda" rows="3" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;background:var(--surface2);color:var(--text-primary);outline:none;resize:vertical;font-family:inherit;box-sizing:border-box">${legenda}</textarea>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;height:44px;margin-top:12px;background:#128C7E" onclick="catShareFotosEnviar()">📲 Enviar no WhatsApp</button>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;height:44px;background:#128C7E" onclick="catShareFotosEnviar()">📲 Enviar no WhatsApp</button>
       <div id="cat-share-erro" style="font-size:12px;color:var(--red);margin-top:6px"></div>
     </div>
   </div>`;
@@ -290,13 +285,12 @@ window.catShareFotos = function(id) {
 window.catShareFotosFechar = function() { const ov = document.getElementById('cat-share-modal'); if (ov) { ov.style.display = 'none'; ov.innerHTML = ''; } };
 window.catShareFotosEnviar = async function() {
   const urls = [...document.querySelectorAll('.cat-share-foto:checked')].map(el => el.value);
-  const texto = document.getElementById('cat-share-legenda')?.value || '';
   const erro = document.getElementById('cat-share-erro');
   if (!urls.length) { if (erro) erro.textContent = 'Selecione ao menos uma imagem.'; return; }
   if (erro) erro.textContent = '';
   const btn = document.querySelector('#cat-share-modal button.btn-primary');
   if (btn) { btn.disabled = true; btn.textContent = 'Abrindo…'; }
-  const r = await waShare({ arquivos: urls, texto, linkFallback: urls[0] });
+  const r = await waShare({ arquivos: urls, linkFallback: urls[0] });
   if (btn) { btn.disabled = false; btn.textContent = '📲 Enviar no WhatsApp'; }
   if (r && r.ok && r.via !== 'cancel') catShareFotosFechar();
 };
