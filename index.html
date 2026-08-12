@@ -337,7 +337,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   .cfg-grid-2, .form-row-2, .form-row-3, .grid-2, .grid-3 { grid-template-columns: 1fr; }
 
   /* Drawer — tela cheia no mobile */
-  .drawer { width: 100%; right: -100%; border-radius: 0; display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+  /* Mobile: desliza por transform (o right/percentual não estava aplicando nesse motor) */
+  .drawer { width: 100%; right: 0; left: auto; transform: translateX(100%); border-radius: 0; display: flex; flex-direction: column; height: 100vh; height: 100dvh; transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); }
+  .drawer.open { transform: translateX(0) !important; }
   /* Tabs do drawer — scroll horizontal */
   .drawer-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; padding: 0 12px; }
   .drawer-tab  { white-space: nowrap; flex-shrink: 0; font-size: 12px; padding: 8px 12px; }
