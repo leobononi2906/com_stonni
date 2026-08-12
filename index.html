@@ -362,8 +362,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   .cat-card-footer { padding: 6px 8px 8px; }
   .cat-card-footer .btn { font-size: 12px; padding: 6px; }
 
-  /* Topbar mobile */
-  .mobile-topbar { height: 52px; padding: 0 14px; padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
+  /* Topbar mobile — respeita o notch do iOS (safe-area-inset-top) p/ o ☰ não ficar sob a status bar */
+  .mobile-topbar { height: calc(52px + env(safe-area-inset-top)); padding: 0 14px; padding-top: env(safe-area-inset-top); padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
   .drawer-footer { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
   .mobile-topbar .app-logo { font-size: 15px; }
 
