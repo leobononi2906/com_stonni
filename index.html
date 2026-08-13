@@ -889,16 +889,53 @@ function fmt(v) { return Number(v || 0).toLocaleString('pt-BR', { minimumFractio
 function fmtData(d) { if (!d) return '—'; return new Date(d + 'T00:00:00').toLocaleDateString('pt-BR'); }
 function fmtCNPJ(v) { const n = (v||'').replace(/\D/g,''); return n.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5'); }
 
+// Renova o access_token via refresh_token (Supabase Auth). Atualiza localStorage
+// + HEADERS. Uma única renovação em voo por vez (evita várias em paralelo).
+// Sem isso, o token expirava (~1h) e TODA chamada supa* tomava 401 em silêncio
+// (a tela ficava "vazia" sem avisar — foi o caso do Materiais mostrando 0).
+let _renovandoToken = null;
+async function renovarToken() {
+  if (_renovandoToken) return _renovandoToken;
+  _renovandoToken = (async () => {
+    try {
+      const LS_KEY = 'sb-vishxwdxqiygbxmtpfoy-auth-token';
+      const sb = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+      if (!sb.refresh_token) return false;
+      const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: sb.refresh_token })
+      });
+      if (!r.ok) return false;
+      const ns = await r.json();
+      if (!ns.access_token) return false;
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        access_token: ns.access_token,
+        refresh_token: ns.refresh_token || sb.refresh_token,
+        expires_at: Math.floor(Date.now()/1000) + (ns.expires_in || 3600)
+      }));
+      HEADERS['Authorization'] = 'Bearer ' + ns.access_token;
+      return true;
+    } catch (e) { return false; }
+  })();
+  try { return await _renovandoToken; } finally { _renovandoToken = null; }
+}
+
 async function supa(tabela, query = '') {
-  const res = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${query}&limit=9999`, { headers: HEADERS });
+  const url = `${SUPA_URL}/rest/v1/${tabela}?${query}&limit=9999`;
+  let res = await fetch(url, { headers: HEADERS });
+  if (res.status === 401 && await renovarToken()) {
+    res = await fetch(url, { headers: HEADERS }); // token renovado — repete 1x
+  }
   return res.json();
 }
 async function supaInsert(tabela, body) {
-  const res = await fetch(`${SUPA_URL}/rest/v1/${tabela}`, {
-    method: 'POST',
-    headers: { ...HEADERS, 'Prefer': 'return=representation' },
-    body: JSON.stringify(body)
-  });
+  const url = `${SUPA_URL}/rest/v1/${tabela}`;
+  const opts = { method: 'POST', headers: { ...HEADERS, 'Prefer': 'return=representation' }, body: JSON.stringify(body) };
+  let res = await fetch(url, opts);
+  if (res.status === 401 && await renovarToken()) {
+    res = await fetch(url, { ...opts, headers: { ...HEADERS, 'Prefer': 'return=representation' } });
+  }
   if (!res.ok) {
     const err = await res.text().catch(()=>'');
     console.error(`supaInsert ${tabela} erro ${res.status}:`, err);
@@ -906,11 +943,12 @@ async function supaInsert(tabela, body) {
   return res.json().catch(()=>({}));
 }
 async function supaPatch(tabela, filtro, body) {
-  const res = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${filtro}`, {
-    method: 'PATCH',
-    headers: { ...HEADERS, 'Prefer': 'return=minimal' },
-    body: JSON.stringify(body)
-  });
+  const url = `${SUPA_URL}/rest/v1/${tabela}?${filtro}`;
+  const opts = { method: 'PATCH', headers: { ...HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify(body) };
+  let res = await fetch(url, opts);
+  if (res.status === 401 && await renovarToken()) {
+    res = await fetch(url, { ...opts, headers: { ...HEADERS, 'Prefer': 'return=minimal' } });
+  }
   if (!res.ok) {
     const err = await res.text().catch(()=>'');
     console.error(`supaPatch ${tabela} erro ${res.status}:`, err);
