@@ -218,6 +218,7 @@ window.gPedAbrir = async function(id) {
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-warning" onclick="gPedEditarCotacao(${id})">✏️ Editar</button>
         <button class="btn btn-outline" onclick="pedGerarPDF(${id})">🖨️ Gerar PDF</button>
+        <button class="btn btn-success" onclick="pedEnviarWhatsApp(${id}, this)">📲 Enviar por WhatsApp</button>
         <button class="btn btn-primary" onclick="gPedConverterCotacao(${id})">📦 Converter em Pedido</button>
         <button class="btn btn-danger"  onclick="gPedReprovar(${id})">❌ Cancelar</button>
       </div>
@@ -281,11 +282,14 @@ window.gPedAbrir = async function(id) {
       <div class="drawer-tab" onclick="gPedTab('historico',this)">Histórico</div>
     </div>`;
 
-  // Botão PDF — visível para todos os perfis, qualquer status
+  // Botões PDF / WhatsApp — visíveis para todos os perfis, qualquer status
   const btnPdfHtml = `
-    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+    <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <button class="btn btn-outline btn-sm" onclick="pedGerarPDF(${id})" style="display:flex;align-items:center;gap:6px">
         🖨️ Gerar PDF
+      </button>
+      <button class="btn btn-success btn-sm" onclick="pedEnviarWhatsApp(${id}, this)" style="display:flex;align-items:center;gap:6px">
+        📲 Enviar por WhatsApp
       </button>
     </div>`;
 

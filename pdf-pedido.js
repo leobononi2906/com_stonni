@@ -4,6 +4,43 @@
 //  Funciona com window.print() + @media print — sem lib externa
 // ============================================================
 
+// Cálculo ÚNICO dos totais/itens do pedido — fonte de verdade compartilhada entre
+// o PDF de impressão (pedGerarPDF) e o PDF-arquivo do WhatsApp (pedGerarPDFFile).
+// Mantém os dois documentos idênticos: se a regra fiscal mudar, muda num lugar só.
+window.pedCalcularTotais = function(ped, itens) {
+  itens = itens || [];
+  const stEstado = ped.st_estado || null;
+  const perItem = itens.map(it => {
+    const precoTabela = Number(it.preco_unitario || 0);
+    const precoFinal  = Number(it.preco_final || it.preco_unitario || 0);
+    const ipi         = Number(it.ipi_perc || 0);
+    const descPercReg = Number(it.desconto_perc || 0);
+    // Desconto efetivo: por regra OU diferença manual de preço
+    const editadoManual = descPercReg === 0 && precoFinal < precoTabela * 0.999;
+    const descExibido = descPercReg > 0 ? descPercReg
+      : editadoManual ? Math.round((1 - precoFinal / precoTabela) * 10000) / 100
+      : 0;
+    const precoComDesc = parseFloat((precoTabela * (1 - descExibido / 100)).toFixed(2));
+    const qtd = Number(it.quantidade || 1);
+    const subtotalItem = precoComDesc * qtd;
+    const valorIpiItem = stEstado ? 0 : subtotalItem * ipi / 100; // IPI após desconto; zerado se ST
+    const totalComIpi  = subtotalItem + valorIpiItem;
+    return { referencia: it.referencia || '—', nome: it.nome_produto || '—', qtd,
+             precoTabela, descExibido, ipi, precoComDesc, valorIpiItem, totalComIpi };
+  });
+  const subtotalTabela  = itens.reduce((s,i) => s + Number(i.preco_unitario||0) * Number(i.quantidade||1), 0);
+  const subtotalComDesc = perItem.reduce((s,p) => s + p.precoComDesc * p.qtd, 0);
+  const valorDesconto   = parseFloat((subtotalTabela - subtotalComDesc).toFixed(2));
+  const valorIPI        = perItem.reduce((s,p) => s + p.valorIpiItem, 0);
+  const valorProdutos   = subtotalTabela; // exibe preço de tabela (Subtotal - Desconto)
+  const valorFrete      = Number(ped.valor_frete || 0);
+  const valorST         = stEstado
+    ? itens.reduce((s,i) => s + (stEstado === 'SP' ? Number(i.st_sp||0) : Number(i.st_pr||0)) * Number(i.quantidade||1), 0)
+    : Number(ped.valor_st || 0);
+  const valorTotal = valorProdutos - valorDesconto + valorIPI + valorFrete + valorST;
+  return { stEstado, perItem, valorProdutos, valorDesconto, valorIPI, valorST, valorFrete, valorTotal };
+};
+
 window.pedGerarPDF = async function(idPedido) {
   // Busca pedido + itens + configs em paralelo
   const [pedidos, itens, configs] = await Promise.all([
@@ -35,74 +72,22 @@ window.pedGerarPDF = async function(idPedido) {
     return v || '—';
   };
 
-  // Totais do banco (fonte de verdade)
-  // Recalcula totais a partir dos itens — evita duplo desconto
-  // subtotalTabela = preço de tabela × qtd (sem desconto)
-  // subtotalComDesc = preço com desconto × qtd
-  // valorDesconto = diferença entre os dois
-  const subtotalTabela = (itens||[]).reduce((s,i) => {
-    return s + Number(i.preco_unitario||0) * Number(i.quantidade||1);
-  }, 0);
-  const subtotalComDesc = (itens||[]).reduce((s,i) => {
-    const pt  = Number(i.preco_unitario || 0);
-    const dp  = Number(i.desconto_perc  || 0);
-    const pf  = Number(i.preco_final    || pt);
-    const pcd = dp > 0 ? pt*(1-dp/100) : (pf < pt*0.999 ? pf : pt);
-    return s + pcd * Number(i.quantidade||1);
-  }, 0);
-  const valorDesconto = parseFloat((subtotalTabela - subtotalComDesc).toFixed(2));
-  // IPI calculado sobre subtotalComDesc (zerado quando ST ativo)
-  const stEstado      = ped.st_estado || null;
-  const valorIPI = stEstado ? 0 : (itens||[]).reduce((s,i) => {
-    const pt  = Number(i.preco_unitario || 0);
-    const dp  = Number(i.desconto_perc  || 0);
-    const pf  = Number(i.preco_final    || pt);
-    const pcd = dp > 0 ? pt*(1-dp/100) : (pf < pt*0.999 ? pf : pt);
-    return s + pcd * Number(i.quantidade||1) * (Number(i.ipi_perc)||0) / 100;
-  }, 0);
-  // valorProdutos exibido = preço de tabela (para mostrar "Subtotal R$ X, Desconto -R$ Y")
-  const valorProdutos = subtotalTabela;
-  const valorFrete    = Number(ped.valor_frete || 0);
-  const valorST       = stEstado ? (itens||[]).reduce((s,i) => {
-    const campo = stEstado === 'SP' ? Number(i.st_sp||0) : Number(i.st_pr||0);
-    return s + campo * Number(i.quantidade||1);
-  }, 0) : Number(ped.valor_st || 0);
-  const valorTotal = valorProdutos - valorDesconto + valorIPI + valorFrete + valorST;
+  // Totais + itens: cálculo ÚNICO (mesma conta do PDF-arquivo enviado no WhatsApp).
+  const calc = window.pedCalcularTotais(ped, itens);
+  const { stEstado, perItem, valorProdutos, valorDesconto, valorIPI, valorST, valorFrete, valorTotal } = calc;
 
-  // Monta linhas de itens
-  // Itens: mostra preço de TABELA + desconto separado (cliente vê o benefício)
-  const linhasItens = (itens || []).map((it, i) => {
-    const precoTabela  = Number(it.preco_unitario || 0);
-    const precoFinal   = Number(it.preco_final || it.preco_unitario || 0);
-    const ipi          = Number(it.ipi_perc || 0);
-    const descPercReg  = Number(it.desconto_perc || 0);
-
-    // Desconto efetivo: por regra OU diferença manual de preço
-    const editadoManual = descPercReg === 0 && precoFinal < precoTabela * 0.999;
-    const descExibido = descPercReg > 0 ? descPercReg
-      : editadoManual ? Math.round((1 - precoFinal / precoTabela) * 10000) / 100
-      : 0;
-
-    // Preço exibido: preço de TABELA
-    // Preço com desconto: base para IPI e total
-    const precoComDesc = parseFloat((precoTabela * (1 - descExibido / 100)).toFixed(2));
-    const subtotalItem = precoComDesc * Number(it.quantidade);
-    // IPI calculado APÓS o desconto (zerado quando ST ativo)
-    const valorIpiItem = stEstado ? 0 : subtotalItem * ipi / 100;
-    const totalComIpi  = subtotalItem + valorIpiItem;
-
-    return `
+  // Monta linhas de itens — mostra preço de TABELA + desconto separado (cliente vê o benefício)
+  const linhasItens = perItem.map((p, i) => `
       <tr class="${i % 2 === 0 ? 'par' : ''}">
-        <td class="ref">${it.referencia || '—'}</td>
-        <td class="nome">${it.nome_produto || '—'}</td>
-        <td class="centro">${it.quantidade}</td>
-        <td class="centro mono">R$ ${fmtVal(precoTabela)}</td>
-        <td class="centro">${descExibido > 0 ? descExibido.toFixed(descExibido % 1 === 0 ? 0 : 1) + '%' : '—'}</td>
-        <td class="centro">${ipi > 0 && !stEstado ? ipi + '%' : '—'}</td>
-        <td class="centro mono">${valorIpiItem > 0 ? 'R$ ' + fmtVal(valorIpiItem) : '—'}</td>
-        <td class="direita mono"><strong>R$ ${fmtVal(totalComIpi)}</strong></td>
-      </tr>`;
-  }).join('');
+        <td class="ref">${p.referencia}</td>
+        <td class="nome">${p.nome}</td>
+        <td class="centro">${p.qtd}</td>
+        <td class="centro mono">R$ ${fmtVal(p.precoTabela)}</td>
+        <td class="centro">${p.descExibido > 0 ? p.descExibido.toFixed(p.descExibido % 1 === 0 ? 0 : 1) + '%' : '—'}</td>
+        <td class="centro">${p.ipi > 0 && !stEstado ? p.ipi + '%' : '—'}</td>
+        <td class="centro mono">${p.valorIpiItem > 0 ? 'R$ ' + fmtVal(p.valorIpiItem) : '—'}</td>
+        <td class="direita mono"><strong>R$ ${fmtVal(p.totalComIpi)}</strong></td>
+      </tr>`).join('');
 
   // Linhas de totais
   const linhasFrete = valorFrete > 0

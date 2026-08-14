@@ -27,7 +27,7 @@
     return new File([blob], name, { type: blob.type || 'application/octet-stream' });
   }
 
-  // opts: { arquivos:string[] (URLs p/ anexar), texto:string, linkFallback:string }
+  // opts: { arquivos:(string|File|Blob)[] (URLs OU arquivos p/ anexar), texto, linkFallback }
   // Retorna { ok, via } — via ∈ share-files | share-link | wa.me | cancel
   async function waShare(opts) {
     const { arquivos = [], texto = '', linkFallback = '' } = opts || {};
@@ -36,7 +36,12 @@
     if (arquivos.length && navigator.canShare) {
       try {
         const files = [];
-        for (let i = 0; i < arquivos.length; i++) files.push(await _urlToFile(arquivos[i], 'arquivo-' + (i + 1)));
+        for (let i = 0; i < arquivos.length; i++) {
+          const a = arquivos[i];
+          if (a instanceof File) { files.push(a); continue; }
+          if (a instanceof Blob) { files.push(new File([a], 'arquivo-' + (i + 1), { type: a.type || 'application/octet-stream' })); continue; }
+          files.push(await _urlToFile(a, 'arquivo-' + (i + 1)));
+        }
         if (files.length && navigator.canShare({ files })) {
           await navigator.share({ files, text: texto });
           return { ok: true, via: 'share-files' };
@@ -47,7 +52,7 @@
       }
     }
 
-    const url = linkFallback || arquivos[0] || '';
+    const url = linkFallback || (typeof arquivos[0] === 'string' ? arquivos[0] : '') || '';
 
     // 2) Share sheet só com link/texto
     if (navigator.share) {
