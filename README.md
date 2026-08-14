@@ -12,7 +12,8 @@ Acesso liberado pelo **Hub** (`stonni` = portal, `atacado` = CRM, `admin` = tudo
 ## Estrutura
 - `index.html` — shell (login + sidebar + roteador `renderPagina`)
 - `catalogo.js` · `pedidos.js` · `configuracoes.js` · `gestao.js` · `materiais.js` · `wshare.js` · `crm.js`
-- `catalogo-pdf.js` · `pdf-pedido.js` · `manifest.json` · `sw.js` · `logo.png`
+- `catalogo-pdf.js` · `pdf-pedido.js` · `pdf-orcamento-file.js` · `manifest.json` · `sw.js` · `logo.png`
+- `vendor/` — libs vendorizadas (`jspdf` + `autotable`, p/ o PDF do orçamento) — sem CDN em runtime
 - `crm/` — CRM vendorizado (app completo + `crm/docs/`)
 
 ## Documentação

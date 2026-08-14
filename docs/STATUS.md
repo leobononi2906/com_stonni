@@ -1,6 +1,6 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-08-12
+> Atualizado: 2026-08-14
 
 ## O que é
 **PWA único** do Grupo Bononi que junta, num só app e uma só sidebar:
@@ -24,8 +24,14 @@ Rep monta pedido a partir do catálogo; interno usa também o CRM. Acesso libera
 ## Stack / arquitetura
 HTML/JS vanilla, sem build. `index.html` (shell/login/nav dirigido por `construirNav`) + módulos:
 `catalogo.js`, `pedidos.js`, `configuracoes.js`, `gestao.js`, `materiais.js`, `wshare.js`, `crm.js`,
-`catalogo-pdf.js`, `pdf-pedido.js`. **PWA:** `manifest.json` + `sw.js` (network-first, versionado).
+`catalogo-pdf.js`, `pdf-pedido.js`, `pdf-orcamento-file.js`. Libs vendorizadas em `vendor/`
+(`jspdf` + `jspdf.plugin.autotable`). **PWA:** `manifest.json` + `sw.js` (network-first, versionado).
 **CRM:** vendorizado em `crm/` (cópia fiel do stonnidist-v2), embutido via **iframe same-origin** com **SSO** (sessão do localStorage). Doc do CRM em [`crm/docs/`](../crm/docs/).
+
+## Feito (13–14/08/2026)
+- **Enviar orçamento por WhatsApp como PDF real** (pedido/cotação): botão **📲 Enviar por WhatsApp** ao lado do "Gerar PDF". `pdf-orcamento-file.js` (`pedGerarPDFFile`) monta o PDF com **jsPDF + autotable vendorizados** (`vendor/`, sem CDN em runtime) e anexa via Web Share API (mobile) ou baixa + abre WhatsApp Web (desktop). `window.pedCalcularTotais` (em `pdf-pedido.js`) virou **fonte única** dos números → PDF impresso e enviado são idênticos. `waShare` passou a aceitar `File`/`Blob` direto.
+- **Auth: renova token e repete em 401** (`renovarToken()` + retry nos helpers `supa/supaInsert/supaPatch`). Antes o token só era renovado no load da página; após ~1h expirava e **toda** chamada voltava vazia em silêncio (sintoma: Materiais mostrando "Nenhum" com 16 itens no banco). Policy/grants estavam OK — o bug era 100% do app.
+- **CRM: descartar cliente some da tela na aba Carteira** — `descartarCliente` agora recarrega carteira+prospecção e re-renderiza (antes só atualizava a prospecção local). Corrigido também no repo fonte `stonnidist-v2`.
 
 ## Feito na unificação (11–12/08/2026)
 - **Casca PWA** + porteiro por módulo + **sidebar única** (Portal + seções do CRM agrupadas em DASHBOARD/OPERACIONAL; barra interna do CRM escondida via guard "is-embedded").
@@ -49,5 +55,8 @@ HTML/JS vanilla, sem build. `index.html` (shell/login/nav dirigido por `construi
 - `configuracoes.js` grande — refatoração gradual.
 
 ## Dev-log
+- 2026-08-14 — Orçamento por WhatsApp como **PDF real** (jsPDF+autotable vendorizados; `pedGerarPDFFile`/`pedEnviarWhatsApp`; `pedCalcularTotais` como fonte única). SW v4. Commit `61c8929`.
+- 2026-08-13 — Fix auth: `renovarToken()` + retry 401 nos helpers `supa*` (conserta telas vazias após ~1h; era o caso do Materiais). SW v3. Commit `2cc6a68`.
+- 2026-08-13 — Fix CRM: descartar cliente some na aba Carteira (com_stonni `e052271` + fonte `stonnidist-v2` `f3f7758`).
 - 2026-08-12 — Docs atualizadas + doc do CRM trazida p/ `crm/docs/`. Fixes mobile (notch, drawer CRM overlay, fotos sem legenda). Commits `a74bc6c`→`549a81a`.
 - 2026-08-11 — Unificação: PWA, sidebar única, Materiais+IA, WhatsApp, catálogos, Config reorg, CRM embutido+SSO. Deploy em com-stonni.vercel.app.
