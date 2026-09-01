@@ -25,12 +25,52 @@ window.pedMostrarIncentivo = function(msg) {
   setTimeout(function() { if (toast.parentElement) toast.remove(); }, 6000);
 };
 
+// Recalcula do ZERO o desconto de cada item a cada chamada (regras + promoções),
+// para que descontos ENTREM e SAIAM automaticamente ao mudar/remover quantidade.
+// Preço editado manualmente é preservado (regra/promoção não se aplicam nele).
 window.aplicarRegrasDesconto = function(itens, regras) {
-  if (!regras || !regras.length || !itens || !itens.length) return itens;
-  const regrasAtivas = regras.filter(r => r.ativa !== false);
+  if (!itens || !itens.length) return itens;
+  const regrasAtivas = (regras || []).filter(r => r.ativa !== false);
+  const acoes = (window._catAcoes || []).filter(a => a && a.ativa);
+  const hoje = new Date().toISOString().slice(0, 10);
+
+  // Melhor promoção (ação comercial) ativa para o item — recalculada na hora
+  function descontoAcaoItem(item) {
+    for (const a of acoes) {
+      const di = a.data_inicio ? a.data_inicio.slice(0, 10) : null;
+      const df = a.data_fim ? a.data_fim.slice(0, 10) : null;
+      if (di && di > hoje) continue;
+      if (df && df < hoje) continue;
+      let casa = false;
+      if (a.escopo === 'produto') {
+        casa = String(a.id_produto) === String(item.id_produto_erp);
+      } else if (a.escopo === 'grupo') {
+        const ng = (a.nome_grupo || '').toLowerCase().trim();
+        const g  = (item.grupo || '').toLowerCase().trim();
+        if (ng && g && (g.includes(ng) || ng.includes(g))) {
+          const ns = (a.nome_subgrupo || '').toLowerCase().trim();
+          const s  = (item.subgrupo || '').toLowerCase().trim();
+          casa = !ns || (s && (s.includes(ns) || ns.includes(s)));
+        }
+      }
+      if (!casa) continue;
+      const base = Number(item.preco_unitario) || 0;
+      if (a.tipo === 'preco_fixo') {
+        const pf = Number(a.valor) || 0;
+        if (base > 0 && pf > 0 && pf < base) return { desconto: (1 - pf / base) * 100, nome: a.nome };
+      } else if (a.tipo === 'desconto') {
+        return { desconto: Number(a.valor) || 0, nome: a.nome };
+      }
+    }
+    return { desconto: 0, nome: null };
+  }
+
   return itens.map(item => {
-    let melhorDesconto = Number(item.desconto_perc) || 0;
-    let regraAplicada  = item.regras_aplicadas?.length ? item.regras_aplicadas : [];
+    // Preço manual editado: mantém como está (regra/promoção não se aplicam)
+    if (item.preco_editado) return { ...item, preco_final: Number(item.preco_unitario) };
+
+    let melhorDesconto = 0;         // sempre recomeça do zero -> desconto sai sozinho quando não qualifica
+    let regraAplicada  = [];
     for (const rg of regrasAtivas) {
       let desconto = 0;
       const qtdMinima   = Number(rg.qtd_minima)   || 0;
@@ -84,12 +124,11 @@ window.aplicarRegrasDesconto = function(itens, regras) {
         regraAplicada  = [rg.descricao || rg.tipo];
       }
     }
-    if (melhorDesconto > 0) {
-      // Não altera preco_final — desconto aparece separado no resumo
-      return { ...item, desconto_perc: melhorDesconto, preco_final: Number(item.preco_unitario), regras_aplicadas: regraAplicada };
-    }
-    // Sem desconto — garante preco_final = preco_unitario
-    return { ...item, preco_final: Number(item.preco_unitario), desconto_perc: item.preco_editado ? item.desconto_perc : 0 };
+    // Promoção (ação comercial) — concorre com as regras; a maior vence
+    const ac = descontoAcaoItem(item);
+    if (ac.desconto > melhorDesconto) { melhorDesconto = ac.desconto; regraAplicada = [ac.nome]; }
+
+    return { ...item, desconto_perc: melhorDesconto > 0 ? melhorDesconto : 0, preco_final: Number(item.preco_unitario), regras_aplicadas: melhorDesconto > 0 ? regraAplicada : [] };
   });
 };
 
@@ -675,16 +714,14 @@ window.pedAlterarQtd = function(idx, delta) {
   _pedidoAtual.itens[idx].preco_final = _pedidoAtual.itens[idx].preco_unitario;
   _pedidoAtual.itens[idx].desconto_perc = 0;
   _pedidoAtual.itens[idx].regras_aplicadas = [];
-  // Reaplica regras em todo o carrinho
-  if (window._pedRegras?.length)
-    _pedidoAtual.itens = window.aplicarRegrasDesconto(_pedidoAtual.itens, window._pedRegras);
+  // Recalcula desconto/promoção em todo o carrinho (entra e sai conforme a quantidade)
+  _pedidoAtual.itens = window.aplicarRegrasDesconto(_pedidoAtual.itens, window._pedRegras || []);
   pedRenderCarrinho();
 };
 window.pedRemoverItem = function(idx) {
   _pedidoAtual.itens.splice(idx, 1);
-  // Reaplica regras — a remoção pode invalidar desconto de grupo
-  if (window._pedRegras?.length)
-    _pedidoAtual.itens = window.aplicarRegrasDesconto(_pedidoAtual.itens, window._pedRegras);
+  // Recalcula — a remoção pode invalidar desconto de grupo/valor do pedido
+  _pedidoAtual.itens = window.aplicarRegrasDesconto(_pedidoAtual.itens, window._pedRegras || []);
   pedRenderCarrinho();
 };
 
@@ -805,10 +842,10 @@ window.pedAdicionarProdutoId = function(id) {
       st_sp: parseFloat(p.st_sp) || 0,
       st_pr: parseFloat(p.st_pr) || 0,
     });
-    // Re-aplica regras de desconto em todo o carrinho
-    if (window._pedRegras?.length) {
-      _pedidoAtual.itens = window.aplicarRegrasDesconto(_pedidoAtual.itens, window._pedRegras);
-    }
+  }
+  // Recalcula desconto/promoção em todo o carrinho (vale pra item novo E pra incremento)
+  _pedidoAtual.itens = window.aplicarRegrasDesconto(_pedidoAtual.itens, window._pedRegras || []);
+  {
 
     // Verifica regras proximas de ativar (incentivo de desconto)
     if (window._pedRegras && window._pedRegras.length) {
