@@ -529,7 +529,7 @@ async function loadItens() {
   let params=`select=id_doc,id_cliente,id_vendedor,id_produto,produto,referencia,id_grupo,grupo,id_subgrupo,subgrupo,qtd,total_item,custo_total,margem_item,data_faturamento&tipo_saida=eq.DISTRIBUICAO&data_faturamento=gte.${F.dtStart}&data_faturamento=lte.${F.dtEnd}&order=data_faturamento.desc`;
   if(F.vendedorId) params+=`&id_vendedor=eq.${F.vendedorId}`;
   if(F.empresaId)  params+=`&id_empresa=eq.${F.empresaId}`;
-  const d=await sbQ('vw_comercial_itens_faturados',params);
+  const d=await sbQ('vw_comercial_itens_margem',params);
   S.itens=Array.isArray(d)?d:[];
 }
 
