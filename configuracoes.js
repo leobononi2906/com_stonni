@@ -1119,6 +1119,52 @@ window.cfgDefinirCapa = async function(id, indice) {
   cfgEditarProduto(id);
 };
 
+// Upload de foto manual (enquanto o produto não está no Bling) → bucket catalogo-fotos
+window.cfgUploadFotoManual = async function(id, input) {
+  const file = input?.files?.[0]; if (!file) return;
+  if (!file.type.startsWith('image/')) { alert('Selecione uma imagem.'); input.value=''; return; }
+  if (file.size > 5 * 1024 * 1024) { alert('Imagem muito grande (máx. 5MB).'); input.value=''; return; }
+  const msg = document.getElementById('ep-foto-msg');
+  if (msg) { msg.textContent = '📤 Enviando foto...'; msg.style.color = 'var(--text-muted)'; }
+  try {
+    const ext = ((file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')) || 'jpg';
+    const path = `manual/${id}-${Date.now()}.${ext}`;
+    const up = await fetch(`${SUPA_URL}/storage/v1/object/catalogo-fotos/${path}`, {
+      method: 'POST',
+      headers: { apikey: SUPA_KEY, Authorization: HEADERS['Authorization'] || ('Bearer ' + SUPA_KEY), 'x-upsert': 'true' },
+      body: file
+    });
+    if (!up.ok) { throw new Error((await up.text().catch(()=>'')) || ('HTTP ' + up.status)); }
+    const url = `${SUPA_URL}/storage/v1/object/public/catalogo-fotos/${path}`;
+    const r = await supa('ped_catalogo_produtos', `id=eq.${id}&select=fotos`);
+    const fotos = Array.isArray(r?.[0]?.fotos) ? r[0].fotos : [];
+    fotos.push(url);
+    await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos });
+    cfgEditarProduto(id);   // recarrega o drawer com a foto nova
+  } catch (e) {
+    if (msg) { msg.textContent = 'Falha ao enviar: ' + (e.message || e); msg.style.color = 'var(--red)'; }
+  }
+};
+
+// Apaga uma foto do produto (útil pra remover a manual depois que a do Bling chegar)
+window.cfgRemoverFoto = async function(id, indice) {
+  if (!confirm('Apagar esta foto?')) return;
+  const r = await supa('ped_catalogo_produtos', `id=eq.${id}&select=fotos,foto_miniatura`);
+  const fotos = Array.isArray(r?.[0]?.fotos) ? r[0].fotos : [];
+  const alvo = fotos[indice];
+  if (alvo === undefined) return;
+  const novas = fotos.filter((_, i) => i !== indice);
+  const patch = { fotos: novas };
+  if (r?.[0]?.foto_miniatura && r[0].foto_miniatura === alvo) patch.foto_miniatura = novas[0] || null;
+  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, patch);
+  // Se era foto manual (nossa no storage), remove o arquivo também
+  if (typeof alvo === 'string' && alvo.includes('/catalogo-fotos/')) {
+    const rel = alvo.split('/catalogo-fotos/')[1];
+    if (rel) fetch(`${SUPA_URL}/storage/v1/object/catalogo-fotos/${rel}`, { method: 'DELETE', headers: { apikey: SUPA_KEY, Authorization: HEADERS['Authorization'] || ('Bearer ' + SUPA_KEY) } }).catch(()=>{});
+  }
+  cfgEditarProduto(id);
+};
+
 window.cfgEditarProduto = async function(id) {
   const res = await supa('ped_catalogo_produtos', `id=eq.${id}`);
   const p = res?.[0]; if (!p) return;
@@ -1129,15 +1175,20 @@ window.cfgEditarProduto = async function(id) {
         Fotos ${fotos.length > 1 ? '· <span style=\"font-weight:400;color:var(--blue-mid)\">clique para definir capa</span>' : ''}
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${fotos.length ? fotos.slice(0,6).map((f,fi) => `
-          <div onclick="cfgDefinirCapa(${id},${fi})" title="${fi===0?'✅ Capa atual':'Clique para definir como capa'}"
-            style="position:relative;cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid ${fi===0?'#1A3A8F':'var(--border)'};transition:border .15s">
-            <img src="${f}" style="width:72px;height:72px;object-fit:contain;background:#f5f6fa;display:block">
+        ${fotos.length ? fotos.slice(0,12).map((f,fi) => `
+          <div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid ${fi===0?'#1A3A8F':'var(--border)'};transition:border .15s">
+            <img src="${f}" onclick="cfgDefinirCapa(${id},${fi})" title="${fi===0?'✅ Capa atual':'Clique para definir como capa'}" style="width:72px;height:72px;object-fit:contain;background:#f5f6fa;display:block;cursor:pointer">
             ${fi===0 ? '<div style=\"position:absolute;bottom:0;left:0;right:0;background:#1A3A8F;color:#fff;font-size:9px;font-weight:700;text-align:center;padding:2px\">CAPA</div>' : ''}
-          </div>`).join('') : '<div style="font-size:12px;color:var(--text-muted)">Sem fotos — sincronize com o Bling</div>'}
+            <button onclick="event.stopPropagation();cfgRemoverFoto(${id},${fi})" title="Apagar esta foto" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:rgba(217,48,37,.92);color:#fff;font-size:12px;line-height:1;cursor:pointer;padding:0">×</button>
+          </div>`).join('') : '<div style="font-size:12px;color:var(--text-muted)">Sem fotos — adicione manualmente abaixo ou sincronize com o Bling</div>'}
+      </div>
+      <div style="margin-top:8px">
+        <input type="file" id="ep-foto-file" accept="image/*" style="display:none" onchange="cfgUploadFotoManual(${id}, this)">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('ep-foto-file').click()">📷 Adicionar foto manual</button>
+        <span id="ep-foto-msg" style="font-size:11px;color:var(--text-muted);margin-left:8px">Use enquanto o produto não está no Bling. Depois é só apagar (×).</span>
       </div>
     </div>
-    <button class="btn btn-outline btn-sm" onclick="cfgSincronizarBling(${id},'${p.referencia}')" style="margin-bottom:4px;width:100%">🔄 Sincronizar com Bling</button>
+    <button class="btn btn-outline btn-sm" onclick="cfgSincronizarBling(${id},'${p.referencia}')" style="margin:10px 0 4px;width:100%">🔄 Sincronizar com Bling</button>
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Atualiza fotos + peso + dimensões</div>
     <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap">
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="ep-sync-fotos" ${p.sync_fotos!==false?'checked':''} style="accent-color:var(--blue-dark)"> Sincronizar fotos</label>
