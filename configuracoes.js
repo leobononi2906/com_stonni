@@ -267,7 +267,7 @@ async function cfgCarregarPrecos(el) {
               ${r.map(rg => `<tr>
                 <td><span class="badge badge-b">${cfgTipoLabel(rg.tipo)}</span></td>
                 <td style="font-size:12px;color:var(--text-secondary)">${cfgCondicaoLabel(rg)}</td>
-                <td class="mono" style="color:var(--green);font-weight:600">${rg.desconto_perc}%</td>
+                <td class="mono" style="color:var(--green);font-weight:600">${cfgRegraValorLabel(rg)}</td>
                 <td style="font-size:12px">${rg.descricao || '—'}</td>
                 <td><span class="badge ${rg.ativa ? 'badge-aprovado' : 'badge-cancelado'}">${rg.ativa ? 'Ativa' : 'Inativa'}</span></td>
                 <td>
@@ -282,7 +282,7 @@ async function cfgCarregarPrecos(el) {
               <div class="cfg-card-row">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
                   <span class="badge badge-b">${cfgTipoLabel(rg.tipo)}</span>
-                  <span class="mono" style="color:var(--green);font-weight:600">${rg.desconto_perc}%</span>
+                  <span class="mono" style="color:var(--green);font-weight:600">${cfgRegraValorLabel(rg)}</span>
                 </div>
                 <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">${cfgCondicaoLabel(rg)}</div>
                 ${rg.descricao ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">${rg.descricao}</div>` : ''}
@@ -318,10 +318,15 @@ async function cfgCarregarPrecos(el) {
 }
 
 function cfgTipoLabel(tipo) {
-  return { quantidade: 'Qtd. Produto', valor_pedido: 'Valor Pedido', grupo: 'Grupo', global: 'Global' }[tipo] || tipo;
+  return { quantidade: 'Qtd. Produto', preco_fixo_qtd: 'Preço fixo/qtd', valor_pedido: 'Valor Pedido', grupo: 'Grupo', global: 'Global' }[tipo] || tipo;
+}
+function cfgRegraValorLabel(rg) {
+  if (rg.tipo === 'preco_fixo_qtd') return `R$ ${Number(rg.preco_fixo||0).toLocaleString('pt-BR',{minimumFractionDigits:2})} fixo`;
+  return `${rg.desconto_perc}%`;
 }
 function cfgCondicaoLabel(rg) {
   if (rg.tipo === 'quantidade')   return `≥ ${rg.qtd_minima} peças do mesmo produto`;
+  if (rg.tipo === 'preco_fixo_qtd') return `≥ ${rg.qtd_minima} peças → preço fixo`;
   if (rg.tipo === 'valor_pedido') return `Pedido ≥ R$ ${(rg.valor_minimo||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
   if (rg.tipo === 'grupo')        return `Grupo ID ${rg.id_grupo}${rg.id_subgrupo ? ` / Sub ${rg.id_subgrupo}` : ''}`;
   if (rg.tipo === 'qtd_grupo')    return `≥ ${rg.qtd_minima} peças do grupo ${rg.nome_grupo || '—'}`;
@@ -383,6 +388,7 @@ function cfgNovaRegra(idTabela) {
       <label>Tipo de regra</label>
       <select id="rg-tipo" class="cfg-input" onchange="cfgAtualizarCamposRegra()">
         <option value="quantidade">Por quantidade do produto</option>
+        <option value="preco_fixo_qtd">Preço fixo por quantidade do produto</option>
         <option value="qtd_grupo">Por quantidade do grupo/subgrupo</option>
         <option value="valor_pedido">Por valor total do pedido</option>
         <option value="grupo">Por grupo/subgrupo</option>
@@ -390,7 +396,7 @@ function cfgNovaRegra(idTabela) {
       </select>
     </div>
     <div id="rg-campos-dinamicos"></div>
-    <div class="form-field"><label>Desconto (%)</label><input type="number" id="rg-desconto" class="cfg-input" min="0" max="100" step="0.1" placeholder="Ex: 5"></div>
+    <div class="form-field" id="rg-desconto-field"><label>Desconto (%)</label><input type="number" id="rg-desconto" class="cfg-input" min="0" max="100" step="0.1" placeholder="Ex: 5"></div>
     <div class="form-field"><label>Descrição (exibida ao representante)</label><input type="text" id="rg-desc" class="cfg-input" placeholder="Ex: Desconto por volume"></div>
     <input type="hidden" id="rg-id-tabela" value="${idTabela}">
   `, `
@@ -404,7 +410,11 @@ window.cfgAtualizarCamposRegra = function() {
   const tipo = document.getElementById('rg-tipo')?.value;
   const el = document.getElementById('rg-campos-dinamicos');
   if (!el) return;
+  // Campo de desconto % fica escondido no tipo "preço fixo" (lá o preço substitui o desconto)
+  const descField = document.getElementById('rg-desconto-field');
+  if (descField) descField.style.display = (tipo === 'preco_fixo_qtd') ? 'none' : '';
   if (tipo === 'quantidade')   el.innerHTML = `<div class="form-field"><label>Quantidade mínima (peças do mesmo produto)</label><input type="number" id="rg-qtd" class="cfg-input" min="1" placeholder="Ex: 10"></div>`;
+  else if (tipo === 'preco_fixo_qtd') el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Quantidade mínima (peças do mesmo produto)</label><input type="number" id="rg-qtd-fixo" class="cfg-input" min="1" placeholder="Ex: 10"></div><div class="form-field"><label>Preço fixo por unidade (R$)</label><input type="number" id="rg-preco-fixo" class="cfg-input" min="0" step="0.01" placeholder="Ex: 89,90"></div></div><div class="alert alert-info" style="margin-top:4px"><span class="alert-icon">💡</span>Ao atingir a quantidade, o preço unitário do produto passa a ser este valor fixo (só reduz; se ficar acima do preço da tabela, não aplica).</div>`;
   else if (tipo === 'valor_pedido') el.innerHTML = `<div class="form-field"><label>Valor mínimo do pedido (R$)</label><input type="number" id="rg-valor" class="cfg-input" min="0" step="0.01" placeholder="Ex: 3000"></div>`;
   else if (tipo === 'qtd_grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo do produto</label><select id="rg-nome-grupo" class="cfg-input"><option value="">Selecione...</option><option value="AUTO VIDROS">AUTO VIDROS</option>
 <option value="STONNI AR CONDICIONADO">STONNI AR CONDICIONADO</option>
@@ -416,10 +426,21 @@ window.cfgAtualizarCamposRegra = function() {
 
 async function cfgSalvarRegra() {
   const tipo = document.getElementById('rg-tipo').value;
-  const desconto = parseFloat(document.getElementById('rg-desconto').value);
-  if (!desconto || desconto <= 0) { alert('Informe o percentual de desconto'); return; }
   const idTabela = parseInt(document.getElementById('rg-id-tabela').value);
   if (!idTabela || isNaN(idTabela)) { alert('Erro: tabela não identificada. Feche e tente novamente.'); return; }
+  // Tipo "preço fixo por quantidade": não usa desconto %, usa preço fixo + qtd mínima
+  if (tipo === 'preco_fixo_qtd') {
+    const qtd = parseFloat(document.getElementById('rg-qtd-fixo')?.value);
+    const precoFixo = parseFloat(document.getElementById('rg-preco-fixo')?.value);
+    if (!qtd || qtd < 1) { alert('Informe a quantidade mínima'); return; }
+    if (!precoFixo || precoFixo <= 0) { alert('Informe o preço fixo'); return; }
+    const bodyPF = { id_tabela: idTabela, tipo, desconto_perc: 0, qtd_minima: qtd, preco_fixo: precoFixo, descricao: document.getElementById('rg-desc').value.trim(), ativa: true };
+    const resPF = await supaInsert('ped_tabela_regras', bodyPF);
+    if (resPF?.code || resPF?.error) { alert('Erro ao salvar: ' + (resPF.message || resPF.error || JSON.stringify(resPF))); return; }
+    fecharDrawer(); cfgAba('precos', null); return;
+  }
+  const desconto = parseFloat(document.getElementById('rg-desconto').value);
+  if (!desconto || desconto <= 0) { alert('Informe o percentual de desconto'); return; }
   const body = { id_tabela: idTabela, tipo, desconto_perc: desconto, descricao: document.getElementById('rg-desc').value.trim(), ativa: true };
   if (tipo === 'quantidade')   body.qtd_minima  = parseFloat(document.getElementById('rg-qtd')?.value) || null;
   if (tipo === 'valor_pedido') body.valor_minimo = parseFloat(document.getElementById('rg-valor')?.value) || null;
@@ -438,7 +459,7 @@ window.cfgEditarRegra = async function(id) {
     ${rg.tipo==='valor_pedido' ? `<div class="form-field"><label>Valor mínimo (R$)</label><input type="number" id="rg-edit-valor" class="cfg-input" value="${rg.valor_minimo||''}"></div>` : ''}
     ${rg.tipo==='grupo' ? `<div class="cfg-grid-2"><div class="form-field"><label>ID grupo</label><input type="number" id="rg-edit-grupo" class="cfg-input" value="${rg.id_grupo||''}"></div><div class="form-field"><label>ID subgrupo</label><input type="number" id="rg-edit-subgrupo" class="cfg-input" value="${rg.id_subgrupo||''}"></div></div>` : ''}
     ${rg.tipo==='qtd_grupo' ? `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><input type="text" id="rg-edit-nome-grupo" class="cfg-input" value="${rg.nome_grupo||''}"></div><div class="form-field"><label>Quantidade mínima</label><input type="number" id="rg-edit-qtd-grupo" class="cfg-input" value="${rg.qtd_minima||''}"></div></div>` : ''}
-    <div class="form-field"><label>Desconto (%)</label><input type="number" id="rg-edit-desconto" class="cfg-input" value="${rg.desconto_perc}" step="0.1"></div>
+    ${rg.tipo==='preco_fixo_qtd' ? `<div class="cfg-grid-2"><div class="form-field"><label>Quantidade mínima</label><input type="number" id="rg-edit-qtd-fixo" class="cfg-input" value="${rg.qtd_minima||''}"></div><div class="form-field"><label>Preço fixo por unidade (R$)</label><input type="number" id="rg-edit-preco-fixo" class="cfg-input" step="0.01" value="${rg.preco_fixo||''}"></div></div>` : `<div class="form-field"><label>Desconto (%)</label><input type="number" id="rg-edit-desconto" class="cfg-input" value="${rg.desconto_perc}" step="0.1"></div>`}
     <div class="form-field"><label>Descrição</label><input type="text" id="rg-edit-desc" class="cfg-input" value="${rg.descricao||''}"></div>
     <div class="form-field"><label>Status</label><select id="rg-edit-ativa" class="cfg-input"><option value="true" ${rg.ativa?'selected':''}>Ativa</option><option value="false" ${!rg.ativa?'selected':''}>Inativa</option></select></div>
   `, `
@@ -447,6 +468,11 @@ window.cfgEditarRegra = async function(id) {
   `);
 };
 window.cfgAtualizarRegra = async function(id, tipo) {
+  if (tipo==='preco_fixo_qtd') {
+    const body = { desconto_perc: 0, qtd_minima: parseFloat(document.getElementById('rg-edit-qtd-fixo')?.value)||null, preco_fixo: parseFloat(document.getElementById('rg-edit-preco-fixo')?.value)||null, descricao: document.getElementById('rg-edit-desc').value.trim(), ativa: document.getElementById('rg-edit-ativa').value==='true' };
+    await supaPatch('ped_tabela_regras', `id=eq.${id}`, body);
+    fecharDrawer(); cfgAba('precos', null); return;
+  }
   const body = { desconto_perc: parseFloat(document.getElementById('rg-edit-desconto').value), descricao: document.getElementById('rg-edit-desc').value.trim(), ativa: document.getElementById('rg-edit-ativa').value==='true' };
   if (tipo==='quantidade')   body.qtd_minima  = parseFloat(document.getElementById('rg-edit-qtd')?.value)||null;
   if (tipo==='qtd_grupo') { body.nome_grupo = document.getElementById('rg-edit-nome-grupo')?.value||null; body.qtd_minima = parseFloat(document.getElementById('rg-edit-qtd-grupo')?.value)||null; }

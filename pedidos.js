@@ -40,6 +40,15 @@ window.aplicarRegrasDesconto = function(itens, regras) {
       if (rg.tipo === 'quantidade' && qtdMinima) {
         if (Number(item.quantidade) >= qtdMinima) desconto = descontoPc;
       }
+      // Preço fixo por quantidade: ao atingir a qtd, o preço unitário vira o valor fixo.
+      // Converte em desconto equivalente pra reaproveitar toda a cadeia (só reduz).
+      if (rg.tipo === 'preco_fixo_qtd' && qtdMinima) {
+        const precoFixo = Number(rg.preco_fixo) || 0;
+        const precoBase = Number(item.preco_unitario) || 0;
+        if (Number(item.quantidade) >= qtdMinima && precoFixo > 0 && precoBase > 0 && precoFixo < precoBase) {
+          desconto = (1 - precoFixo / precoBase) * 100;
+        }
+      }
       if (rg.tipo === 'qtd_grupo' && rg.nome_grupo && qtdMinima) {
         const nomeGrupoRg = (rg.nome_grupo || '').toLowerCase().trim();
         const grupoItem   = (item.grupo     || '').toLowerCase().trim();
@@ -791,6 +800,14 @@ window.pedAdicionarProdutoId = function(id) {
           var faltam = rg.qtd_minima - qtdAtual;
           if (faltam > 0 && faltam < rg.qtd_minima) {
             avisos.push('Adicione mais ' + faltam + (faltam===1?' peça':' peças') + ' deste produto e ganhe ' + rg.desconto_perc + '% de desconto!' + (rg.descricao ? ' ' + rg.descricao : ''));
+          }
+        }
+        if (rg.tipo === 'preco_fixo_qtd' && rg.qtd_minima && rg.preco_fixo) {
+          var itemPF = _pedidoAtual.itens.find(function(i) { return i.id_produto === p.id; });
+          var qtdPF = itemPF ? itemPF.quantidade : 1;
+          var faltamPF = rg.qtd_minima - qtdPF;
+          if (faltamPF > 0 && faltamPF < rg.qtd_minima) {
+            avisos.push('Adicione mais ' + faltamPF + (faltamPF===1?' peça':' peças') + ' deste produto e o preço cai para R$ ' + Number(rg.preco_fixo).toLocaleString('pt-BR',{minimumFractionDigits:2}) + ' cada!' + (rg.descricao ? ' ' + rg.descricao : ''));
           }
         }
         if (rg.tipo === 'qtd_grupo' && rg.nome_grupo && rg.qtd_minima) {
