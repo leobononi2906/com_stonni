@@ -20,11 +20,11 @@ async function renderConfiguracoes(el) {
       <div class="cfg-tabs-scroll">
         <div class="cfg-tabs">
           <button class="cfg-tab active" onclick="cfgAba('geral',this)">⚙️ Geral</button>
-          <button class="cfg-tab" onclick="cfgAba('precos',this)">💲 Preços</button>
-          <button class="cfg-tab" onclick="cfgAba('acoes',this)">🎯 Ações</button>
           <button class="cfg-tab" onclick="cfgAba('catalogo',this)">🛍️ Catálogo</button>
-          <button class="cfg-tab" onclick="cfgAba('representantes',this)">👥 Equipe</button>
-    <button class="cfg-tab" onclick="cfgAba('logs',this)">📋 Logs</button>
+          <button class="cfg-tab" onclick="cfgAba('precos',this)">💲 Tabelas & Preços</button>
+          <button class="cfg-tab" onclick="cfgAba('acoes',this)">🎯 Ações & Promoções</button>
+          <button class="cfg-tab" onclick="cfgAba('pdf',this)">📄 PDF do Pedido</button>
+          <button class="cfg-tab" onclick="cfgAba('logs',this)">📋 Logs</button>
         </div>
       </div>
       <div id="cfg-body"></div>
@@ -43,7 +43,7 @@ function cfgAba(aba, btn) {
     case 'precos':          cfgCarregarPrecos(body); break;
     case 'acoes':           cfgCarregarAcoes(body); break;
     case 'catalogo':        cfgCarregarCatalogo(body); break;
-    case 'representantes':  cfgCarregarRepresentantes(body); break;
+    case 'pdf':             cfgCarregarPDF(body); break;
     case 'status':           cfgCarregarStatus(body); break;
     case 'logs':             cfgCarregarLogs(body); break;
   }
@@ -89,9 +89,9 @@ async function cfgCarregarGeral(el) {
   el.innerHTML = `
     <div class="section-header">
       <span class="section-title">Configurações — Catálogo & Pedidos</span>
-      <button class="btn btn-primary" onclick="cfgSalvarGeralTudo()">💾 Salvar tudo</button>
+      <button class="btn btn-primary" onclick="cfgSalvarGeral()">💾 Salvar</button>
     </div>
-    <div style="font-size:12px;color:var(--text-muted)">Ajustes do portal do representante — inclui o PDF do pedido, mais abaixo. O CRM tem configuração própria.</div>
+    <div style="font-size:12px;color:var(--text-muted)">Ajustes do portal do representante. O visual do PDF fica na aba <strong>PDF do Pedido</strong>. O CRM tem configuração própria.</div>
 
     ${GRUPOS.map(_grupo).join('')}
 
@@ -104,50 +104,31 @@ async function cfgCarregarGeral(el) {
     </details>
 
     <div id="cfg-geral-msg" style="margin-top:12px;font-size:13px;"></div>
+  `;
+}
 
-    <!-- SEÇÃO PDF -->
-    <div class="cfg-section" style="margin-top:28px">
-      <div class="section-header">
-        <span class="section-title">📄 PDF / Documento</span>
-      </div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">
-        Personaliza o PDF gerado nos pedidos. Gestores podem alterar sem precisar de programação.
-      </div>
-      <div class="cfg-grid-2">
-        <div class="form-field">
-          <label>Título do documento</label>
-          <input type="text" id="cfg-pdf-titulo" class="cfg-input" placeholder="Ex: PEDIDO, ORÇAMENTO, PROPOSTA" value="${cfgPDF['pdf_titulo'] || 'PEDIDO'}">
-        </div>
-        <div class="form-field">
-          <label>Nome da empresa</label>
-          <input type="text" id="cfg-pdf-empresa-nome" class="cfg-input" placeholder="Ex: Stonni — Bononi Acessórios" value="${cfgPDF['pdf_empresa_nome'] || ''}">
-        </div>
-      </div>
-      <div class="cfg-grid-2">
-        <div class="form-field">
-          <label>CNPJ da empresa</label>
-          <input type="text" id="cfg-pdf-empresa-cnpj" class="cfg-input" placeholder="00.000.000/0000-00" value="${cfgPDF['pdf_empresa_cnpj'] || ''}">
-        </div>
-        <div class="form-field">
-          <label>Telefone</label>
-          <input type="text" id="cfg-pdf-empresa-telefone" class="cfg-input" placeholder="(00) 00000-0000" value="${cfgPDF['pdf_empresa_telefone'] || ''}">
-        </div>
-      </div>
-      <div class="form-field">
-        <label>Endereço</label>
-        <input type="text" id="cfg-pdf-empresa-endereco" class="cfg-input" placeholder="Rua, número, cidade — UF" value="${cfgPDF['pdf_empresa_endereco'] || ''}">
-      </div>
-      <div class="form-field">
-        <label>URL do logo</label>
-        <input type="text" id="cfg-pdf-logo-url" class="cfg-input" placeholder="logo.png ou https://..." value="${cfgPDF['pdf_logo_url'] || 'logo.png'}">
-        <span style="font-size:11px;color:var(--text-muted)">Use "logo.png" para o logo padrão do portal, ou cole uma URL externa.</span>
-      </div>
-      <div class="form-field">
-        <label>Texto do rodapé</label>
-        <textarea id="cfg-pdf-rodape" class="cfg-input" rows="2" placeholder="Ex: Este documento não tem valor fiscal...">${cfgPDF['pdf_rodape'] || ''}</textarea>
-      </div>
-      <div id="cfg-pdf-status" style="font-size:12px;color:var(--green);margin-top:8px;display:none">✅ Configurações de PDF salvas!</div>
+// ABA — PDF do Pedido (separada da Geral)
+async function cfgCarregarPDF(el) {
+  const configs = await supa('ped_configuracoes', 'order=chave');
+  const cfgPDF = Object.fromEntries((configs || []).map(c => [c.chave, c.valor]));
+  el.innerHTML = `
+    <div class="section-header">
+      <span class="section-title">📄 PDF do Pedido</span>
+      <button class="btn btn-primary" onclick="cfgSalvarPDF()">💾 Salvar</button>
     </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Personaliza o documento (PDF) gerado nos pedidos. Gestores podem alterar sem precisar de programação.</div>
+    <div class="cfg-grid-2">
+      <div class="form-field"><label>Título do documento</label><input type="text" id="cfg-pdf-titulo" class="cfg-input" placeholder="Ex: PEDIDO, ORÇAMENTO, PROPOSTA" value="${cfgPDF['pdf_titulo'] || 'PEDIDO'}"></div>
+      <div class="form-field"><label>Nome da empresa</label><input type="text" id="cfg-pdf-empresa-nome" class="cfg-input" placeholder="Ex: Stonni — Bononi Acessórios" value="${cfgPDF['pdf_empresa_nome'] || ''}"></div>
+    </div>
+    <div class="cfg-grid-2">
+      <div class="form-field"><label>CNPJ da empresa</label><input type="text" id="cfg-pdf-empresa-cnpj" class="cfg-input" placeholder="00.000.000/0000-00" value="${cfgPDF['pdf_empresa_cnpj'] || ''}"></div>
+      <div class="form-field"><label>Telefone</label><input type="text" id="cfg-pdf-empresa-telefone" class="cfg-input" placeholder="(00) 00000-0000" value="${cfgPDF['pdf_empresa_telefone'] || ''}"></div>
+    </div>
+    <div class="form-field"><label>Endereço</label><input type="text" id="cfg-pdf-empresa-endereco" class="cfg-input" placeholder="Rua, número, cidade — UF" value="${cfgPDF['pdf_empresa_endereco'] || ''}"></div>
+    <div class="form-field"><label>URL do logo</label><input type="text" id="cfg-pdf-logo-url" class="cfg-input" placeholder="logo.png ou https://..." value="${cfgPDF['pdf_logo_url'] || 'logo.png'}"><span style="font-size:11px;color:var(--text-muted)">Use "logo.png" para o logo padrão do portal, ou cole uma URL externa.</span></div>
+    <div class="form-field"><label>Texto do rodapé</label><textarea id="cfg-pdf-rodape" class="cfg-input" rows="2" placeholder="Ex: Este documento não tem valor fiscal...">${cfgPDF['pdf_rodape'] || ''}</textarea></div>
+    <div id="cfg-pdf-status" style="font-size:12px;color:var(--green);margin-top:8px;display:none">✅ Configurações de PDF salvas!</div>
   `;
 }
 
@@ -305,6 +286,8 @@ async function cfgCarregarPrecos(el) {
   }
 
   el.innerHTML = `
+    <div class="section-header"><span class="section-title">💲 Tabelas & Preços</span></div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Preço base de cada tabela + regras <strong>permanentes</strong> (desconto por quantidade, por grupo, preço fixo...). Promoções com data ficam em <strong>Ações & Promoções</strong>.</div>
     <div class="precos-layout">
       <div class="precos-sidebar">
         <div class="hide-mobile" style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;letter-spacing:0.5px">Tabelas</div>
@@ -340,7 +323,7 @@ function cfgCondicaoLabel(rg) {
   if (rg.tipo === 'preco_fixo_qtd') return `≥ ${rg.qtd_minima} un.${rg.id_produto_erp ? ' de ' + cfgNomeProduto(rg.id_produto_erp) : ' do mesmo produto'} → preço fixo`;
   if (rg.tipo === 'valor_pedido') return `Pedido ≥ R$ ${(rg.valor_minimo||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
   if (rg.tipo === 'grupo')        return `Grupo ${rg.nome_grupo || (rg.id_grupo ? 'ID '+rg.id_grupo : '—')}${rg.nome_subgrupo ? ` / ${rg.nome_subgrupo}` : (rg.id_subgrupo ? ` / Sub ${rg.id_subgrupo}` : '')}`;
-  if (rg.tipo === 'qtd_grupo')    return `≥ ${rg.qtd_minima} peças do grupo ${rg.nome_grupo || '—'}`;
+  if (rg.tipo === 'qtd_grupo')    return `≥ ${rg.qtd_minima} peças do grupo ${rg.nome_grupo || '—'}${rg.nome_subgrupo ? ' / ' + rg.nome_subgrupo : ''}`;
   if (rg.tipo === 'global')       return 'Todos os produtos';
   return '—';
 }
@@ -430,6 +413,12 @@ window.cfgAtualizarSubgrupos = function() {
   const sub = document.getElementById('rg-nome-subgrupo-sel');
   if (sub) sub.innerHTML = cfgOpcoesSubgrupo(g, '');
 };
+// idem para a regra "por quantidade do grupo"
+window.cfgQgAtualizarSubgrupos = function() {
+  const g = document.getElementById('rg-nome-grupo')?.value || '';
+  const sub = document.getElementById('rg-nome-subgrupo-qg');
+  if (sub) sub.innerHTML = cfgOpcoesSubgrupo(g, '');
+};
 
 async function cfgNovaRegra(idTabela) {
   await cfgCarregarGruposCat();
@@ -466,7 +455,7 @@ window.cfgAtualizarCamposRegra = function() {
   if (tipo === 'quantidade')   el.innerHTML = `<div class="form-field"><label>Produto (opcional)</label><select id="rg-prod" class="cfg-input">${cfgOpcoesProduto('')}</select></div><div class="form-field"><label>Quantidade mínima (peças)</label><input type="number" id="rg-qtd" class="cfg-input" min="1" placeholder="Ex: 10"></div>`;
   else if (tipo === 'preco_fixo_qtd') el.innerHTML = `<div class="form-field"><label>Produto (opcional)</label><select id="rg-prod-fixo" class="cfg-input">${cfgOpcoesProduto('')}</select></div><div class="cfg-grid-2"><div class="form-field"><label>Quantidade mínima (peças)</label><input type="number" id="rg-qtd-fixo" class="cfg-input" min="1" placeholder="Ex: 5"></div><div class="form-field"><label>Preço fixo por unidade (R$)</label><input type="number" id="rg-preco-fixo" class="cfg-input" min="0" step="0.01" placeholder="Ex: 1999,00"></div></div><div class="alert alert-info" style="margin-top:4px"><span class="alert-icon">💡</span>Escolha o produto e a quantidade: ao atingir, o preço unitário vira o valor fixo. Ex.: <strong>gerador, 5 peças, R$ 1.999,00</strong>. Deixe "produto" vazio para valer a qualquer item.</div>`;
   else if (tipo === 'valor_pedido') el.innerHTML = `<div class="form-field"><label>Valor mínimo do pedido (R$)</label><input type="number" id="rg-valor" class="cfg-input" min="0" step="0.01" placeholder="Ex: 3000"></div>`;
-  else if (tipo === 'qtd_grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo do produto</label><select id="rg-nome-grupo" class="cfg-input">${cfgOpcoesGrupo('')}</select></div><div class="form-field"><label>Quantidade mínima (peças do grupo)</label><input type="number" id="rg-qtd-grupo" class="cfg-input" min="1" placeholder="Ex: 3"></div></div>`;
+  else if (tipo === 'qtd_grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo do produto</label><select id="rg-nome-grupo" class="cfg-input" onchange="cfgQgAtualizarSubgrupos()">${cfgOpcoesGrupo('')}</select></div><div class="form-field"><label>Subgrupo (opcional)</label><select id="rg-nome-subgrupo-qg" class="cfg-input">${cfgOpcoesSubgrupo('','')}</select></div></div><div class="form-field"><label>Quantidade mínima (peças do grupo)</label><input type="number" id="rg-qtd-grupo" class="cfg-input" min="1" placeholder="Ex: 3"></div>`;
   else if (tipo === 'grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><select id="rg-nome-grupo-sel" class="cfg-input" onchange="cfgAtualizarSubgrupos()">${cfgOpcoesGrupo('')}</select></div><div class="form-field"><label>Subgrupo (opcional)</label><select id="rg-nome-subgrupo-sel" class="cfg-input">${cfgOpcoesSubgrupo('','')}</select></div></div><div style="font-size:11px;color:var(--text-muted);margin-top:-6px">Vazio no subgrupo = vale para todo o grupo.</div>`;
   else el.innerHTML = `<div class="alert alert-info"><span class="alert-icon">ℹ️</span>Aplica em todos os produtos de todas as ordens.</div>`;
 };
@@ -483,7 +472,7 @@ async function cfgSalvarRegra() {
     if (!precoFixo || precoFixo <= 0) { alert('Informe o preço fixo'); return; }
     const bodyPF = { id_tabela: idTabela, tipo, desconto_perc: 0, qtd_minima: qtd, preco_fixo: precoFixo, id_produto_erp: parseInt(document.getElementById('rg-prod-fixo')?.value)||null, descricao: document.getElementById('rg-desc').value.trim(), ativa: true };
     const resPF = await supaInsert('ped_tabela_regras', bodyPF);
-    if (resPF?.code || resPF?.error) { alert('Erro ao salvar: ' + (resPF.message || resPF.error || JSON.stringify(resPF))); return; }
+    if (!Array.isArray(resPF) || !resPF[0]?.id) { alert('Não foi possível salvar a regra. Tente de novo ou avise o suporte.'); return; }
     fecharDrawer(); cfgAba('precos', null); return;
   }
   const desconto = parseFloat(document.getElementById('rg-desconto').value);
@@ -496,9 +485,9 @@ async function cfgSalvarRegra() {
     body.nome_subgrupo = document.getElementById('rg-nome-subgrupo-sel')?.value||null;
     if (!body.nome_grupo) { alert('Selecione o grupo'); return; }
   }
-  if (tipo === 'qtd_grupo') { body.nome_grupo = document.getElementById('rg-nome-grupo')?.value||null; body.qtd_minima = parseFloat(document.getElementById('rg-qtd-grupo')?.value)||null; }
+  if (tipo === 'qtd_grupo') { body.nome_grupo = document.getElementById('rg-nome-grupo')?.value||null; body.nome_subgrupo = document.getElementById('rg-nome-subgrupo-qg')?.value||null; body.qtd_minima = parseFloat(document.getElementById('rg-qtd-grupo')?.value)||null; }
   const res = await supaInsert('ped_tabela_regras', body);
-  if (res?.code || res?.error) { alert('Erro ao salvar: ' + (res.message || res.error || JSON.stringify(res))); return; }
+  if (!Array.isArray(res) || !res[0]?.id) { alert('Não foi possível salvar a regra. Tente de novo ou avise o suporte.'); return; }
   fecharDrawer(); cfgAba('precos', null);
 }
 window.cfgEditarRegra = async function(id) {
@@ -510,7 +499,7 @@ window.cfgEditarRegra = async function(id) {
     ${rg.tipo==='quantidade'   ? `<div class="form-field"><label>Produto (opcional)</label><select id="rg-edit-prod" class="cfg-input">${cfgOpcoesProduto(rg.id_produto_erp||'')}</select></div><div class="form-field"><label>Quantidade mínima</label><input type="number" id="rg-edit-qtd" class="cfg-input" value="${rg.qtd_minima||''}"></div>` : ''}
     ${rg.tipo==='valor_pedido' ? `<div class="form-field"><label>Valor mínimo (R$)</label><input type="number" id="rg-edit-valor" class="cfg-input" value="${rg.valor_minimo||''}"></div>` : ''}
     ${rg.tipo==='grupo' ? `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><select id="rg-edit-nome-grupo-sel" class="cfg-input">${cfgOpcoesGrupo(rg.nome_grupo||'')}</select></div><div class="form-field"><label>Subgrupo (opcional)</label><select id="rg-edit-nome-subgrupo-sel" class="cfg-input">${cfgOpcoesSubgrupo(rg.nome_grupo||'', rg.nome_subgrupo||'')}</select></div></div>` : ''}
-    ${rg.tipo==='qtd_grupo' ? `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><select id="rg-edit-nome-grupo" class="cfg-input">${cfgOpcoesGrupo(rg.nome_grupo||'')}</select></div><div class="form-field"><label>Quantidade mínima</label><input type="number" id="rg-edit-qtd-grupo" class="cfg-input" value="${rg.qtd_minima||''}"></div></div>` : ''}
+    ${rg.tipo==='qtd_grupo' ? `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><select id="rg-edit-nome-grupo" class="cfg-input">${cfgOpcoesGrupo(rg.nome_grupo||'')}</select></div><div class="form-field"><label>Subgrupo (opcional)</label><select id="rg-edit-nome-subgrupo-qg" class="cfg-input">${cfgOpcoesSubgrupo(rg.nome_grupo||'', rg.nome_subgrupo||'')}</select></div></div><div class="form-field"><label>Quantidade mínima</label><input type="number" id="rg-edit-qtd-grupo" class="cfg-input" value="${rg.qtd_minima||''}"></div>` : ''}
     ${rg.tipo==='preco_fixo_qtd' ? `<div class="form-field"><label>Produto (opcional)</label><select id="rg-edit-prod-fixo" class="cfg-input">${cfgOpcoesProduto(rg.id_produto_erp||'')}</select></div><div class="cfg-grid-2"><div class="form-field"><label>Quantidade mínima</label><input type="number" id="rg-edit-qtd-fixo" class="cfg-input" value="${rg.qtd_minima||''}"></div><div class="form-field"><label>Preço fixo por unidade (R$)</label><input type="number" id="rg-edit-preco-fixo" class="cfg-input" step="0.01" value="${rg.preco_fixo||''}"></div></div>` : `<div class="form-field"><label>Desconto (%)</label><input type="number" id="rg-edit-desconto" class="cfg-input" value="${rg.desconto_perc}" step="0.1"></div>`}
     <div class="form-field"><label>Descrição</label><input type="text" id="rg-edit-desc" class="cfg-input" value="${rg.descricao||''}"></div>
     <div class="form-field"><label>Status</label><select id="rg-edit-ativa" class="cfg-input"><option value="true" ${rg.ativa?'selected':''}>Ativa</option><option value="false" ${!rg.ativa?'selected':''}>Inativa</option></select></div>
@@ -527,7 +516,7 @@ window.cfgAtualizarRegra = async function(id, tipo) {
   }
   const body = { desconto_perc: parseFloat(document.getElementById('rg-edit-desconto').value), descricao: document.getElementById('rg-edit-desc').value.trim(), ativa: document.getElementById('rg-edit-ativa').value==='true' };
   if (tipo==='quantidade') { body.qtd_minima = parseFloat(document.getElementById('rg-edit-qtd')?.value)||null; body.id_produto_erp = parseInt(document.getElementById('rg-edit-prod')?.value)||null; }
-  if (tipo==='qtd_grupo') { body.nome_grupo = document.getElementById('rg-edit-nome-grupo')?.value||null; body.qtd_minima = parseFloat(document.getElementById('rg-edit-qtd-grupo')?.value)||null; }
+  if (tipo==='qtd_grupo') { body.nome_grupo = document.getElementById('rg-edit-nome-grupo')?.value||null; body.nome_subgrupo = document.getElementById('rg-edit-nome-subgrupo-qg')?.value||null; body.qtd_minima = parseFloat(document.getElementById('rg-edit-qtd-grupo')?.value)||null; }
   if (tipo==='valor_pedido') body.valor_minimo = parseFloat(document.getElementById('rg-edit-valor')?.value)||null;
   if (tipo==='grupo') { body.nome_grupo = document.getElementById('rg-edit-nome-grupo-sel')?.value||null; body.nome_subgrupo = document.getElementById('rg-edit-nome-subgrupo-sel')?.value||null; }
   await supaPatch('ped_tabela_regras', `id=eq.${id}`, body);
@@ -598,9 +587,10 @@ async function cfgCarregarAcoes(el) {
 
   el.innerHTML = `
     <div class="section-header">
-      <span class="section-title">${(acoes||[]).length} ação(ões) cadastrada(s)</span>
+      <span class="section-title">🎯 Ações & Promoções</span>
       <button class="btn btn-primary" onclick="cfgNovaAcao()">+ Nova ação</button>
     </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Campanhas <strong>temporárias</strong> (com data de início/fim) — desconto ou preço fixo por produto ou grupo. Regras permanentes ficam em <strong>Tabelas & Preços</strong>. <strong>${(acoes||[]).length}</strong> ação(ões) cadastrada(s).</div>
     <div id="sync-todos-progress" style="display:none;margin-top:10px"></div>
     <div class="table-card hide-mobile" style="margin-top:14px">
       <table class="data-table">
@@ -693,7 +683,8 @@ async function cfgSalvarAcao() {
   const body = { nome, valor, tipo: document.getElementById('ac-tipo').value, escopo, data_inicio: document.getElementById('ac-inicio').value || null, data_fim: document.getElementById('ac-fim').value || null, obs: document.getElementById('ac-obs').value.trim(), ativa: document.getElementById('ac-ativa').value === 'true', id_produto: escopo==='produto' ? (parseInt(document.getElementById('ac-produto-sel')?.value)||null) : null, nome_grupo: escopo==='grupo' ? (document.getElementById('ac-grupo-sel')?.value||null) : null, nome_subgrupo: escopo==='grupo' ? (document.getElementById('ac-subgrupo-sel')?.value||null) : null };
   if (escopo==='grupo' && !body.nome_grupo) { alert('Selecione o grupo'); return; }
   if (escopo==='produto' && !body.id_produto) { alert('Selecione o produto'); return; }
-  await supaInsert('ped_acoes_comerciais', body);
+  const resAc = await supaInsert('ped_acoes_comerciais', body);
+  if (!Array.isArray(resAc) || !resAc[0]?.id) { alert('Não foi possível salvar a ação. Tente de novo ou avise o suporte.'); return; }
   fecharDrawer(); cfgAba('acoes', null);
 }
 window.cfgEditarAcao = async function(id) {

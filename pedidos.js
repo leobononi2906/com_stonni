@@ -53,14 +53,12 @@ window.aplicarRegrasDesconto = function(itens, regras) {
       }
       if (rg.tipo === 'qtd_grupo' && rg.nome_grupo && qtdMinima) {
         const nomeGrupoRg = (rg.nome_grupo || '').toLowerCase().trim();
-        const grupoItem   = (item.grupo     || '').toLowerCase().trim();
-        const match = grupoItem && (grupoItem.includes(nomeGrupoRg) || nomeGrupoRg.includes(grupoItem));
-        if (match) {
+        const nomeSubRg   = (rg.nome_subgrupo || '').toLowerCase().trim();
+        const casaGrupo = (g) => { g = (g||'').toLowerCase().trim(); return g && (g.includes(nomeGrupoRg) || nomeGrupoRg.includes(g)); };
+        const casaSub   = (s) => { if (!nomeSubRg) return true; s = (s||'').toLowerCase().trim(); return s && (s.includes(nomeSubRg) || nomeSubRg.includes(s)); };
+        if (casaGrupo(item.grupo) && casaSub(item.subgrupo)) {
           const qtdGrupo = itens
-            .filter(x => {
-              const g = (x.grupo || '').toLowerCase().trim();
-              return g && (g.includes(nomeGrupoRg) || nomeGrupoRg.includes(g));
-            })
+            .filter(x => casaGrupo(x.grupo) && casaSub(x.subgrupo))
             .reduce((acc, x) => acc + (Number(x.quantidade) || 0), 0);
           if (qtdGrupo >= qtdMinima) desconto = descontoPc;
         }
