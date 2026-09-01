@@ -79,7 +79,8 @@ async function cfgCarregarGeral(el) {
 
   const _item = (chave) => {
     const c = byKey[chave]; if (!c) return '';
-    return `<div class="form-field"><label>${LABELS[chave] || c.descricao || chave}</label>${cfgInputPorTipo(c)}<span style="font-size:10.5px;color:var(--text-muted);font-family:'DM Mono',monospace">${chave}</span></div>`;
+    const ajuda = (LABELS[chave] && c.descricao && c.descricao !== LABELS[chave]) ? c.descricao : '';
+    return `<div class="form-field"><label>${LABELS[chave] || c.descricao || chave}</label>${cfgInputPorTipo(c)}${ajuda ? `<span style="font-size:11px;color:var(--text-muted)">${ajuda}</span>` : ''}</div>`;
   };
   const _grupo = (g) => `<div class="cfg-section" style="margin-top:22px"><div style="font-size:13px;font-weight:700;color:var(--text-primary)">${g.titulo}</div>${g.desc ? `<div style="font-size:12px;color:var(--text-muted);margin:2px 0 12px">${g.desc}</div>` : '<div style="height:12px"></div>'}<div class="cfg-grid-2">${g.chaves.map(_item).join('')}</div></div>`;
   const _mask = v => { const s = String(v || ''); return s.length > 10 ? s.slice(0, 6) + '••••' + s.slice(-4) : (s ? '••••' : '—'); };
@@ -88,9 +89,9 @@ async function cfgCarregarGeral(el) {
   el.innerHTML = `
     <div class="section-header">
       <span class="section-title">Configurações — Catálogo & Pedidos</span>
-      <button class="btn btn-primary" onclick="cfgSalvarGeral()">💾 Salvar</button>
+      <button class="btn btn-primary" onclick="cfgSalvarGeralTudo()">💾 Salvar tudo</button>
     </div>
-    <div style="font-size:12px;color:var(--text-muted)">Ajustes do portal do representante. O CRM tem configuração própria (dentro de <strong>Info Técnica</strong>).</div>
+    <div style="font-size:12px;color:var(--text-muted)">Ajustes do portal do representante — inclui o PDF do pedido, mais abaixo. O CRM tem configuração própria.</div>
 
     ${GRUPOS.map(_grupo).join('')}
 
@@ -108,7 +109,6 @@ async function cfgCarregarGeral(el) {
     <div class="cfg-section" style="margin-top:28px">
       <div class="section-header">
         <span class="section-title">📄 PDF / Documento</span>
-        <button class="btn btn-primary" onclick="cfgSalvarPDF()">💾 Salvar</button>
       </div>
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">
         Personaliza o PDF gerado nos pedidos. Gestores podem alterar sem precisar de programação.
@@ -207,6 +207,12 @@ window.cfgSalvarPDF = async function() {
   if (status) { status.style.display = 'block'; setTimeout(() => { status.style.display = 'none'; }, 3000); }
 };
 
+// Salva tudo da aba Geral (ajustes + PDF) num botão só
+window.cfgSalvarGeralTudo = async function() {
+  await cfgSalvarGeral();
+  await cfgSalvarPDF();
+};
+
 // ============================================================
 //  ABA 2 — TABELAS DE PREÇO
 // ============================================================
@@ -245,24 +251,24 @@ async function cfgCarregarPrecos(el) {
           <div>
             <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;margin-bottom:4px">Markup global</div>
             <div style="font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:${(t.markup_global||0) === 0 ? 'var(--text-muted)' : (t.markup_global > 0 ? 'var(--orange)' : 'var(--blue-mid)')}">${(t.markup_global||0) > 0 ? '+' : ''}${t.markup_global || 0}%</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">sobre preco_aux2 Bononi SC</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">sobre o preço base (Bononi SC)</div>
           </div>
           <div style="flex:1;min-width:160px">
             <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">
-              ${(t.markup_global||0) === 0 ? 'Preço igual à tabela base (preco_aux2)' : `Preço = preco_aux2 ${(t.markup_global||0) > 0 ? '+' : ''}${t.markup_global}%`}
+              ${(t.markup_global||0) === 0 ? 'Preço igual ao preço base da tabela' : `Preço = preço base ${(t.markup_global||0) > 0 ? '+' : ''}${t.markup_global}%`}
               <br><span style="color:var(--text-muted)">Regras de desconto aplicadas <strong>sobre</strong> esse preço</span>
             </div>
           </div>
         </div>
       </div>
       <div class="section-header" style="margin-bottom:14px">
-        <span class="section-title">Regras de desconto</span>
+        <span class="section-title">Regras de preço</span>
         <button class="btn btn-primary btn-sm" onclick="cfgNovaRegra(${idTabela})">+ Adicionar regra</button>
       </div>
-      ${r.length === 0 ? `<div class="empty-state"><div class="empty-state-icon">📋</div><h3>Nenhuma regra de desconto</h3><p>Adicione regras por quantidade, valor do pedido ou grupo.</p></div>` : `
+      ${r.length === 0 ? `<div class="empty-state"><div class="empty-state-icon">📋</div><h3>Nenhuma regra</h3><p>Adicione descontos (por quantidade, grupo ou valor) ou preço fixo por quantidade.</p></div>` : `
         <div class="table-card">
           <table class="data-table hide-mobile">
-            <thead><tr><th>Tipo</th><th>Condição</th><th>Desconto</th><th>Descrição</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Tipo</th><th>Condição</th><th>Valor</th><th>Descrição</th><th>Status</th><th></th></tr></thead>
             <tbody>
               ${r.map(rg => `<tr>
                 <td><span class="badge badge-b">${cfgTipoLabel(rg.tipo)}</span></td>
@@ -328,7 +334,7 @@ function cfgCondicaoLabel(rg) {
   if (rg.tipo === 'quantidade')   return `≥ ${rg.qtd_minima} peças do mesmo produto`;
   if (rg.tipo === 'preco_fixo_qtd') return `≥ ${rg.qtd_minima} peças → preço fixo`;
   if (rg.tipo === 'valor_pedido') return `Pedido ≥ R$ ${(rg.valor_minimo||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-  if (rg.tipo === 'grupo')        return `Grupo ID ${rg.id_grupo}${rg.id_subgrupo ? ` / Sub ${rg.id_subgrupo}` : ''}`;
+  if (rg.tipo === 'grupo')        return `Grupo ${rg.nome_grupo || (rg.id_grupo ? 'ID '+rg.id_grupo : '—')}${rg.nome_subgrupo ? ` / ${rg.nome_subgrupo}` : (rg.id_subgrupo ? ` / Sub ${rg.id_subgrupo}` : '')}`;
   if (rg.tipo === 'qtd_grupo')    return `≥ ${rg.qtd_minima} peças do grupo ${rg.nome_grupo || '—'}`;
   if (rg.tipo === 'global')       return 'Todos os produtos';
   return '—';
@@ -382,17 +388,47 @@ window.cfgAtualizarTabela = async function(id) {
   fecharDrawer(); cfgAba('precos', null);
 };
 
-function cfgNovaRegra(idTabela) {
-  abrirDrawer('Nova Regra de Desconto', 'Aplicada sobre o preço já calculado da tabela', `
+// Carrega grupos/subgrupos do catálogo (uma vez) para os dropdowns por nome
+async function cfgCarregarGruposCat() {
+  if (window._cfgGruposCat) return window._cfgGruposCat;
+  const prods = await supa('ped_catalogo_produtos', 'select=grupo,subgrupo') || [];
+  const mapa = {};
+  prods.forEach(p => {
+    const g = (p.grupo || '').trim(); if (!g) return;
+    if (!mapa[g]) mapa[g] = new Set();
+    if ((p.subgrupo || '').trim()) mapa[g].add(p.subgrupo.trim());
+  });
+  window._cfgGruposCat = Object.fromEntries(Object.keys(mapa).sort().map(g => [g, [...mapa[g]].sort()]));
+  return window._cfgGruposCat;
+}
+function cfgOpcoesGrupo(sel) {
+  const gc = window._cfgGruposCat || {};
+  return '<option value="">Selecione...</option>' + Object.keys(gc).map(g => `<option value="${g}" ${g===sel?'selected':''}>${g}</option>`).join('');
+}
+function cfgOpcoesSubgrupo(grupo, sel) {
+  const gc = window._cfgGruposCat || {};
+  const subs = gc[grupo] || [];
+  return '<option value="">Todos do grupo</option>' + subs.map(s => `<option value="${s}" ${s===sel?'selected':''}>${s}</option>`).join('');
+}
+// Repovoa o dropdown de subgrupo quando o grupo muda (modal novo)
+window.cfgAtualizarSubgrupos = function() {
+  const g = document.getElementById('rg-nome-grupo-sel')?.value || '';
+  const sub = document.getElementById('rg-nome-subgrupo-sel');
+  if (sub) sub.innerHTML = cfgOpcoesSubgrupo(g, '');
+};
+
+async function cfgNovaRegra(idTabela) {
+  await cfgCarregarGruposCat();
+  abrirDrawer('Nova Regra de Preço', 'Aplicada sobre o preço já calculado da tabela', `
     <div class="form-field">
       <label>Tipo de regra</label>
       <select id="rg-tipo" class="cfg-input" onchange="cfgAtualizarCamposRegra()">
-        <option value="quantidade">Por quantidade do produto</option>
+        <option value="quantidade">Desconto por quantidade do produto</option>
         <option value="preco_fixo_qtd">Preço fixo por quantidade do produto</option>
-        <option value="qtd_grupo">Por quantidade do grupo/subgrupo</option>
-        <option value="valor_pedido">Por valor total do pedido</option>
-        <option value="grupo">Por grupo/subgrupo</option>
-        <option value="global">Global (todos os produtos)</option>
+        <option value="qtd_grupo">Desconto por quantidade do grupo</option>
+        <option value="grupo">Desconto por grupo/subgrupo</option>
+        <option value="valor_pedido">Desconto por valor total do pedido</option>
+        <option value="global">Desconto global (todos os produtos)</option>
       </select>
     </div>
     <div id="rg-campos-dinamicos"></div>
@@ -416,11 +452,8 @@ window.cfgAtualizarCamposRegra = function() {
   if (tipo === 'quantidade')   el.innerHTML = `<div class="form-field"><label>Quantidade mínima (peças do mesmo produto)</label><input type="number" id="rg-qtd" class="cfg-input" min="1" placeholder="Ex: 10"></div>`;
   else if (tipo === 'preco_fixo_qtd') el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Quantidade mínima (peças do mesmo produto)</label><input type="number" id="rg-qtd-fixo" class="cfg-input" min="1" placeholder="Ex: 10"></div><div class="form-field"><label>Preço fixo por unidade (R$)</label><input type="number" id="rg-preco-fixo" class="cfg-input" min="0" step="0.01" placeholder="Ex: 89,90"></div></div><div class="alert alert-info" style="margin-top:4px"><span class="alert-icon">💡</span>Ao atingir a quantidade, o preço unitário do produto passa a ser este valor fixo (só reduz; se ficar acima do preço da tabela, não aplica).</div>`;
   else if (tipo === 'valor_pedido') el.innerHTML = `<div class="form-field"><label>Valor mínimo do pedido (R$)</label><input type="number" id="rg-valor" class="cfg-input" min="0" step="0.01" placeholder="Ex: 3000"></div>`;
-  else if (tipo === 'qtd_grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo do produto</label><select id="rg-nome-grupo" class="cfg-input"><option value="">Selecione...</option><option value="AUTO VIDROS">AUTO VIDROS</option>
-<option value="STONNI AR CONDICIONADO">STONNI AR CONDICIONADO</option>
-<option value="STONNI DIVERSOS">STONNI DIVERSOS</option>
-<option value="STONNI GELADEIRAS">STONNI GELADEIRAS</option></select></div><div class="form-field"><label>Quantidade mínima (peças do grupo)</label><input type="number" id="rg-qtd-grupo" class="cfg-input" min="1" placeholder="Ex: 3"></div></div>`;
-  else if (tipo === 'grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>ID grupo</label><input type="number" id="rg-grupo" class="cfg-input" placeholder="ID no ERP"></div><div class="form-field"><label>ID subgrupo (opcional)</label><input type="number" id="rg-subgrupo" class="cfg-input"></div></div>`;
+  else if (tipo === 'qtd_grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo do produto</label><select id="rg-nome-grupo" class="cfg-input">${cfgOpcoesGrupo('')}</select></div><div class="form-field"><label>Quantidade mínima (peças do grupo)</label><input type="number" id="rg-qtd-grupo" class="cfg-input" min="1" placeholder="Ex: 3"></div></div>`;
+  else if (tipo === 'grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><select id="rg-nome-grupo-sel" class="cfg-input" onchange="cfgAtualizarSubgrupos()">${cfgOpcoesGrupo('')}</select></div><div class="form-field"><label>Subgrupo (opcional)</label><select id="rg-nome-subgrupo-sel" class="cfg-input">${cfgOpcoesSubgrupo('','')}</select></div></div><div style="font-size:11px;color:var(--text-muted);margin-top:-6px">Vazio no subgrupo = vale para todo o grupo.</div>`;
   else el.innerHTML = `<div class="alert alert-info"><span class="alert-icon">ℹ️</span>Aplica em todos os produtos de todas as ordens.</div>`;
 };
 
@@ -444,21 +477,26 @@ async function cfgSalvarRegra() {
   const body = { id_tabela: idTabela, tipo, desconto_perc: desconto, descricao: document.getElementById('rg-desc').value.trim(), ativa: true };
   if (tipo === 'quantidade')   body.qtd_minima  = parseFloat(document.getElementById('rg-qtd')?.value) || null;
   if (tipo === 'valor_pedido') body.valor_minimo = parseFloat(document.getElementById('rg-valor')?.value) || null;
-  if (tipo === 'grupo') { body.id_grupo = parseInt(document.getElementById('rg-grupo')?.value)||null; body.id_subgrupo = parseInt(document.getElementById('rg-subgrupo')?.value)||null; }
+  if (tipo === 'grupo') {
+    body.nome_grupo = document.getElementById('rg-nome-grupo-sel')?.value||null;
+    body.nome_subgrupo = document.getElementById('rg-nome-subgrupo-sel')?.value||null;
+    if (!body.nome_grupo) { alert('Selecione o grupo'); return; }
+  }
   if (tipo === 'qtd_grupo') { body.nome_grupo = document.getElementById('rg-nome-grupo')?.value||null; body.qtd_minima = parseFloat(document.getElementById('rg-qtd-grupo')?.value)||null; }
   const res = await supaInsert('ped_tabela_regras', body);
   if (res?.code || res?.error) { alert('Erro ao salvar: ' + (res.message || res.error || JSON.stringify(res))); return; }
   fecharDrawer(); cfgAba('precos', null);
 }
 window.cfgEditarRegra = async function(id) {
+  await cfgCarregarGruposCat();
   const res = await supa('ped_tabela_regras', `id=eq.${id}`);
   const rg = res?.[0]; if (!rg) return;
   abrirDrawer('Editar Regra', cfgTipoLabel(rg.tipo), `
     <div class="form-field"><label>Tipo</label><input type="text" class="cfg-input" value="${cfgTipoLabel(rg.tipo)}" disabled style="opacity:.6"></div>
     ${rg.tipo==='quantidade'   ? `<div class="form-field"><label>Quantidade mínima</label><input type="number" id="rg-edit-qtd" class="cfg-input" value="${rg.qtd_minima||''}"></div>` : ''}
     ${rg.tipo==='valor_pedido' ? `<div class="form-field"><label>Valor mínimo (R$)</label><input type="number" id="rg-edit-valor" class="cfg-input" value="${rg.valor_minimo||''}"></div>` : ''}
-    ${rg.tipo==='grupo' ? `<div class="cfg-grid-2"><div class="form-field"><label>ID grupo</label><input type="number" id="rg-edit-grupo" class="cfg-input" value="${rg.id_grupo||''}"></div><div class="form-field"><label>ID subgrupo</label><input type="number" id="rg-edit-subgrupo" class="cfg-input" value="${rg.id_subgrupo||''}"></div></div>` : ''}
-    ${rg.tipo==='qtd_grupo' ? `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><input type="text" id="rg-edit-nome-grupo" class="cfg-input" value="${rg.nome_grupo||''}"></div><div class="form-field"><label>Quantidade mínima</label><input type="number" id="rg-edit-qtd-grupo" class="cfg-input" value="${rg.qtd_minima||''}"></div></div>` : ''}
+    ${rg.tipo==='grupo' ? `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><select id="rg-edit-nome-grupo-sel" class="cfg-input">${cfgOpcoesGrupo(rg.nome_grupo||'')}</select></div><div class="form-field"><label>Subgrupo (opcional)</label><select id="rg-edit-nome-subgrupo-sel" class="cfg-input">${cfgOpcoesSubgrupo(rg.nome_grupo||'', rg.nome_subgrupo||'')}</select></div></div>` : ''}
+    ${rg.tipo==='qtd_grupo' ? `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><select id="rg-edit-nome-grupo" class="cfg-input">${cfgOpcoesGrupo(rg.nome_grupo||'')}</select></div><div class="form-field"><label>Quantidade mínima</label><input type="number" id="rg-edit-qtd-grupo" class="cfg-input" value="${rg.qtd_minima||''}"></div></div>` : ''}
     ${rg.tipo==='preco_fixo_qtd' ? `<div class="cfg-grid-2"><div class="form-field"><label>Quantidade mínima</label><input type="number" id="rg-edit-qtd-fixo" class="cfg-input" value="${rg.qtd_minima||''}"></div><div class="form-field"><label>Preço fixo por unidade (R$)</label><input type="number" id="rg-edit-preco-fixo" class="cfg-input" step="0.01" value="${rg.preco_fixo||''}"></div></div>` : `<div class="form-field"><label>Desconto (%)</label><input type="number" id="rg-edit-desconto" class="cfg-input" value="${rg.desconto_perc}" step="0.1"></div>`}
     <div class="form-field"><label>Descrição</label><input type="text" id="rg-edit-desc" class="cfg-input" value="${rg.descricao||''}"></div>
     <div class="form-field"><label>Status</label><select id="rg-edit-ativa" class="cfg-input"><option value="true" ${rg.ativa?'selected':''}>Ativa</option><option value="false" ${!rg.ativa?'selected':''}>Inativa</option></select></div>
@@ -477,7 +515,7 @@ window.cfgAtualizarRegra = async function(id, tipo) {
   if (tipo==='quantidade')   body.qtd_minima  = parseFloat(document.getElementById('rg-edit-qtd')?.value)||null;
   if (tipo==='qtd_grupo') { body.nome_grupo = document.getElementById('rg-edit-nome-grupo')?.value||null; body.qtd_minima = parseFloat(document.getElementById('rg-edit-qtd-grupo')?.value)||null; }
   if (tipo==='valor_pedido') body.valor_minimo = parseFloat(document.getElementById('rg-edit-valor')?.value)||null;
-  if (tipo==='grupo') { body.id_grupo=parseInt(document.getElementById('rg-edit-grupo')?.value)||null; body.id_subgrupo=parseInt(document.getElementById('rg-edit-subgrupo')?.value)||null; }
+  if (tipo==='grupo') { body.nome_grupo = document.getElementById('rg-edit-nome-grupo-sel')?.value||null; body.nome_subgrupo = document.getElementById('rg-edit-nome-subgrupo-sel')?.value||null; }
   await supaPatch('ped_tabela_regras', `id=eq.${id}`, body);
   fecharDrawer(); cfgAba('precos', null);
 };
@@ -892,13 +930,14 @@ window.cfgSincronizarTodos = async function() {
 };
 
 window.cfgAdicionarProduto = function() {
-  abrirDrawer('Adicionar Produto ao Catálogo', 'Digite o SKU do ERP para buscar os dados', `
-    <div class="alert alert-info"><span class="alert-icon">ℹ️</span>Digite o código do produto no ERP. Os dados e preço (preco_aux2 Bononi SC) virão automaticamente. As fotos do Bling serão buscadas após salvar.</div>
+  abrirDrawer('Adicionar Produto ao Catálogo', 'Busque pelo código (SKU) ou pelo nome do produto', `
+    <div class="alert alert-info"><span class="alert-icon">ℹ️</span>Digite o <strong>código (SKU)</strong> ou parte do <strong>nome</strong> do produto. Os dados e o preço base virão automaticamente do ERP. As fotos serão buscadas após salvar.</div>
     <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:20px">
-      <div class="form-field" style="flex:1;margin:0"><label>SKU / Código ERP</label><input type="text" id="np-sku" class="cfg-input" placeholder="Ex: 18744" onkeydown="if(event.key==='Enter') cfgBuscarERP()"></div>
+      <div class="form-field" style="flex:1;margin:0"><label>SKU ou nome do produto</label><input type="text" id="np-sku" class="cfg-input" placeholder="Ex: 18744  ·  ou: geladeira 45L" onkeydown="if(event.key==='Enter') cfgBuscarERP()"></div>
       <button class="btn btn-primary" onclick="cfgBuscarERP()" style="flex-shrink:0">🔍 Buscar</button>
     </div>
     <div id="np-erp-resultado"></div>
+    <input type="hidden" id="np-id-erp">
     <div id="np-form-produto" style="display:none">
       <div class="cfg-grid-2">
         <div class="form-field"><label>Nome do produto</label><input type="text" id="np-nome" class="cfg-input"></div>
@@ -910,7 +949,7 @@ window.cfgAdicionarProduto = function() {
         <div class="form-field"><label>Subgrupo</label><input type="text" id="np-subgrupo" class="cfg-input" readonly style="opacity:.7"></div>
       </div>
       <div class="cfg-grid-2">
-        <div class="form-field"><label>Preço base — preco_aux2 (R$)</label><input type="number" id="np-preco" class="cfg-input" min="0" step="0.01"></div>
+        <div class="form-field"><label>Preço base (R$)</label><input type="number" id="np-preco" class="cfg-input" min="0" step="0.01"></div>
         <div class="form-field"><label>Estoque Bononi SC</label><input type="text" id="np-estoque" class="cfg-input" readonly style="opacity:.7"></div>
       </div>
       <div class="form-field"><label>Descrição</label><textarea id="np-desc" class="cfg-input" rows="2"></textarea></div>
@@ -933,27 +972,61 @@ window.cfgAdicionarProduto = function() {
   `);
 };
 
+// Busca: aceita SKU (só números) OU nome do produto (texto → lista de resultados)
 window.cfgBuscarERP = async function() {
-  const sku = document.getElementById('np-sku').value.trim();
-  if (!sku) { alert('Digite o SKU primeiro'); return; }
+  const termo = document.getElementById('np-sku').value.trim();
+  if (!termo) { alert('Digite o SKU ou o nome do produto'); return; }
+  const res = document.getElementById('np-erp-resultado');
+  document.getElementById('np-form-produto').style.display = 'none';
+  document.getElementById('np-btn-salvar').style.display = 'none';
+
+  // Só números → é SKU: vai direto pro produto
+  if (/^\d+$/.test(termo)) { await cfgSelecionarProdutoERP(parseInt(termo)); return; }
+
+  // Texto → busca por nome (empresa 8 = Bononi SC, sem repetir por empresa)
+  res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Buscando por nome...</div>';
+  const rows = await supa('vw_fb_produtos_compras', `nome=ilike.*${encodeURIComponent(termo)}*&id_empresa=eq.8&select=id_produto,referencia,nome,grupo,preco_aux2,estoque_fisico&order=nome&limit=30`);
+  if (!rows?.length) {
+    res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Nenhum produto encontrado com "<strong>${termo}</strong>". Tente outra palavra ou busque pelo código (SKU).</div>`;
+    return;
+  }
+  // Marca os que já estão no catálogo (não deixa escolher duplicado)
+  const idsBusca = rows.map(r => r.id_produto);
+  const noCat = await supa('ped_catalogo_produtos', `id_produto_erp=in.(${idsBusca.join(',')})&select=id_produto_erp`);
+  const setCat = new Set((noCat || []).map(x => x.id_produto_erp));
+  res.innerHTML = `<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${rows.length} produto(s) encontrado(s) — clique para selecionar:</div>
+    <div style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto">
+    ${rows.map(p => {
+      const jaTem = setCat.has(p.id_produto);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--border);border-radius:8px;padding:9px 12px;background:${jaTem ? 'var(--surface2)' : 'var(--surface)'}">
+        <div style="min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nome?.trim() || '—'}</div>
+        <div style="font-size:11px;color:var(--text-muted)">SKU ${p.id_produto} · ${p.grupo || '—'} · R$ ${Number(p.preco_aux2||0).toLocaleString('pt-BR',{minimumFractionDigits:2})} · ${p.estoque_fisico??0} un.</div></div>
+        ${jaTem
+          ? '<span class="badge" style="background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);flex-shrink:0">já no catálogo</span>'
+          : `<button class="btn btn-primary btn-sm" style="flex-shrink:0" onclick="cfgSelecionarProdutoERP(${p.id_produto})">Selecionar</button>`}
+      </div>`;
+    }).join('')}</div>`;
+};
+
+// Seleciona um produto (por SKU): trava duplicado, busca dados do ERP e preenche o formulário
+window.cfgSelecionarProdutoERP = async function(sku) {
   const res = document.getElementById('np-erp-resultado');
   res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Verificando catálogo...</div>';
-  // TRAVA: bloqueia produto que já está no catálogo (mesmo SKU/id_produto_erp)
-  const jaNoCatalogo = await supa('ped_catalogo_produtos', `id_produto_erp=eq.${parseInt(sku)}&select=id,nome,ativo`);
+  // TRAVA: bloqueia produto que já está no catálogo (mesmo id_produto_erp)
+  const jaNoCatalogo = await supa('ped_catalogo_produtos', `id_produto_erp=eq.${sku}&select=id,nome,ativo`);
   if (jaNoCatalogo?.length) {
     const j = jaNoCatalogo[0];
     res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon">🚫</span><div>Este produto <strong>já está no catálogo</strong>: <strong>${j.nome || '—'}</strong>${j.ativo ? '' : ' <em>(inativo)</em>'}.<br><span style="font-size:12px">Não é possível adicionar de novo. Para alterar, edite pela lista do catálogo.</span></div></div>`;
-    document.getElementById('np-form-produto').style.display = 'none';
-    document.getElementById('np-btn-salvar').style.display = 'none';
     return;
   }
   res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Buscando no ERP...</div>';
   // Tenta empresa 8 (Bononi SC) primeiro, fallback para qualquer empresa do grupo
-  let rows = await supa('vw_fb_produtos_compras', `id_produto=eq.${parseInt(sku)}&id_empresa=eq.8&select=id_produto,referencia,nome,complemento,id_grupo,grupo,id_subgrupo,subgrupo,preco_aux2,estoque_fisico`);
+  let rows = await supa('vw_fb_produtos_compras', `id_produto=eq.${sku}&id_empresa=eq.8&select=id_produto,referencia,nome,complemento,id_grupo,grupo,id_subgrupo,subgrupo,preco_aux2,estoque_fisico`);
   if (!rows?.length) {
-    rows = await supa('vw_fb_produtos_compras', `id_produto=eq.${parseInt(sku)}&select=id_produto,referencia,nome,complemento,id_grupo,grupo,id_subgrupo,subgrupo,preco_aux2,estoque_fisico&limit=1`);
+    rows = await supa('vw_fb_produtos_compras', `id_produto=eq.${sku}&select=id_produto,referencia,nome,complemento,id_grupo,grupo,id_subgrupo,subgrupo,preco_aux2,estoque_fisico&limit=1`);
   }
   const p = rows?.[0];
+  document.getElementById('np-id-erp').value = sku;
   if (!p) {
     res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Produto <strong>${sku}</strong> não encontrado no ERP. Pode ser um produto novo — verifique se a integração com o Firebird já sincronizou. Preencha manualmente enquanto isso.</div>`;
     document.getElementById('np-ref').value = sku;
@@ -978,9 +1051,10 @@ window.cfgBuscarERP = async function() {
 
 window.cfgSalvarProduto = async function() {
   const nome = document.getElementById('np-nome').value.trim();
-  const sku  = document.getElementById('np-sku').value.trim();
+  // SKU real vem do campo oculto (a caixa de busca pode conter um nome)
+  const sku  = (document.getElementById('np-id-erp').value || document.getElementById('np-sku').value).trim();
   if (!nome) { alert('Nome obrigatório'); return; }
-  if (!sku)  { alert('SKU obrigatório'); return; }
+  if (!sku || !/^\d+$/.test(sku)) { alert('Selecione um produto pela busca (SKU válido)'); return; }
   const btn = document.getElementById('np-btn-salvar');
   // TRAVA final: não deixa gravar duplicado no catálogo (mesmo id_produto_erp)
   const dup = await supa('ped_catalogo_produtos', `id_produto_erp=eq.${parseInt(sku)}&select=id,nome`);

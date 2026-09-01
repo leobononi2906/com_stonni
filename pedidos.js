@@ -63,6 +63,16 @@ window.aplicarRegrasDesconto = function(itens, regras) {
           if (qtdGrupo >= qtdMinima) desconto = descontoPc;
         }
       }
+      // Desconto por grupo/subgrupo (por nome, sem exigir quantidade)
+      if (rg.tipo === 'grupo' && rg.nome_grupo) {
+        const nomeGrupoRg = (rg.nome_grupo || '').toLowerCase().trim();
+        const grupoItem   = (item.grupo     || '').toLowerCase().trim();
+        const matchGrupo = grupoItem && (grupoItem.includes(nomeGrupoRg) || nomeGrupoRg.includes(grupoItem));
+        const nomeSubRg = (rg.nome_subgrupo || '').toLowerCase().trim();
+        const subItem   = (item.subgrupo || '').toLowerCase().trim();
+        const matchSub = !nomeSubRg || (subItem && (subItem.includes(nomeSubRg) || nomeSubRg.includes(subItem)));
+        if (matchGrupo && matchSub) desconto = descontoPc;
+      }
       if (rg.tipo === 'valor_pedido' && valorMinimo) {
         const totalPedido = itens.reduce((acc, x) => acc + (Number(x.preco_unitario) * Number(x.quantidade)), 0);
         if (totalPedido >= valorMinimo) desconto = descontoPc;
@@ -124,7 +134,7 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
       const preco = parseFloat((precoBase * (1 + markup)).toFixed(2));
       _pedidoAtual.itens.push({
         id_produto: p.id, id_produto_erp: p.id_produto_erp,
-        referencia: p.referencia, nome: p.nome, grupo: p.grupo || null,
+        referencia: p.referencia, nome: p.nome, grupo: p.grupo || null, subgrupo: p.subgrupo || null,
         preco_unitario: preco, preco_final: preco,
         quantidade: x.quantidade, desconto_perc: 0,
         regras_aplicadas: [], ipi_perc: parseFloat(p.ipi_perc) || 0,
@@ -493,7 +503,7 @@ window.pedCarregarCotacao = async function(id) {
     alertas: null,
     itens: (itens||[]).map(i => ({
       id_produto: i.id_produto, referencia: i.referencia,
-      nome: i.nome_produto, grupo: i.grupo || null,
+      nome: i.nome_produto, grupo: i.grupo || null, subgrupo: i.subgrupo || null,
       preco_unitario: Number(i.preco_unitario || i.preco_final),
       preco_final:    Number(i.preco_final),
       quantidade:     Number(i.quantidade),
@@ -767,7 +777,7 @@ window.pedAdicionarProdutoId = function(id) {
   else {
     _pedidoAtual.itens.push({
       id_produto: p.id, id_produto_erp: p.id_produto_erp,
-      referencia: p.referencia, nome: p.nome, grupo: p.grupo || null,
+      referencia: p.referencia, nome: p.nome, grupo: p.grupo || null, subgrupo: p.subgrupo || null,
       preco_unitario: preco,   // preço de TABELA
       preco_final:    preco,   // igual — desconto aparece separado
       desconto_perc:  descontoPerc || 0,
