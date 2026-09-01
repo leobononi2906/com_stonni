@@ -11,13 +11,30 @@
 
   const MAT = { items: [], linha: '', busca: '', loaded: false, loading: false };
 
-  const MAT_LINHAS = [
+  // Linhas de produto: fonte da verdade = tabela prt_linhas_produto (igual à app Assistência).
+  // Os valores abaixo são só FALLBACK; carregarLinhasProduto() sobrescreve.
+  let MAT_LINHAS = [
     { key: '',                label: 'Todos',           icon: '📚' },
     { key: 'geladeira',       label: 'Geladeira',       icon: '🧊' },
-    { key: 'ar_condicionado', label: 'Ar Condicionado', icon: '❄️' },
+    { key: 'ar_condicionado', label: 'Ar-Condicionado', icon: '❄️' },
     { key: 'gerador',         label: 'Gerador',         icon: '⚡' },
   ];
-  const MAT_PRODUTO_IA = { geladeira: 'Geladeira', ar_condicionado: 'Ar Condicionado', gerador: 'Gerador', '': 'Outros' };
+  let MAT_PRODUTO_IA = { geladeira: 'Geladeira', ar_condicionado: 'Ar-Condicionado', gerador: 'Gerador', '': 'Outros' };
+  const _MAT_ICONE = { geladeira: '🧊', ar_condicionado: '❄️', gerador: '⚡' };
+  let _matLinhasLoaded = false;
+  async function carregarLinhasProduto() {
+    try {
+      const ls = await supa('prt_linhas_produto', 'select=slug,nome&ativo=eq.true&order=ordem.asc');
+      if (!Array.isArray(ls) || !ls.length) return;
+      MAT_LINHAS = [{ key: '', label: 'Todos', icon: '📚' }];
+      MAT_PRODUTO_IA = { '': 'Outros' };
+      ls.forEach(l => {
+        MAT_LINHAS.push({ key: l.slug, label: l.nome, icon: _MAT_ICONE[l.slug] || '🔧' });
+        MAT_PRODUTO_IA[l.slug] = l.nome;
+      });
+      _matLinhasLoaded = true;
+    } catch (e) { console.error('carregarLinhasProduto', e); }
+  }
 
   function ytId(url) {
     const m = String(url || '').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
@@ -39,7 +56,7 @@
         if (MAT.loading) return;
         MAT.loading = true;
         el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
-        try { MAT.items = await carregarMateriais(); MAT.loaded = true; }
+        try { MAT.items = await carregarMateriais(); if (!_matLinhasLoaded) await carregarLinhasProduto(); MAT.loaded = true; }
         finally { MAT.loading = false; }
       }
 

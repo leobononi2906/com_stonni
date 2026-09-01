@@ -8,20 +8,36 @@
 
 const MAT = { items: [], linha: '', busca: '', loaded: false, loading: false };
 
-const MAT_LINHAS = [
-  { key: '',                label: 'Todos',          icon: '📚' },
-  { key: 'geladeira',       label: 'Geladeira',      icon: '🧊' },
-  { key: 'ar_condicionado', label: 'Ar Condicionado',icon: '❄️' },
-  { key: 'gerador',         label: 'Gerador',        icon: '⚡' },
+// Linhas de produto: fonte da verdade = tabela prt_linhas_produto (igual à app Assistência).
+// Os valores abaixo são só FALLBACK (se o fetch falhar); carregarLinhasProduto() sobrescreve.
+let MAT_LINHAS = [
+  { key: '',                label: 'Todos',           icon: '📚' },
+  { key: 'geladeira',       label: 'Geladeira',       icon: '🧊' },
+  { key: 'ar_condicionado', label: 'Ar-Condicionado', icon: '❄️' },
+  { key: 'gerador',         label: 'Gerador',         icon: '⚡' },
 ];
-
 // Mapa linha_produto -> rótulo de produto que a IA entende
-const MAT_PRODUTO_IA = {
-  geladeira: 'Geladeira',
-  ar_condicionado: 'Ar Condicionado',
-  gerador: 'Gerador',
-  '': 'Outros',
-};
+let MAT_PRODUTO_IA = { geladeira: 'Geladeira', ar_condicionado: 'Ar-Condicionado', gerador: 'Gerador', '': 'Outros' };
+const _MAT_ICONE = { geladeira: '🧊', ar_condicionado: '❄️', gerador: '⚡' };
+let _matLinhasLoaded = false;
+async function carregarLinhasProduto() {
+  try {
+    const r = await fetch(
+      `${window.SUPA_URL}/rest/v1/prt_linhas_produto?select=slug,nome&ativo=eq.true&order=ordem.asc&limit=9999`,
+      { headers: { apikey: window.SUPA_KEY, Authorization: 'Bearer ' + window.SUPA_KEY } }
+    );
+    if (!r.ok) return;
+    const ls = await r.json();
+    if (!Array.isArray(ls) || !ls.length) return;
+    MAT_LINHAS = [{ key: '', label: 'Todos', icon: '📚' }];
+    MAT_PRODUTO_IA = { '': 'Outros' };
+    ls.forEach(l => {
+      MAT_LINHAS.push({ key: l.slug, label: l.nome, icon: _MAT_ICONE[l.slug] || '🔧' });
+      MAT_PRODUTO_IA[l.slug] = l.nome;
+    });
+    _matLinhasLoaded = true;
+  } catch (e) { console.error('carregarLinhasProduto', e); }
+}
 
 function _matYtId(url) {
   const m = String(url || '').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
@@ -46,7 +62,7 @@ async function renderMateriais() {
     if (MAT.loading) return;
     MAT.loading = true;
     el.innerHTML = '<div class="empty-msg"><div class="spinner" style="margin:0 auto 12px"></div>Carregando materiais...</div>';
-    try { MAT.items = await carregarMateriais(); MAT.loaded = true; }
+    try { MAT.items = await carregarMateriais(); if (!_matLinhasLoaded) await carregarLinhasProduto(); MAT.loaded = true; }
     catch (e) { console.error(e); el.innerHTML = '<div class="empty-msg">Erro ao carregar materiais.</div>'; MAT.loading = false; return; }
     MAT.loading = false;
   }
