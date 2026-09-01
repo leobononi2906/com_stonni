@@ -37,12 +37,14 @@ window.aplicarRegrasDesconto = function(itens, regras) {
       const valorMinimo = Number(rg.valor_minimo)  || 0;
       const descontoPc  = Number(rg.desconto_perc) || 0;
 
-      if (rg.tipo === 'quantidade' && qtdMinima) {
+      // Produto específico (opcional): se a regra fixa um produto, só vale pra ele
+      const prodOk = !rg.id_produto_erp || String(rg.id_produto_erp) === String(item.id_produto_erp);
+      if (rg.tipo === 'quantidade' && qtdMinima && prodOk) {
         if (Number(item.quantidade) >= qtdMinima) desconto = descontoPc;
       }
       // Preço fixo por quantidade: ao atingir a qtd, o preço unitário vira o valor fixo.
       // Converte em desconto equivalente pra reaproveitar toda a cadeia (só reduz).
-      if (rg.tipo === 'preco_fixo_qtd' && qtdMinima) {
+      if (rg.tipo === 'preco_fixo_qtd' && qtdMinima && prodOk) {
         const precoFixo = Number(rg.preco_fixo) || 0;
         const precoBase = Number(item.preco_unitario) || 0;
         if (Number(item.quantidade) >= qtdMinima && precoFixo > 0 && precoBase > 0 && precoFixo < precoBase) {
@@ -751,6 +753,18 @@ window.pedAdicionarProdutoId = function(id) {
     if (df && df < hoje) return false;
     if (a.escopo === 'produto') return String(a.id_produto) === String(p.id_produto_erp);
     if (a.escopo === 'grupo') {
+      // Novo: casa por NOME (fallback pro ID antigo em ações legadas)
+      if (a.nome_grupo) {
+        const ng = a.nome_grupo.toLowerCase().trim();
+        const pg = (p.grupo || '').toLowerCase().trim();
+        if (!pg || (!pg.includes(ng) && !ng.includes(pg))) return false;
+        if (a.nome_subgrupo) {
+          const ns = a.nome_subgrupo.toLowerCase().trim();
+          const ps = (p.subgrupo || '').toLowerCase().trim();
+          if (!ps || (!ps.includes(ns) && !ns.includes(ps))) return false;
+        }
+        return true;
+      }
       if (String(a.id_grupo) !== String(p.id_grupo)) return false;
       if (a.id_subgrupo && String(a.id_subgrupo) !== String(p.id_subgrupo)) return false;
       return true;
@@ -804,6 +818,8 @@ window.pedAdicionarProdutoId = function(id) {
       for (var ri = 0; ri < window._pedRegras.length; ri++) {
         var rg = window._pedRegras[ri];
         if (rg.ativa === false) continue;
+        // Se a regra é de um produto específico, só incentiva quando for esse produto
+        if (rg.id_produto_erp && String(rg.id_produto_erp) !== String(p.id_produto_erp)) continue;
         if (rg.tipo === 'quantidade' && rg.qtd_minima) {
           var itemAtual = _pedidoAtual.itens.find(function(i) { return i.id_produto === p.id; });
           var qtdAtual = itemAtual ? itemAtual.quantidade : 1;
