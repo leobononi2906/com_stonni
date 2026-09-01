@@ -911,6 +911,16 @@ window.cfgBuscarERP = async function() {
   const sku = document.getElementById('np-sku').value.trim();
   if (!sku) { alert('Digite o SKU primeiro'); return; }
   const res = document.getElementById('np-erp-resultado');
+  res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Verificando catálogo...</div>';
+  // TRAVA: bloqueia produto que já está no catálogo (mesmo SKU/id_produto_erp)
+  const jaNoCatalogo = await supa('ped_catalogo_produtos', `id_produto_erp=eq.${parseInt(sku)}&select=id,nome,ativo`);
+  if (jaNoCatalogo?.length) {
+    const j = jaNoCatalogo[0];
+    res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon">🚫</span><div>Este produto <strong>já está no catálogo</strong>: <strong>${j.nome || '—'}</strong>${j.ativo ? '' : ' <em>(inativo)</em>'}.<br><span style="font-size:12px">Não é possível adicionar de novo. Para alterar, edite pela lista do catálogo.</span></div></div>`;
+    document.getElementById('np-form-produto').style.display = 'none';
+    document.getElementById('np-btn-salvar').style.display = 'none';
+    return;
+  }
   res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Buscando no ERP...</div>';
   // Tenta empresa 8 (Bononi SC) primeiro, fallback para qualquer empresa do grupo
   let rows = await supa('vw_fb_produtos_compras', `id_produto=eq.${parseInt(sku)}&id_empresa=eq.8&select=id_produto,referencia,nome,complemento,id_grupo,grupo,id_subgrupo,subgrupo,preco_aux2,estoque_fisico`);
@@ -946,6 +956,9 @@ window.cfgSalvarProduto = async function() {
   if (!nome) { alert('Nome obrigatório'); return; }
   if (!sku)  { alert('SKU obrigatório'); return; }
   const btn = document.getElementById('np-btn-salvar');
+  // TRAVA final: não deixa gravar duplicado no catálogo (mesmo id_produto_erp)
+  const dup = await supa('ped_catalogo_produtos', `id_produto_erp=eq.${parseInt(sku)}&select=id,nome`);
+  if (dup?.length) { alert(`Este produto já está no catálogo: "${dup[0].nome || sku}".\nNão é possível adicionar duplicado.`); return; }
   btn.textContent = 'Salvando...'; btn.disabled = true;
   const referencia = document.getElementById('np-ref').value.trim() || sku;
   const npTags = [...document.querySelectorAll('.np-tag-check:checked')].map(el=>el.value);
