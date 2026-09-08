@@ -49,7 +49,7 @@ window.catGerarPDF = async function(opcoes = {}) {
 
   // Gera cards HTML
   const gerarCard = (p) => {
-    const foto = p.fotos?.[0] || null;
+    const foto = p.foto_exibir_miniatura || (p.fotos_exibir || p.fotos)?.[0] || null;
     const ipi  = parseFloat(p.ipi_perc) || 0;
     const preco = p.preco_base || 0;
 

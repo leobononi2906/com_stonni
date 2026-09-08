@@ -159,7 +159,7 @@ window.catFiltrar = function() {
   }
 
   grid.innerHTML = lista.map(p => {
-    const foto = p.fotos?.[0] || null;
+    const foto = p.foto_exibir_miniatura || (p.fotos_exibir || p.fotos)?.[0] || null;
     const { preco, precoOriginal, acaoAtiva } = catPrecoFinal(p);
 
     return `
@@ -201,7 +201,7 @@ window.catAbrirProduto = function(id) {
   const p = (window._catProdutos||[]).find(p => p.id === id);
   if (!p) return;
   const { preco, precoOriginal, acaoAtiva } = catPrecoFinal(p);
-  const fotos = p.fotos || [];
+  const fotos = p.fotos_exibir || p.fotos || [];
 
   const fotosHtml = fotos.length
     ? `<div class="cat-detalhe-fotos">
@@ -253,7 +253,7 @@ window.catAbrirProduto = function(id) {
 window.catShareFotos = function(id) {
   const p = (window._catProdutos || []).find(x => x.id === id);
   if (!p) return;
-  const fotos = p.fotos || [];
+  const fotos = p.fotos_exibir || p.fotos || [];
   if (!fotos.length) return;
   let ov = document.getElementById('cat-share-modal');
   if (!ov) {
