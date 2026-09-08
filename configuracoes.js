@@ -825,7 +825,7 @@ async function cfgCarregarCatalogo(el) {
 function cfgRenderLinhasProduto(lista) {
   if (!lista.length) return `<tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon">🛍️</div><h3>Catálogo vazio</h3><p>Adicione produtos pelo SKU do ERP.</p></div></td></tr>`;
   return lista.map(p => {
-    const foto = p.fotos?.[0] || null;
+    const foto = p.foto_exibir_miniatura || p.fotos_exibir?.[0] || null;
     const isEsgotado = p.esgotado || p.esgotado_manual;
     const status = !p.ativo ? 'inativo' : isEsgotado ? 'esgotado' : 'disponivel';
     const badgeMap = { inativo:'badge-cancelado', esgotado:'badge-esgotado', disponivel:'badge-disponivel' };
@@ -847,7 +847,7 @@ function cfgRenderLinhasProduto(lista) {
 function cfgRenderCardsProduto(lista) {
   if (!lista.length) return `<div class="empty-state"><div class="empty-state-icon">🛍️</div><h3>Catálogo vazio</h3><p>Adicione produtos pelo SKU do ERP.</p></div>`;
   return lista.map(p => {
-    const foto = p.fotos?.[0] || null;
+    const foto = p.foto_exibir_miniatura || p.fotos_exibir?.[0] || null;
     const isEsgotado = p.esgotado || p.esgotado_manual;
     const status = !p.ativo ? 'inativo' : isEsgotado ? 'esgotado' : 'disponivel';
     const badgeMap = { inativo:'badge-cancelado', esgotado:'badge-esgotado', disponivel:'badge-disponivel' };
@@ -1136,14 +1136,31 @@ window.cfgUploadFotoManual = async function(id, input) {
     });
     if (!up.ok) { throw new Error((await up.text().catch(()=>'')) || ('HTTP ' + up.status)); }
     const url = `${SUPA_URL}/storage/v1/object/public/catalogo-fotos/${path}`;
-    const r = await supa('ped_catalogo_produtos', `id=eq.${id}&select=fotos`);
-    const fotos = Array.isArray(r?.[0]?.fotos) ? r[0].fotos : [];
-    fotos.push(url);
-    await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos });
+    // grava na camada MANUAL (base) — não some quando o Bling/ERP sincronizar; a resolução (fotos_exibir) mostra Bling>ERP>Manual
+    const r = await supa('ped_catalogo_produtos', `id=eq.${id}&select=fotos_manual`);
+    const fotos_manual = Array.isArray(r?.[0]?.fotos_manual) ? r[0].fotos_manual : [];
+    fotos_manual.push(url);
+    await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos_manual, foto_manual_miniatura: fotos_manual[0] });
     cfgEditarProduto(id);   // recarrega o drawer com a foto nova
   } catch (e) {
     if (msg) { msg.textContent = 'Falha ao enviar: ' + (e.message || e); msg.style.color = 'var(--red)'; }
   }
+};
+
+// Apaga uma foto MANUAL (da camada fotos_manual) + remove o arquivo do storage
+window.cfgRemoverFotoManual = async function(id, indice) {
+  if (!confirm('Apagar esta foto manual?')) return;
+  const r = await supa('ped_catalogo_produtos', `id=eq.${id}&select=fotos_manual`);
+  const fotos = Array.isArray(r?.[0]?.fotos_manual) ? r[0].fotos_manual : [];
+  const alvo = fotos[indice];
+  if (alvo === undefined) return;
+  const novas = fotos.filter((_, i) => i !== indice);
+  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos_manual: novas, foto_manual_miniatura: novas[0] || null });
+  if (typeof alvo === 'string' && alvo.includes('/catalogo-fotos/')) {
+    const rel = alvo.split('/catalogo-fotos/')[1];
+    if (rel) fetch(`${SUPA_URL}/storage/v1/object/catalogo-fotos/${rel}`, { method: 'DELETE', headers: { apikey: SUPA_KEY, Authorization: HEADERS['Authorization'] || ('Bearer ' + SUPA_KEY) } }).catch(()=>{});
+  }
+  cfgEditarProduto(id);
 };
 
 // Apaga uma foto do produto (útil pra remover a manual depois que a do Bling chegar)
@@ -1169,23 +1186,41 @@ window.cfgEditarProduto = async function(id) {
   const res = await supa('ped_catalogo_produtos', `id=eq.${id}`);
   const p = res?.[0]; if (!p) return;
   const fotos = p.fotos || [];
+  const fotosErp = p.fotos_erp || [];
+  const fotosManual = p.fotos_manual || [];
+  const origemLabel = ({ bling:'🔵 Bling', erp:'🟢 ERP', manual:'✏️ Manual' })[p.origem_foto] || '— sem foto';
   abrirDrawer('Editar Produto', p.nome, `
     <div style="margin-bottom:4px">
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px">
-        Fotos ${fotos.length > 1 ? '· <span style=\"font-weight:400;color:var(--blue-mid)\">clique para definir capa</span>' : ''}
+        Fotos automáticas (Bling ▸ ERP) — <span style="font-weight:400">no catálogo aparece: <b>${origemLabel}</b></span>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${fotos.length ? fotos.slice(0,12).map((f,fi) => `
+        ${fotos.map((f,fi) => `
           <div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid ${fi===0?'#1A3A8F':'var(--border)'};transition:border .15s">
-            <img src="${f}" onclick="cfgDefinirCapa(${id},${fi})" title="${fi===0?'✅ Capa atual':'Clique para definir como capa'}" style="width:72px;height:72px;object-fit:contain;background:#f5f6fa;display:block;cursor:pointer">
-            ${fi===0 ? '<div style=\"position:absolute;bottom:0;left:0;right:0;background:#1A3A8F;color:#fff;font-size:9px;font-weight:700;text-align:center;padding:2px\">CAPA</div>' : ''}
+            <img src="${f}" onclick="cfgDefinirCapa(${id},${fi})" title="${fi===0?'✅ Capa (Bling)':'Clique para definir como capa'}" style="width:72px;height:72px;object-fit:contain;background:#f5f6fa;display:block;cursor:pointer">
+            ${fi===0 ? '<div style=\"position:absolute;bottom:0;left:0;right:0;background:#1A3A8F;color:#fff;font-size:9px;font-weight:700;text-align:center;padding:2px\">BLING</div>' : ''}
             <button onclick="event.stopPropagation();cfgRemoverFoto(${id},${fi})" title="Apagar esta foto" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:rgba(217,48,37,.92);color:#fff;font-size:12px;line-height:1;cursor:pointer;padding:0">×</button>
-          </div>`).join('') : '<div style="font-size:12px;color:var(--text-muted)">Sem fotos — adicione manualmente abaixo ou sincronize com o Bling</div>'}
+          </div>`).join('')}
+        ${fotosErp.map(f => `
+          <div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid #0F9D6E">
+            <img src="${f}" title="Foto do ERP (automática)" style="width:72px;height:72px;object-fit:contain;background:#f5f6fa;display:block">
+            <div style="position:absolute;bottom:0;left:0;right:0;background:#0F9D6E;color:#fff;font-size:9px;font-weight:700;text-align:center;padding:2px">ERP</div>
+          </div>`).join('')}
+        ${(!fotos.length && !fotosErp.length) ? '<div style="font-size:12px;color:var(--text-muted)">Sem foto do Bling nem do ERP — use a foto manual abaixo, ou sincronize com o Bling.</div>' : ''}
       </div>
-      <div style="margin-top:8px">
+      <div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#B45309;letter-spacing:.5px;margin-bottom:6px">✏️ Foto manual <span style="font-weight:400;color:var(--text-muted)">— aparece só quando não tem Bling nem ERP</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          ${fotosManual.map((f,fi) => `
+            <div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid #E8B04B">
+              <img src="${f}" style="width:72px;height:72px;object-fit:contain;background:#f5f6fa;display:block">
+              <div style="position:absolute;bottom:0;left:0;right:0;background:#B45309;color:#fff;font-size:9px;font-weight:700;text-align:center;padding:2px">MANUAL</div>
+              <button onclick="cfgRemoverFotoManual(${id},${fi})" title="Apagar foto manual" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:rgba(217,48,37,.92);color:#fff;font-size:12px;line-height:1;cursor:pointer;padding:0">×</button>
+            </div>`).join('')}
+        </div>
         <input type="file" id="ep-foto-file" accept="image/*" style="display:none" onchange="cfgUploadFotoManual(${id}, this)">
         <button class="btn btn-outline btn-sm" onclick="document.getElementById('ep-foto-file').click()">📷 Adicionar foto manual</button>
-        <span id="ep-foto-msg" style="font-size:11px;color:var(--text-muted);margin-left:8px">Use enquanto o produto não está no Bling. Depois é só apagar (×).</span>
+        <span id="ep-foto-msg" style="font-size:11px;color:var(--text-muted);margin-left:8px">Fica guardada mesmo se o Bling/ERP chegar depois (aí eles aparecem por cima).</span>
       </div>
     </div>
     <button class="btn btn-outline btn-sm" onclick="cfgSincronizarBling(${id},'${p.referencia}')" style="margin:10px 0 4px;width:100%">🔄 Sincronizar com Bling</button>
