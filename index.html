@@ -929,6 +929,19 @@ async function supa(tabela, query = '') {
   }
   return res.json();
 }
+// Foto do catálogo: usa SEMPRE a foto cheia e pede ao Supabase uma versão
+// reduzida e nítida na hora (nunca depende da miniatura pré-gerada, que ficava
+// velha/quebrada). w = largura desejada em px.
+function catFotoUrl(p, w = 500, q = 80) {
+  const cheia = (p && (p.fotos_exibir || p.fotos) || [])[0] || null;
+  if (!cheia) return null;
+  // Só reescreve URLs de storage público do próprio Supabase.
+  if (cheia.includes('/storage/v1/object/public/')) {
+    const alvo = cheia.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+    return `${alvo}?width=${w}&quality=${q}`;
+  }
+  return cheia;
+}
 async function supaInsert(tabela, body) {
   const url = `${SUPA_URL}/rest/v1/${tabela}`;
   const opts = { method: 'POST', headers: { ...HEADERS, 'Prefer': 'return=representation' }, body: JSON.stringify(body) };

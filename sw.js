@@ -6,7 +6,7 @@
 //
 //  ⚠️ Ao subir um deploy, BUMPAR CACHE_VERSION para invalidar o cache antigo.
 // ============================================================
-const CACHE_VERSION = 'stonni-v4-20260814';
+const CACHE_VERSION = 'stonni-v5-20260915';
 const APP_SHELL = [
   './',
   './index.html',
