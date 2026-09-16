@@ -1,0 +1,32 @@
+# A Vercel publica o repo INTEIRO, não só o que o app carrega. Este é o
+# repo com mais coisa aberta — tudo isto respondia 200 em
+# com-stonni.vercel.app:
+#
+#   docs/            crm/docs/STATUS.md      crm/docs/_HANDOFF.md
+#   DOCUMENTACAO.md  PLANO_UNIFICACAO.md     scripts/gerar-icones.py
+#
+# Não era vazamento de credencial (conferido: .env e package.json não
+# estavam expostos); o que ficava exposto era schema, plano interno e
+# notas de handoff.
+#
+# NÃO PODE ENTRAR AQUI, e cada um tem um motivo:
+#   - os .js da raiz, ds/, manifest.json, sw.js, os .png — são o app
+#   - `vendor/`  -> jspdf, carregado por script tag no index.html
+#   - `crm/`     -> o index.html carrega `./crm/index.html` num iframe.
+#                   Por isso a lista tira `crm/docs/`, e NÃO `crm/`.
+#   - `scripts/` é ferramenta Python (gerar ícone, migrar medida), não
+#     roda no navegador — esse pode sair.
+#
+# ESTE APP É PWA. O service worker pré-cacheia ./index.html,
+# ./manifest.json, ./icon-192.png e ./icon-512.png — nenhum está na lista.
+#
+# Isto não apaga nada do git, só deixa de mandar para o deploy.
+
+docs/
+crm/docs/
+scripts/
+CLAUDE.md
+README.md
+DOCUMENTACAO.md
+PLANO_UNIFICACAO.md
+.claude/
