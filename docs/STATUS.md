@@ -19,6 +19,9 @@ Rep monta pedido a partir do catálogo; interno usa também o CRM. Acesso libera
 ## Acesso (100% pelo Hub — `user_metadata.modulos` + `admin`)
 - `stonni` → Portal (Catálogo/Pedidos/Materiais). `atacado` → CRM (interno). `admin` → Configurações.
 - **Admin vê tudo** (independe de módulo). **Rep (`stonni`) nunca vê o CRM.**
+- **A porta é a mesma lista** (`MODULOS_DESTE_APP` no `index.html`): quem não tem `stonni`, `atacado`
+  nem `admin` é recusado no login, não entra para ver sidebar vazia. Área nova aqui = módulo novo
+  nessa lista, senão a porta e o nav voltam a discordar (foi o que aconteceu — ver dev-log 16/09).
 - Parede real = RLS por módulo **desacoplada** (projeto à parte — hoje anon lê tudo; ver PLANO).
 
 ## Stack / arquitetura
@@ -63,9 +66,23 @@ HTML/JS vanilla, sem build. `index.html` (shell/login/nav dirigido por `construi
 - **Vendoring do `crm/`**: é cópia; re-sincronizar a cada deploy do `stonnidist-v2` (reaplicar o guard "is-embedded" + o overlay-fixo do drawer). Aposentar o stonnidist-v2 quando o unificado virar produção do CRM.
 - **Wrapper + clone aninhado** (`com_stonni\com_stonni`) — editar o de dentro.
 - **Preview local não compõe frames** (innerWidth=0) → **não confiar** em teste visual de `transform`/drawer no preview; validar no device real.
+- **O `sw.js` transforma request falho em HTML, e isso mata script em silêncio.** O fallback é
+  `caches.match(req) || caches.match('./index.html')` para **todo** GET do mesmo domínio — inclusive
+  `.js` e `.css`. Quando a rede falha num sub-recurso, o navegador recebe `<!DOCTYPE html>` no lugar
+  do script e estoura `Unexpected token '<'`; aquele arquivo simplesmente não carrega. Visto em
+  16/09 com `ds/geral-acesso.js?v=2` no preview local — com o SW desregistrado, o mesmo arquivo volta
+  como `text/javascript` normalmente. O fallback para `index.html` só faz sentido em
+  `req.mode === 'navigate'`. **Mesmo padrão em `bononi-vendas` e `controle-stonni`**; o `bononi-exped`
+  não tem. Mexer no `sw.js` exige bumpar `CACHE_VERSION` e só chega em quem já instalou o PWA quando
+  o SW novo ativar.
 - `configuracoes.js` grande — refatoração gradual.
 
 ## Dev-log
+- 2026-09-16 — **`temAcessoStonni()` fazia `return true`: a porta deste app estava escancarada.** A função se chamava "verifica acesso ao módulo `atacado`" e o comentário dizia que *"a restrição real é feita pelo `ped_gestores`/`ped_representantes` em `carregarUsuario`"*. **Não era.** `carregarUsuario` não tem caminho de recusa — quem não é gestor nem representante cai no `iniciarApp()` igual. Como o Supabase Auth é compartilhado pelos 22 apps do grupo, **as 53 contas entravam aqui**: compras, expedição, varejo, RH, financeiro e os 12 parceiros da rede autorizada. Não era vazamento de tela — sem módulo o nav sai vazio ("Sem áreas liberadas") — mas era token entregue a quem não tem o que fazer aqui, e uma mensagem de erro (`Sem acesso a este sistema`) que **nunca podia disparar**.
+  - **A porta agora é a soma das áreas de dentro**, e sai da mesma lista que elas: `MODULOS_DESTE_APP = ['stonni','atacado']` + `admin`. `temPortal()` e `ehInterno()` passaram a chamar a mesma função da porta (`liberaAlgumaArea`), então porta e nav **não têm como discordar** — era esse o buraco, não a linha `return true` em si.
+  - **Medido em produção antes de mexer, porque trancar porta errada tira gente do trabalho:** dos 53, **20 passam e 33 são barrados**. Dos 33, **nenhum** é gestor ou representante, e **nenhum** tem ato registrado no app (conferido em `taco_logs`, `atac_log_acoes`, `atac_crm_notas`, `atac_card` e `ped_pedido_log`). Os 4 gestores ativos e os 4 representantes com conta passam todos. `rodrigodeonideal@gmail.com` está em `ped_representantes` mas **não tem conta no Auth** — não entrava antes nem agora.
+  - **Conferido rodando a função de verdade** (recortada do `index.html`, não redigitada) contra os 53 metadados de produção: 20 × 33, igual ao SQL, e `porta != nav` em **nenhuma** conta. Mais 11 casos de borda, incluindo os três que quebram implementação ingênua: `meta` nulo, `meta` sem a chave `modulos` (é o formato dos 12 parceiros e de 1 admin) e `modulos` vindo como string em vez de array.
+  - **Sessão válida sem área agora diz o motivo.** Quem vem do Hub logado e não tem chave daqui via um formulário de login em branco; agora vê `Sem acesso a este sistema. Contate o administrador.`
 - 2026-09-16 — **Configurações ganhou a aba "Acessos", só leitura.** Mostra quem tem o módulo `atacado` — que é a chave que este app confere de verdade, não a `stonni` do cartão no Hub —, a hierarquia de cada um e o que ela autoriza aqui. **Quem MUDA acesso muda no Hub**, num lugar só. Quem PODE ver é a RPC `geral_quem_tem_acesso` que decide pelo JWT: admin global ou admin do Comercial. Painel desenhado por `ds/geral-acesso.js`, cópia verbatim de `bononi-hub/ds/` — mudou lá, recopiar aqui e subir o `?v=`. A v2 do módulo resolve cada cor com fallback, porque 11 tokens que ele usava não existem no `stonni-ds.css` e token inexistente apaga o fundo sem dar erro. Se a RPC recusar ou a migration `0003` não estiver no banco, a aba explica em vez de mostrar painel quebrado.
 - 2026-09-16 — **`.vercelignore`: era o repo com mais coisa aberta.** Respondiam **200** em `com-stonni.vercel.app`: `docs/`, **`crm/docs/STATUS.md`**, **`crm/docs/_HANDOFF.md`**, `DOCUMENTACAO.md`, `PLANO_UNIFICACAO.md` e `scripts/gerar-icones.py`. O `crm/docs/` é o que passa mais fácil despercebido — é uma pasta de doc **dentro** de uma pasta que o app precisa. A Vercel serve o repo INTEIRO, não só o que o app carrega — descoberto ao fechar a mesma coisa no Hub e no Compras. **Não era vazamento de credencial:** a chave anon já sai no `index.html` por design, e uma varredura nos 12 sites do grupo confirmou que `.env`, `.env.local`, `.git/config` e `package.json` **não** estavam expostos em lugar nenhum. O que ficava aberto era schema e notas internas. Fechado com `.vercelignore`. **O que ficou de fora da lista, e por quê:** os `.js` da raiz, `ds/`, `manifest.json`, `sw.js` e os `.png` são o app; **`vendor/`** é o jspdf, carregado por script tag; e **`crm/`** entra num iframe (`src="./crm/index.html"`) — por isso a lista exclui `crm/docs/` e **não** `crm/`. `scripts/` é ferramenta Python (gerar ícone, migrar medida), não roda no navegador, então saiu. **Este app é PWA:** o `sw.js` pré-cacheia `./index.html`, `./manifest.json`, `./icon-192.png` e `./icon-512.png` — nenhum está na lista. **Isto não apaga nada do git** — só deixa de mandar para o deploy.
 - 2026-09-16 — **A capa do catálogo passou a usar o lockup da marca, e o fundo teve de mudar junto.** Antes era um logo tipográfico com emoji (`✳ stonni`).

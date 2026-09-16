@@ -654,11 +654,28 @@ let USUARIO = null; // { id, email, nome, perfil: 'representante'|'gestor'|'admi
 //  AUTH — integrado com Hub Bononi (Supabase Auth compartilhado)
 // ============================================================
 
-// Verifica acesso ao módulo 'atacado' via user_metadata
+// ── A PORTA DESTE APP ───────────────────────────────────────────────────
+// Esta lista é a porta E a soma das áreas que existem aqui dentro: `stonni`
+// abre o portal, `atacado` abre o CRM interno, e `admin` abre Configurações.
+// As duas coisas saem da MESMA lista de propósito. A porta já foi
+// `return true` com um comentário dizendo que ped_gestores restringia — e
+// ped_gestores nunca recusou ninguém: `carregarUsuario` não tem caminho de
+// recusa, quem não é gestor nem representante cai no `iniciarApp()` igual.
+// Como o Auth é compartilhado pelos 22 apps do grupo, na prática os 53
+// usuários entravam aqui (16/09/2026), inclusive compras e rede autorizada.
+const MODULOS_DESTE_APP = ['stonni', 'atacado'];
+const MSG_SEM_ACESSO = 'Sem acesso a este sistema. Contate o administrador.';
+
+// Recusar na porta não tira área de ninguém: sem um desses módulos o nav sai
+// vazio ("Sem áreas liberadas para o seu usuário"). Troca uma tela em branco
+// por um motivo — e para de entregar token a quem não tem o que fazer aqui.
+function liberaAlgumaArea(mods, adm, lista) {
+  return !!adm || (Array.isArray(mods) && lista.some(m => mods.includes(m)));
+}
+
 function temAcessoStonni(meta) {
-  // Acesso liberado para qualquer usuário autenticado
-  // A restrição real é feita pelo ped_gestores/ped_representantes em carregarUsuario
-  return true;
+  meta = meta || {};
+  return liberaAlgumaArea(meta.modulos, meta.admin, MODULOS_DESTE_APP);
 }
 
 async function carregarUsuario(user, token) {
@@ -750,7 +767,7 @@ async function fazerLogin() {
 
     const meta = data.user?.user_metadata ?? {};
     if (!temAcessoStonni(meta)) {
-      erroEl.textContent = 'Sem acesso a este sistema. Contate o administrador.';
+      erroEl.textContent = MSG_SEM_ACESSO;
       return;
     }
 
@@ -802,8 +819,11 @@ let paginaAtual = '';
 // ============================================================
 function temMod(m) { return ((USUARIO && USUARIO.modulos) || []).includes(m); }
 function ehAdmin() { return !!(USUARIO && USUARIO.admin); }
-function ehInterno() { return temMod('atacado') || ehAdmin(); }              // vê o CRM (admin sempre vê)
-function temPortal() { return temMod('stonni') || temMod('atacado') || ehAdmin(); } // admin sempre vê o portal
+// Mesma função da porta (`liberaAlgumaArea`), com a lista de cada área. É o
+// que impede porta e nav de voltarem a discordar: área nova aqui só existe se
+// o módulo dela entrar em MODULOS_DESTE_APP, que é o que a porta confere.
+function ehInterno() { return liberaAlgumaArea(USUARIO && USUARIO.modulos, USUARIO && USUARIO.admin, ['atacado']); }
+function temPortal() { return liberaAlgumaArea(USUARIO && USUARIO.modulos, USUARIO && USUARIO.admin, MODULOS_DESTE_APP); }
 
 function construirNav() {
   const grupos = [];
@@ -1082,6 +1102,10 @@ function iniciarApp() {
 //  AUTO LOGIN — usa sessão do Supabase Auth (compartilhada com Hub)
 // ============================================================
 window.addEventListener('DOMContentLoaded', async () => {
+  // Sessão do Hub válida, mas sem área aqui. Guardado para a tela de login
+  // dizer o motivo em vez de devolver um formulário em branco para quem
+  // acabou de entrar no Hub e já está autenticado.
+  let sessaoSemAcesso = false;
   try {
     const LS_KEY = 'sb-vishxwdxqiygbxmtpfoy-auth-token';
     const sbToken = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
@@ -1101,6 +1125,7 @@ window.addEventListener('DOMContentLoaded', async () => {
           await carregarUsuario(userData, accessToken);
           return;
         }
+        if (userData.id) sessaoSemAcesso = true;
       }
     }
 
@@ -1129,6 +1154,7 @@ window.addEventListener('DOMContentLoaded', async () => {
               await carregarUsuario(userData, newSession.access_token);
               return;
             }
+            if (userData.id) sessaoSemAcesso = true;
           }
         }
       }
@@ -1137,6 +1163,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // Sem sessão válida — mostra login
   document.getElementById('login-screen').classList.remove('hidden');
+  if (sessaoSemAcesso) document.getElementById('login-error').textContent = MSG_SEM_ACESSO;
 });
 
 // Enter no login

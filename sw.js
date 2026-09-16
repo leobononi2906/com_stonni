@@ -8,7 +8,10 @@
 // ============================================================
 // v6 engloba o v5 que veio do 0de5264: a versao mais nova vence, e o
 // APP_SHELL abaixo ja e o dos dois lados somados.
-const CACHE_VERSION = 'stonni-v6-20260916';
+// v7: a porta do app passou a conferir modulo (temAcessoStonni). O index.html
+// esta no APP_SHELL, entao sem bumpar aqui quem ja instalou o PWA continuaria
+// arrancando pela casca velha quando estiver offline.
+const CACHE_VERSION = 'stonni-v7-20260916';
 const APP_SHELL = [
   './',
   './index.html',
