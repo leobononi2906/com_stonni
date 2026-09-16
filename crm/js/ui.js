@@ -2,14 +2,14 @@
 // ── TOAST ──────────────────────────────────────────────────
 function toast(msg,tipo='ok',acao) {
   const el=document.createElement('div');
-  el.style.cssText=`position:fixed;bottom:20px;right:20px;z-index:9999;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.4);transition:opacity .3s;background:${tipo==='err'?'#dc2626':'#16a34a'};color:#fff;display:flex;align-items:center;gap:12px`;
+  el.style.cssText=`position:fixed;bottom:20px;right:20px;z-index:9999;padding:var(--space-2-5) var(--space-4);border-radius:var(--radius-lg);font-size:var(--fs-200);font-weight:500;box-shadow:0 4px 12px var(--surface-overlay);transition:opacity .3s;background:${tipo==='err'?'var(--danger-600)':'var(--success-500)'};color:var(--neutral-0);display:flex;align-items:center;gap:var(--space-3)`;
   const txt=document.createElement('span'); txt.textContent=msg; el.appendChild(txt);
   // Carteira e Prospeccao viraram telas separadas: sem isso o card some e o
   // vendedor nao ve pra onde foi.
   if(acao && typeof acao.fn==='function'){
     const b=document.createElement('button');
     b.textContent=acao.texto||'Ver';
-    b.style.cssText='background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;cursor:pointer;white-space:nowrap';
+    b.style.cssText='background:var(--on-brand-veil);border:1px solid var(--on-brand-veil-border);color:var(--neutral-0);font-size:var(--fs-100);font-weight:700;padding:3px var(--space-2-5);border-radius:var(--radius-md);cursor:pointer;white-space:nowrap';
     b.onclick=()=>{el.remove();acao.fn();};
     el.appendChild(b);
   }

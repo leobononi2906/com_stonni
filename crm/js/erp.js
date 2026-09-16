@@ -19,7 +19,7 @@ async function searchVincERP() {
   if (!el) return;
   // Aviso de múltiplos vínculos
   const jaVinc = S.vinculosERP.length;
-  el.innerHTML = `<p style="padding:8px;font-size:11px;color:var(--text-muted);border-bottom:1px solid var(--border);margin-bottom:6px">
+  el.innerHTML = `<p style="padding:var(--space-2);font-size:var(--fs-090);color:var(--text-muted);border-bottom:1px solid var(--border);margin-bottom:var(--space-1-5)">
     ${jaVinc > 0 ? `<strong>${jaVinc} código${jaVinc>1?'s':''} ERP já vinculado${jaVinc>1?'s':''}</strong> — pode adicionar mais. Pedidos serão agregados.` : 'Buscando...'}
   </p>`;
 
@@ -49,12 +49,12 @@ async function searchVincERP() {
   el.innerHTML = res.map(c => `
     <button onclick="confirmarVincERP(${c.id_cliente},'${esc(c.nome_cliente||'')}','${esc(c.cnpj||'')}')"
       ${vincAtual.has(c.id_cliente) ? 'disabled style="opacity:.5;cursor:default"' : ''}
-      class="mres-btn" style="margin-bottom:4px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      class="mres-btn" style="margin-bottom:var(--space-1)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-2)">
         <div class="mres-nome" style="flex:1">${c.nome_cliente||'—'}</div>
-        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-          ${vincAtual.has(c.id_cliente) ? '<span style="font-size:10px;color:var(--green);font-weight:600">✓ Já vinculado</span>' : ''}
-          <span style="font-size:11px;color:var(--text-muted)">#${c.id_cliente}</span>
+        <div style="display:flex;align-items:center;gap:var(--space-1-5);flex-shrink:0">
+          ${vincAtual.has(c.id_cliente) ? '<span style="font-size:var(--fs-075);color:var(--green);font-weight:600"><i class="ic ic-sm" data-ic="check"></i> Já vinculado</span>' : ''}
+          <span style="font-size:var(--fs-090);color:var(--text-muted)">#${c.id_cliente}</span>
         </div>
       </div>
       ${(c.cnpj||c.cidade) ? `<div class="mres-meta">${c.cnpj ? fmtC(c.cnpj)+' · ' : ''}${c.cidade||''}${c.uf ? ' - '+c.uf : ''}</div>` : ''}
@@ -122,8 +122,8 @@ async function confirmarVincERP(erpId, erpNome, cnpj) {
     fecharVincularERP();
 
     const msg = isCarteira
-      ? `✅ ${erpNome} (#${erpId}) vinculado — última compra há ${diasUlt}d`
-      : `✅ ${erpNome} (#${erpId}) vinculado — sem compras recentes`;
+      ? `<i class="ic ic-sm" data-ic="check-circle"></i> ${erpNome} (#${erpId}) vinculado — última compra há ${diasUlt}d`
+      : `<i class="ic ic-sm" data-ic="check-circle"></i> ${erpNome} (#${erpId}) vinculado — sem compras recentes`;
     await logAcao('VINCULAR_ERP', {
       id_cliente: crmId, nome_cliente: crmNome,
       detalhe: { id_erp: erpId, nome_erp: erpNome, cnpj, tem_compras: !!isCarteira }
@@ -164,7 +164,7 @@ async function fundirDuplicado() {
     if (r && r.ok === false) { toast('Falha ao fundir', 'err'); return; }
     await logAcao('FUNDIR_DUPLICADO', { id_cliente: d.id_manual, nome_cliente: d.nome_manual,
       detalhe: { id_erp: d.id_erp, motivo: d.motivo } });
-    toast(`✅ Cards fundidos — ${sN(d.nome_erp)}`);
+    toast(`<i class="ic ic-sm" data-ic="check-circle"></i> Cards fundidos — ${sN(d.nome_erp)}`);
     S.dupSugestao = null;
     await Promise.all([loadCarteira(), loadProspeccao()]);
     await selCliente(d.id_manual);
@@ -187,12 +187,12 @@ async function ignorarDuplicado() {
 async function desvincularERP(vincId, crmId, erpNome) {
   const okDesvincular = await new Promise(res => {
     const d = document.createElement('div');
-    d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
-    d.innerHTML = `<div style='background:#fff;border-radius:12px;padding:24px;max-width:320px;width:90%;text-align:center'>
-      <p style='margin-bottom:16px;font-size:14px'>Desvincular <b>${erpNome}</b>?<br><span style='font-size:12px;color:#64748b'>Telefones importados deste ERP também serão removidos.</span></p>
-      <div style='display:flex;gap:8px;justify-content:center'>
-        <button id='_dv_n' style='padding:8px 20px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;cursor:pointer'>Cancelar</button>
-        <button id='_dv_s' style='padding:8px 20px;border-radius:8px;border:none;background:#dc2626;color:#fff;cursor:pointer'>Desvincular</button>
+    d.style.cssText = 'position:fixed;inset:0;background:var(--surface-overlay);z-index:9999;display:flex;align-items:center;justify-content:center';
+    d.innerHTML = `<div style='background:var(--neutral-0);border-radius:var(--radius-xl);padding:var(--space-6);max-width:320px;width:90%;text-align:center'>
+      <p style='margin-bottom:var(--space-4);font-size:var(--fs-300)'>Desvincular <b>${erpNome}</b>?<br><span style='font-size:var(--fs-100);color:var(--text-subtle)'>Telefones importados deste ERP também serão removidos.</span></p>
+      <div style='display:flex;gap:var(--space-2);justify-content:center'>
+        <button id='_dv_n' style='padding:var(--space-2) var(--space-5);border-radius:var(--radius-lg);border:1px solid var(--border-default);background:var(--surface-subtle);cursor:pointer'>Cancelar</button>
+        <button id='_dv_s' style='padding:var(--space-2) var(--space-5);border-radius:var(--radius-lg);border:none;background:var(--danger-600);color:var(--neutral-0);cursor:pointer'>Desvincular</button>
       </div></div>`;
     document.body.appendChild(d);
     d.querySelector('#_dv_s').onclick = () => { d.remove(); res(true); };

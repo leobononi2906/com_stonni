@@ -35,7 +35,7 @@ async function salvarModalVendedor() {
         id_cliente: cId, nome_cliente: cNome,
         id_vendedor: Number(vendId), nome_vendedor: vend?.nome_vendedor||'',
       });
-      toast(`✅ Vendedor alterado para ${sN(vend?.nome_vendedor||'')}`);
+      toast(`<i class="ic ic-sm" data-ic="check-circle"></i> Vendedor alterado para ${sN(vend?.nome_vendedor||'')}`);
     } else {
       // Remover vínculo → volta para prospecção geral
       await sbDel('atac_cliente_vendedor', 'id_cliente', cId);
@@ -58,7 +58,7 @@ async function salvarModalVendedor() {
 async function buscarNoSupabase(q) {
   const el = document.getElementById('cl-list');
   if (!el) return;
-  el.innerHTML = '<div class="empty-msg" style="padding:16px"><div class="spinner" style="margin:0 auto 8px"></div>Buscando...</div>';
+  el.innerHTML = '<div class="empty-msg" style="padding:var(--space-4)"><div class="spinner" style="margin:0 auto var(--space-2)"></div>Buscando...</div>';
 
   const qEnc = encodeURIComponent(q);
   const tab = S.mainTab === 'carteira' ? 'carteira' : 'geral';
@@ -104,8 +104,8 @@ async function buscarNoSupabase(q) {
       <div class="cl-row1">
         <span class="cl-nome">${c.nome_cliente}</span>
         ${bdg(st)}
-        ${dc>=30?'<span style="color:var(--orange);font-size:12px;flex-shrink:0">⚠</span>':''}
-        ${S.overdueIds.has(c.id_cliente)?'<span style="color:var(--red);font-size:12px;flex-shrink:0">🔔</span>':''}
+        ${dc>=30?'<span style="color:var(--orange);font-size:var(--fs-100);flex-shrink:0"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>':''}
+        ${S.overdueIds.has(c.id_cliente)?'<span style="color:var(--red);font-size:var(--fs-100);flex-shrink:0"><i class="ic ic-sm" data-ic="bell"></i></span>':''}
       </div>
       ${semaforo(c)}
       <div class="cl-row2">${sN(c.nome_vendedor_responsavel)}</div>
@@ -201,12 +201,12 @@ async function assumirCliente(id, nomeCliente) {
 
   const ok = await new Promise(res => {
     const div = document.createElement('div');
-    div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
-    div.innerHTML = `<div style='background:#fff;border-radius:12px;padding:24px;max-width:340px;width:90%;text-align:center'>
-      <p style='margin-bottom:16px;font-size:14px'>Atribuir <b>${nomeCliente}</b> à carteira de <b>${sN(vNome)}</b>?<br><span style='font-size:12px;color:#64748b'>O vendedor terá ${CFG.prospeccao_prazo_contato_dias} dias para registrar uma interação.</span></p>
-      <div style='display:flex;gap:8px;justify-content:center'>
-        <button id='_ac_n' style='padding:8px 20px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;cursor:pointer'>Cancelar</button>
-        <button id='_ac_s' style='padding:8px 20px;border-radius:8px;border:none;background:#0077CC;color:#fff;cursor:pointer'>Assumir</button>
+    div.style.cssText = 'position:fixed;inset:0;background:var(--surface-overlay);z-index:9999;display:flex;align-items:center;justify-content:center';
+    div.innerHTML = `<div style='background:var(--neutral-0);border-radius:var(--radius-xl);padding:var(--space-6);max-width:340px;width:90%;text-align:center'>
+      <p style='margin-bottom:var(--space-4);font-size:var(--fs-300)'>Atribuir <b>${nomeCliente}</b> à carteira de <b>${sN(vNome)}</b>?<br><span style='font-size:var(--fs-100);color:var(--text-subtle)'>O vendedor terá ${CFG.prospeccao_prazo_contato_dias} dias para registrar uma interação.</span></p>
+      <div style='display:flex;gap:var(--space-2);justify-content:center'>
+        <button id='_ac_n' style='padding:var(--space-2) var(--space-5);border-radius:var(--radius-lg);border:1px solid var(--border-default);background:var(--surface-subtle);cursor:pointer'>Cancelar</button>
+        <button id='_ac_s' style='padding:var(--space-2) var(--space-5);border-radius:var(--radius-lg);border:none;background:var(--blue-500);color:var(--neutral-0);cursor:pointer'>Assumir</button>
       </div></div>`;
     document.body.appendChild(div);
     div.querySelector('#_ac_s').onclick = () => { div.remove(); res(true); };
@@ -233,7 +233,7 @@ async function assumirCliente(id, nomeCliente) {
     id_vendedor: vId, nome_vendedor: vNome
   });
   toast(
-    `✅ ${nomeCliente} foi para a carteira de ${sN(vNome)} — prazo de ${CFG.prospeccao_prazo_contato_dias} dias`,
+    `<i class="ic ic-sm" data-ic="check-circle"></i> ${nomeCliente} foi para a carteira de ${sN(vNome)} — prazo de ${CFG.prospeccao_prazo_contato_dias} dias`,
     'ok',
     { texto: 'Ver na carteira', fn: () => { gotoTab('crm'); setMainTab('carteira'); selCliente(id); } }
   );

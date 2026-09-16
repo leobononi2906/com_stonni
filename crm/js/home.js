@@ -54,7 +54,7 @@ function _grupoColor(g) {
 function _sortBtns(secao, opcoes) {
   const atual = S._homeSort[secao] || opcoes[0].v;
   return `<div style="display:flex;gap:3px;flex-shrink:0">${opcoes.map(o =>
-    `<button onclick="setHomeSort('${secao}','${o.v}')" style="padding:2px 8px;font-size:10px;font-weight:600;border-radius:4px;cursor:pointer;border:1px solid ${atual===o.v?'var(--blue-dark)':'var(--border)'};background:${atual===o.v?'var(--blue-dark)':'transparent'};color:${atual===o.v?'#fff':'var(--text-muted)'}">${o.l}</button>`
+    `<button onclick="setHomeSort('${secao}','${o.v}')" style="padding:var(--space-0-5) var(--space-2);font-size:var(--fs-075);font-weight:600;border-radius:var(--radius-sm);cursor:pointer;border:1px solid ${atual===o.v?'var(--blue-dark)':'var(--border)'};background:${atual===o.v?'var(--blue-dark)':'transparent'};color:${atual===o.v?'var(--neutral-0)':'var(--text-muted)'}">${o.l}</button>`
   ).join('')}</div>`;
 }
 
@@ -77,7 +77,7 @@ function _impCell(cur, prev, delta) {
   const sign = d >= 0 ? '+' : '-';
   const pct = delta > 900 ? 'Novo' : fmtPct(delta);
   return `<div style="text-align:right;line-height:1.15">
-    <div class="${cls}" style="font-size:11px">${sign}${fmtK(Math.abs(d))}</div>
+    <div class="${cls}" style="font-size:var(--fs-090)">${sign}${fmtK(Math.abs(d))}</div>
     <div class="${cls}" style="font-size:9px;opacity:.8">${pct}</div>
   </div>`;
 }
@@ -132,14 +132,14 @@ function renderHome() {
     } else if (g.val > 0) {
       deltaHTML = `<span class="delta-pos">Novo</span>`;
     }
-    return `<div class="ccard" style="padding:14px 16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:13px;font-weight:600;color:var(--text-primary)">${escH(g.nome)}</span>
+    return `<div class="ccard" style="padding:var(--space-3-5) var(--space-4)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-1)">
+        <span style="font-size:var(--fs-200);font-weight:600;color:var(--text-primary)">${escH(g.nome)}</span>
         ${deltaHTML}
       </div>
-      <div style="display:flex;align-items:baseline;gap:8px">
-        <span style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:var(--blue-mid)">${fmtK(g.val)}</span>
-        <span style="font-size:11px;color:var(--text-muted)">${pct}%</span>
+      <div style="display:flex;align-items:baseline;gap:var(--space-2)">
+        <span style="font-size:var(--fs-550);font-weight:700;font-family:var(--font-mono);color:var(--blue-mid)">${fmtK(g.val)}</span>
+        <span style="font-size:var(--fs-090);color:var(--text-muted)">${pct}%</span>
       </div>
     </div>`;
   }).join('');
@@ -163,7 +163,7 @@ function renderHome() {
   const grupoOrder = [...allGrupos].sort((a, b) => (grupoMap.get(b) || 0) - (grupoMap.get(a) || 0));
 
   const legendHTML = grupoOrder.slice(0, 6).map(g =>
-    `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted)"><span style="width:8px;height:8px;border-radius:2px;background:${_grupoColor(g)}"></span>${escH(g)}</span>`
+    `<span style="display:inline-flex;align-items:center;gap:var(--space-1);font-size:var(--fs-075);color:var(--text-muted)"><span style="width:8px;height:8px;border-radius:2px;background:${_grupoColor(g)}"></span>${escH(g)}</span>`
   ).join(' ');
 
   const evolHTML = months.map(m => {
@@ -177,7 +177,7 @@ function renderHome() {
     }).join('');
     return `<div class="bar-row">
       <span class="bar-lbl">${_monthLabel(m)}</span>
-      <div class="bar-track" style="height:14px;border-radius:4px;display:flex;overflow:hidden;width:${pctTotal.toFixed(1)}%">${segments}</div>
+      <div class="bar-track" style="height:14px;border-radius:var(--radius-sm);display:flex;overflow:hidden;width:${pctTotal.toFixed(1)}%">${segments}</div>
       <span class="bar-val">${fmtK(total)}</span>
     </div>`;
   }).join('');
@@ -200,13 +200,13 @@ function renderHome() {
 
   const topHTML = topCli.map((c, i) => {
     const pct = Math.round((c.fat / topMax) * 100);
-    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:16px;text-align:right">${i + 1}</span>
-      <span style="flex:1;font-size:12px;color:var(--text-primary);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(c.nome)}</span>
+    return `<div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1-5)">
+      <span style="font-size:var(--fs-075);font-weight:700;color:var(--text-muted);width:16px;text-align:right">${i + 1}</span>
+      <span style="flex:1;font-size:var(--fs-100);color:var(--text-primary);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(c.nome)}</span>
       <div style="width:80px;flex-shrink:0"><div class="bar-track" style="height:5px"><div class="bar-fill" style="width:${pct}%"></div></div></div>
-      <span style="font-size:12px;font-weight:700;color:var(--blue-mid);flex-shrink:0;width:60px;text-align:right">${fmtK(c.fat)}</span>
+      <span style="font-size:var(--fs-100);font-weight:700;color:var(--blue-mid);flex-shrink:0;width:60px;text-align:right">${fmtK(c.fat)}</span>
     </div>`;
-  }).join('') || '<p style="color:var(--text-muted);font-size:12px">Sem dados</p>';
+  }).join('') || '<p style="color:var(--text-muted);font-size:var(--fs-100)">Sem dados</p>';
 
   // ── 5/6. Tendência: ÚLTIMOS 30 DIAS vs MÉDIA MENSAL 3 MESES ──
   // Fonte fixa (independe do filtro de período do topo). Base 3m = total 90d ÷ 3.
@@ -248,16 +248,16 @@ function renderHome() {
   const quedaCli = _rankTrend(cliDeltas, 'down', S._homeSort.cliQueda);
 
   function _cliRow(c) {
-    return `<div style="display:grid;grid-template-columns:1fr 52px 52px 66px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px">
+    return `<div style="display:grid;grid-template-columns:1fr 52px 52px 66px;gap:var(--space-1-5);align-items:center;padding:var(--space-1-5) 0;border-bottom:1px solid var(--border);font-size:var(--fs-090)">
       <span style="font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(c.nome)}">${escH(_truncate(c.nome, 26))}</span>
-      <span style="text-align:right;color:var(--text-muted);font-family:'DM Mono',monospace;font-size:10px">${c.prev ? fmtK(c.prev) : '—'}</span>
-      <span style="text-align:right;font-family:'DM Mono',monospace;font-weight:600;color:var(--text-primary);font-size:10px">${c.cur ? fmtK(c.cur) : 'R$0'}</span>
+      <span style="text-align:right;color:var(--text-muted);font-family:var(--font-mono);font-size:var(--fs-075)">${c.prev ? fmtK(c.prev) : '—'}</span>
+      <span style="text-align:right;font-family:var(--font-mono);font-weight:600;color:var(--text-primary);font-size:var(--fs-075)">${c.cur ? fmtK(c.cur) : 'R$0'}</span>
       ${_impCell(c.cur, c.prev, c.delta)}
     </div>`;
   }
 
   function _cliHeader() {
-    return `<div style="display:grid;grid-template-columns:1fr 52px 52px 66px;gap:6px;padding:4px 0;border-bottom:2px solid var(--border);margin-bottom:2px;font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">
+    return `<div style="display:grid;grid-template-columns:1fr 52px 52px 66px;gap:var(--space-1-5);padding:var(--space-1) 0;border-bottom:2px solid var(--border);margin-bottom:var(--space-0-5);font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">
       <span>Cliente</span>
       <span style="text-align:right">Média 3M</span>
       <span style="text-align:right">Últ. 30D</span>
@@ -303,17 +303,17 @@ function renderHome() {
   const prodQueda = _rankTrend(prodDeltas, 'down', S._homeSort.prodQueda);
 
   function _prodRow(p) {
-    return `<div style="display:grid;grid-template-columns:1fr 36px 50px 50px 66px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px">
+    return `<div style="display:grid;grid-template-columns:1fr 36px 50px 50px 66px;gap:var(--space-1-5);align-items:center;padding:var(--space-1-5) 0;border-bottom:1px solid var(--border);font-size:var(--fs-090)">
       <span style="font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(p.nome)}">${escH(_truncate(p.nome, 26))}</span>
-      <span style="text-align:right;color:var(--text-muted);font-size:10px">${p.qtd ? Math.round(p.qtd) : '—'}</span>
-      <span style="text-align:right;color:var(--text-muted);font-family:'DM Mono',monospace;font-size:10px">${p.prev ? fmtK(p.prev) : '—'}</span>
-      <span style="text-align:right;font-family:'DM Mono',monospace;font-weight:600;color:var(--text-primary);font-size:10px">${p.cur ? fmtK(p.cur) : 'R$0'}</span>
+      <span style="text-align:right;color:var(--text-muted);font-size:var(--fs-075)">${p.qtd ? Math.round(p.qtd) : '—'}</span>
+      <span style="text-align:right;color:var(--text-muted);font-family:var(--font-mono);font-size:var(--fs-075)">${p.prev ? fmtK(p.prev) : '—'}</span>
+      <span style="text-align:right;font-family:var(--font-mono);font-weight:600;color:var(--text-primary);font-size:var(--fs-075)">${p.cur ? fmtK(p.cur) : 'R$0'}</span>
       ${_impCell(p.cur, p.prev, p.delta)}
     </div>`;
   }
 
   function _prodHeader() {
-    return `<div style="display:grid;grid-template-columns:1fr 36px 50px 50px 66px;gap:6px;padding:4px 0;border-bottom:2px solid var(--border);margin-bottom:2px;font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">
+    return `<div style="display:grid;grid-template-columns:1fr 36px 50px 50px 66px;gap:var(--space-1-5);padding:var(--space-1) 0;border-bottom:2px solid var(--border);margin-bottom:var(--space-0-5);font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">
       <span>Produto</span>
       <span style="text-align:right">Qtd</span>
       <span style="text-align:right">Média 3M</span>
@@ -327,14 +327,14 @@ function renderHome() {
   // legenda explicativa do comparativo
   const trailCapHTML = `<div class="panel-cap">Últimos 30 dias vs média mensal dos 3 meses anteriores${S.trailAnchor ? ` · base até ${fmtD(S.trailAnchor)}` : ''}</div>`;
 
-  const emptyMsg = '<p style="color:var(--text-muted);font-size:12px;padding:8px 0">Sem dados comparativos</p>';
+  const emptyMsg = '<p style="color:var(--text-muted);font-size:var(--fs-100);padding:var(--space-2) 0">Sem dados comparativos</p>';
 
   // ── 7. Últimos Pedidos ──────────────────────────────────
   const ultPedidos = d.slice(0, 10).map(r => `<tr>
-    <td style="font-size:12px;color:var(--text-secondary)">${fmtD(r.data_faturamento)}</td>
-    <td class="r" style="font-weight:700;color:var(--blue-mid);font-size:13px">${fmt(docFat(r))}</td>
-    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:600;color:var(--text-primary)">${escH(r.nome_cliente || '')}</td>
-    <td style="font-size:12px;font-weight:600;color:var(--green)">${sN(r.nome_vendedor)}</td>
+    <td style="font-size:var(--fs-100);color:var(--text-secondary)">${fmtD(r.data_faturamento)}</td>
+    <td class="r" style="font-weight:700;color:var(--blue-mid);font-size:var(--fs-200)">${fmt(docFat(r))}</td>
+    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-100);font-weight:600;color:var(--text-primary)">${escH(r.nome_cliente || '')}</td>
+    <td style="font-size:var(--fs-100);font-weight:600;color:var(--green)">${sN(r.nome_vendedor)}</td>
   </tr>`).join('');
 
   // ══════════════════════════════════════════════════════════
@@ -343,33 +343,33 @@ function renderHome() {
   el.innerHTML = `
     <!-- KPIs -->
     <div class="kgrid">
-      ${kc('💰', 'Faturamento', fmtK(fat), 'kc-b')}
-      ${kc('🛒', 'Pedidos', ped, 'kc-p')}
-      ${kc('👥', 'Clientes', cli, 'kc-g')}
-      ${kc('🎯', 'Ticket Medio', fmtK(ticket), 'kc-y')}
+      ${kc('<i class="ic ic-sm" data-ic="dollar-sign"></i>', 'Faturamento', fmtK(fat), 'kc-b')}
+      ${kc('<i class="ic ic-sm" data-ic="shopping-cart"></i>', 'Pedidos', ped, 'kc-p')}
+      ${kc('<i class="ic ic-sm" data-ic="users"></i>', 'Clientes', cli, 'kc-g')}
+      ${kc('<i class="ic ic-sm" data-ic="target"></i>', 'Ticket Medio', fmtK(ticket), 'kc-y')}
     </div>
 
     <!-- Faturamento por Linha -->
     <div class="scard">
-      <div class="scard-title">📊 Faturamento por Linha</div>
+      <div class="scard-title"><i class="ic ic-sm" data-ic="bar-chart"></i> Faturamento por Linha</div>
       <div class="cgrid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
-        ${linhasHTML || '<p style="color:var(--text-muted);font-size:12px">Sem dados de itens</p>'}
+        ${linhasHTML || '<p style="color:var(--text-muted);font-size:var(--fs-100)">Sem dados de itens</p>'}
       </div>
     </div>
 
     <!-- Evolução Mensal -->
     <div class="scard">
-      <div class="scard-title">📈 Evolução Mensal</div>
-      <div style="margin-bottom:8px">${legendHTML}</div>
-      ${evolHTML || '<p style="color:var(--text-muted);font-size:12px">Sem dados</p>'}
+      <div class="scard-title"><i class="ic ic-sm" data-ic="trending-up"></i> Evolução Mensal</div>
+      <div style="margin-bottom:var(--space-2)">${legendHTML}</div>
+      ${evolHTML || '<p style="color:var(--text-muted);font-size:var(--fs-100)">Sem dados</p>'}
     </div>
 
     <!-- Top 10 Clientes -->
     <div class="scard">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div class="scard-title" style="margin-bottom:0">🏆 Top 10 Clientes</div>
-        <div style="display:flex;gap:4px">
-          ${['1m', '3m', '6m'].map(p => `<button onclick="setTopPeriod('${p}')" style="padding:3px 10px;font-size:11px;font-weight:600;border-radius:6px;cursor:pointer;border:1.5px solid ${S.topPeriod === p ? 'var(--blue-dark)' : 'var(--border)'};background:${S.topPeriod === p ? 'var(--blue-dark)' : 'transparent'};color:${S.topPeriod === p ? '#fff' : 'var(--text-secondary)'}">${p}</button>`).join('')}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2-5)">
+        <div class="scard-title" style="margin-bottom:0"><i class="ic ic-sm" data-ic="trophy"></i> Top 10 Clientes</div>
+        <div style="display:flex;gap:var(--space-1)">
+          ${['1m', '3m', '6m'].map(p => `<button onclick="setTopPeriod('${p}')" style="padding:3px var(--space-2-5);font-size:var(--fs-090);font-weight:600;border-radius:var(--radius-md);cursor:pointer;border:1.5px solid ${S.topPeriod === p ? 'var(--blue-dark)' : 'var(--border)'};background:${S.topPeriod === p ? 'var(--blue-dark)' : 'transparent'};color:${S.topPeriod === p ? 'var(--neutral-0)' : 'var(--text-secondary)'}">${p}</button>`).join('')}
         </div>
       </div>
       ${topHTML}
@@ -382,17 +382,17 @@ function renderHome() {
     </div>
 
     <!-- Clientes Crescimento / Queda -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-4)">
       <div class="scard scard-up" style="margin-bottom:0">
         <div class="panel-head">
-          <div class="scard-title" style="margin-bottom:0">📈 Clientes em Alta</div>
+          <div class="scard-title" style="margin-bottom:0"><i class="ic ic-sm" data-ic="trending-up"></i> Clientes em Alta</div>
           ${_sortBtns('cliCresc', sortOptsCli)}
         </div>
         ${crescCli.length ? _cliHeader() + crescCli.map(_cliRow).join('') : emptyMsg}
       </div>
       <div class="scard scard-down" style="margin-bottom:0">
         <div class="panel-head">
-          <div class="scard-title" style="margin-bottom:0">📉 Clientes em Queda</div>
+          <div class="scard-title" style="margin-bottom:0"><i class="ic ic-sm" data-ic="trending-down"></i> Clientes em Queda</div>
           ${_sortBtns('cliQueda', sortOptsCli)}
         </div>
         ${quedaCli.length ? _cliHeader() + quedaCli.map(_cliRow).join('') : emptyMsg}
@@ -400,17 +400,17 @@ function renderHome() {
     </div>
 
     <!-- Produtos Crescimento / Queda -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-4)">
       <div class="scard scard-up" style="margin-bottom:0">
         <div class="panel-head">
-          <div class="scard-title" style="margin-bottom:0">📈 Produtos em Alta</div>
+          <div class="scard-title" style="margin-bottom:0"><i class="ic ic-sm" data-ic="trending-up"></i> Produtos em Alta</div>
           ${_sortBtns('prodCresc', sortOptsProd)}
         </div>
         ${prodCresc.length ? _prodHeader() + prodCresc.map(_prodRow).join('') : emptyMsg}
       </div>
       <div class="scard scard-down" style="margin-bottom:0">
         <div class="panel-head">
-          <div class="scard-title" style="margin-bottom:0">📉 Produtos em Queda</div>
+          <div class="scard-title" style="margin-bottom:0"><i class="ic ic-sm" data-ic="trending-down"></i> Produtos em Queda</div>
           ${_sortBtns('prodQueda', sortOptsProd)}
         </div>
         ${prodQueda.length ? _prodHeader() + prodQueda.map(_prodRow).join('') : emptyMsg}
@@ -419,10 +419,10 @@ function renderHome() {
 
     <!-- Últimos Pedidos -->
     <div class="scard">
-      <div class="scard-title">📦 Últimos Pedidos</div>
+      <div class="scard-title"><i class="ic ic-sm" data-ic="package"></i> Últimos Pedidos</div>
       <div style="overflow-x:auto"><table class="data-table">
         <thead><tr><th>Data</th><th class="r">Valor</th><th>Cliente</th><th>Vendedor</th></tr></thead>
-        <tbody>${ultPedidos || '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Sem pedidos no periodo</td></tr>'}</tbody>
+        <tbody>${ultPedidos || '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:var(--space-5)">Sem pedidos no periodo</td></tr>'}</tbody>
       </table></div>
     </div>`;
 }

@@ -104,14 +104,14 @@ window.catGerarPDF = async function(opcoes = {}) {
 <title>${titulo}</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: 'Helvetica Neue', Arial, sans-serif; background:#fff; color:#1a1a2e; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; background:#fff; color:#161C22; }
 
   /* ── CAPA ── */
   .capa-img { width:210mm; height:297mm; page-break-after:always; overflow:hidden; }
   .capa-img img { width:100%; height:100%; object-fit:cover; }
   .capa-gerada {
     width:210mm; height:297mm; page-break-after:always;
-    background: linear-gradient(180deg, #c8d0d8 0%, #6b8fb5 50%, #1A3A8F 100%);
+    background: linear-gradient(180deg, #c8d0d8 0%, #6b8fb5 50%, #145EA8 100%);
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px;
   }
   .capa-logo { color:#fff; font-size:28px; font-weight:800; letter-spacing:2px; }
@@ -125,11 +125,11 @@ window.catGerarPDF = async function(opcoes = {}) {
   /* ── SEÇÃO ── */
   .secao { margin-bottom:24px; }
   .secao-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
-  .secao-linha { flex:1; height:2px; background:#1A3A8F; }
+  .secao-linha { flex:1; height:2px; background:#145EA8; }
   .secao-titulo {
     font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:2px;
-    color:#1A3A8F; white-space:nowrap; padding:4px 12px;
-    border:2px solid #1A3A8F; border-radius:20px;
+    color:#145EA8; white-space:nowrap; padding:4px 12px;
+    border:2px solid #145EA8; border-radius:20px;
   }
 
   /* ── GRID 3 COLUNAS ── */
@@ -142,8 +142,8 @@ window.catGerarPDF = async function(opcoes = {}) {
   .sem-foto { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; color:#aaa; letter-spacing:1px; }
   .card-body { padding:8px; }
   .card-ref { font-size:9px; color:#888; text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px; }
-  .card-nome { font-size:10px; font-weight:600; color:#1a1a2e; line-height:1.3; margin-bottom:4px; min-height:26px; }
-  .card-preco { font-size:12px; font-weight:800; color:#1A3A8F; font-family:'Courier New',monospace; }
+  .card-nome { font-size:10px; font-weight:600; color:#161C22; line-height:1.3; margin-bottom:4px; min-height:26px; }
+  .card-preco { font-size:12px; font-weight:800; color:#145EA8; font-family:'Courier New',monospace; }
   .card-ipi { font-size:9px; color:#888; margin-top:1px; }
 
   /* ── PRINT ── */
@@ -157,12 +157,12 @@ window.catGerarPDF = async function(opcoes = {}) {
   /* ── BARRA AÇÕES ── */
   @media screen {
     .barra-acoes {
-      position:fixed; top:0; left:0; right:0; background:#1A3A8F; color:#fff;
+      position:fixed; top:0; left:0; right:0; background:#145EA8; color:#fff;
       padding:10px 20px; display:flex; align-items:center; gap:12px; z-index:999;
       box-shadow:0 2px 8px rgba(0,0,0,.2);
     }
     .barra-acoes strong { flex:1; font-size:14px; }
-    .btn-imprimir { background:#fff; color:#1A3A8F; border:none; padding:7px 18px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; }
+    .btn-imprimir { background:#fff; color:#145EA8; border:none; padding:7px 18px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; }
     .btn-imprimir:hover { background:#e8edfa; }
     .btn-fechar { background:transparent; color:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.3); padding:7px 14px; border-radius:6px; font-size:12px; cursor:pointer; }
     body { padding-top:52px; }

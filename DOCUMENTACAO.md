@@ -34,7 +34,9 @@ Storage).
 | `pdf-pedido.js` | Geração do PDF de um pedido. |
 | `gestao.js` | Área do **gestor**: listar/abrir/aprovar/reprovar/faturar pedidos, upload de docs. |
 | `configuracoes.js` | Admin: catálogo (CRUD produtos), tabelas de preço, ações comerciais, representantes, gestores, status, tags, logs. **Aqui vive a sincronização com o ERP.** |
-| `logo.png` | Logo. |
+| `logo-stonni-ink.png` | Lockup da marca para **fundo claro** — login e logo do PDF. |
+| `logo-stonni-white.png` | Lockup da marca para **fundo escuro** — sidebar e topbar mobile. |
+| `icon-192.png` · `icon-512.png` | Ícones quadrados do PWA, gerados por `scripts/gerar-icones-pwa.py` a partir de `logo-mark-white.png`. |
 
 ## 3. Autenticação e perfis
 

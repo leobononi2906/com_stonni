@@ -118,7 +118,7 @@ function semaforo(c) {
   const sc=getStatusCompra(dc); const si=getStatusInteracao(di);
   const cls={SAUDAVEL:'sem-ok',ATENCAO:'sem-at',RISCO:'sem-ri',FRIO:'sem-ri',PERDIDO:'sem-ri'};
   return `<div class="semaforo">
-    <span class="sem-item ${cls[sc]}" title="Compra: ${dc}d">🛒 ${dc}d</span>
-    <span class="sem-item ${cls[si]}" title="Interação: ${di}d">💬 ${di}d</span>
+    <span class="sem-item ${cls[sc]}" title="Compra: ${dc}d"><i class="ic ic-sm" data-ic="shopping-cart"></i> ${dc}d</span>
+    <span class="sem-item ${cls[si]}" title="Interação: ${di}d"><i class="ic ic-sm" data-ic="message-square"></i> ${di}d</span>
   </div>`;
 }

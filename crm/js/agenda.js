@@ -13,7 +13,7 @@ const AG = {
 async function renderAgendaCRM() {
   const el = document.getElementById('crm-agenda-panel');
   if (!el) return;
-  el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted)"><div class="spinner" style="margin:0 auto 12px"></div>Carregando...</div>';
+  el.innerHTML = '<div style="padding:var(--space-6);text-align:center;color:var(--text-muted)"><div class="spinner" style="margin:0 auto var(--space-3)"></div>Carregando...</div>';
   await loadTarefasMes();
   drawAgenda(el);
 }
@@ -55,24 +55,24 @@ function drawAgenda(el) {
 
   el.innerHTML = `
     <div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
-      <div style="padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;align-items:center;gap:10px">
-        <button onclick="setMainTab('carteira')" style="font-size:11px;font-weight:600;color:var(--blue-mid);background:var(--blue-pale);border:1.5px solid rgba(0,119,204,.2);border-radius:var(--radius-sm);padding:4px 10px;cursor:pointer">← CRM</button>
-        <div style="display:flex;align-items:center;gap:6px">
-          <button onclick="navMes(-1)" style="width:24px;height:24px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center">‹</button>
-          <span style="font-size:13px;font-weight:700;color:var(--text-primary);min-width:130px;text-align:center">${MESES[AG.mes]} ${AG.ano}</span>
-          <button onclick="navMes(1)" style="width:24px;height:24px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center">›</button>
-          <button onclick="navMes(0)" style="font-size:10px;font-weight:600;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px 8px;cursor:pointer">Hoje</button>
+      <div style="padding:var(--space-2-5) var(--space-4);border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;align-items:center;gap:var(--space-2-5)">
+        <button onclick="setMainTab('carteira')" style="font-size:var(--fs-090);font-weight:600;color:var(--blue-mid);background:var(--blue-pale);border:1.5px solid var(--blue-veil);border-radius:var(--radius-lg);padding:var(--space-1) var(--space-2-5);cursor:pointer">← CRM</button>
+        <div style="display:flex;align-items:center;gap:var(--space-1-5)">
+          <button onclick="navMes(-1)" style="width:24px;height:24px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;font-size:var(--fs-200);display:flex;align-items:center;justify-content:center">‹</button>
+          <span style="font-size:var(--fs-200);font-weight:700;color:var(--text-primary);min-width:130px;text-align:center">${MESES[AG.mes]} ${AG.ano}</span>
+          <button onclick="navMes(1)" style="width:24px;height:24px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;font-size:var(--fs-200);display:flex;align-items:center;justify-content:center">›</button>
+          <button onclick="navMes(0)" style="font-size:var(--fs-075);font-weight:600;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:3px var(--space-2);cursor:pointer">Hoje</button>
         </div>
-        <span style="font-size:11px;color:var(--text-muted)">— ${vendNome}</span>
-        <div style="margin-left:auto;display:flex;gap:6px">
-          ${vencidas?`<span style="background:var(--red-bg);color:var(--red);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">⚠ ${vencidas}</span>`:''}
-          ${deHoje?`<span style="background:var(--blue-pale);color:var(--blue-dark);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">🔴 ${deHoje} hoje</span>`:''}
+        <span style="font-size:var(--fs-090);color:var(--text-muted)">— ${vendNome}</span>
+        <div style="margin-left:auto;display:flex;gap:var(--space-1-5)">
+          ${vencidas?`<span style="background:var(--red-bg);color:var(--red);padding:var(--space-0-5) var(--space-2);border-radius:var(--radius-pill);font-size:var(--fs-075);font-weight:700"><i class="ic ic-sm" data-ic="alert-triangle"></i> ${vencidas}</span>`:''}
+          ${deHoje?`<span style="background:var(--blue-pale);color:var(--blue-dark);padding:var(--space-0-5) var(--space-2);border-radius:var(--radius-pill);font-size:var(--fs-075);font-weight:700"><i class="ic ic-sm" data-ic="circle"></i> ${deHoje} hoje</span>`:''}
         </div>
       </div>
       <div style="display:flex;flex:1;overflow:hidden">
-        <div style="width:240px;flex-shrink:0;display:flex;flex-direction:column;padding:10px 8px;border-right:1px solid var(--border)">
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:2px">
-            ${DS.map(d=>`<div style="text-align:center;font-size:9px;font-weight:700;color:var(--text-muted);padding:2px">${d}</div>`).join('')}
+        <div style="width:240px;flex-shrink:0;display:flex;flex-direction:column;padding:var(--space-2-5) var(--space-2);border-right:1px solid var(--border)">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:var(--space-0-5)">
+            ${DS.map(d=>`<div style="text-align:center;font-size:9px;font-weight:700;color:var(--text-muted);padding:var(--space-0-5)">${d}</div>`).join('')}
           </div>
           <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px">
             ${Array.from({length: inicioSem}, ()=>'<div></div>').join('')}
@@ -86,22 +86,22 @@ function drawAgenda(el) {
               const temAtiv = tt.some(t=>!t.resolvido && !t.reagendado);
               let bg = eSel ? 'var(--blue-dark)' : 'transparent';
               let border = eHoje && !eSel ? '2px solid var(--blue-mid)' : '1px solid transparent';
-              let txt = eSel ? '#fff' : 'var(--text-primary)';
+              let txt = eSel ? 'var(--neutral-0)' : 'var(--text-primary)';
               let dot = '';
               if (tt.length && !eSel) {
                 const dc = temVenc ? 'var(--red)' : temAtiv ? 'var(--blue-mid)' : 'var(--green)';
                 dot = `<div style="width:4px;height:4px;border-radius:50%;background:${dc};margin:0 auto"></div>`;
               }
-              return `<button onclick="selDia('${dStr}')" style="background:${bg};border:${border};border-radius:4px;padding:2px 1px;cursor:pointer;display:flex;flex-direction:column;align-items:center;min-height:28px;gap:1px" onmouseover="if('${eSel}'!=='true')this.style.background='var(--surface2)'" onmouseout="if('${eSel}'!=='true')this.style.background='transparent'">
-                <span style="font-size:11px;font-weight:${eHoje||eSel?700:400};color:${txt};line-height:1.4">${dia}</span>
+              return `<button onclick="selDia('${dStr}')" style="background:${bg};border:${border};border-radius:var(--radius-sm);padding:var(--space-0-5) 1px;cursor:pointer;display:flex;flex-direction:column;align-items:center;min-height:28px;gap:1px" onmouseover="if('${eSel}'!=='true')this.style.background='var(--surface2)'" onmouseout="if('${eSel}'!=='true')this.style.background='transparent'">
+                <span style="font-size:var(--fs-090);font-weight:${eHoje||eSel?700:400};color:${txt};line-height:1.4">${dia}</span>
                 ${dot}
               </button>`;
             }).join('')}
           </div>
-          <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px">
-            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted)"><div style="width:6px;height:6px;border-radius:50%;background:var(--red)"></div>Atrasada</div>
-            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted)"><div style="width:6px;height:6px;border-radius:50%;background:var(--blue-mid)"></div>Pendente</div>
-            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted)"><div style="width:6px;height:6px;border-radius:50%;background:var(--green)"></div>Resolvida</div>
+          <div style="margin-top:var(--space-2-5);padding-top:var(--space-2);border-top:1px solid var(--border);display:flex;flex-direction:column;gap:var(--space-1)">
+            <div style="display:flex;align-items:center;gap:5px;font-size:var(--fs-075);color:var(--text-muted)"><div style="width:6px;height:6px;border-radius:50%;background:var(--red)"></div>Atrasada</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:var(--fs-075);color:var(--text-muted)"><div style="width:6px;height:6px;border-radius:50%;background:var(--blue-mid)"></div>Pendente</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:var(--fs-075);color:var(--text-muted)"><div style="width:6px;height:6px;border-radius:50%;background:var(--green)"></div>Resolvida</div>
           </div>
         </div>
         <div id="agenda-dia-panel" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--surface)"></div>
@@ -140,42 +140,42 @@ function renderDiaPanel() {
   const ePassado = dStr < hoje;
 
   el.innerHTML = `
-    <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div style="padding:var(--space-2-5) var(--space-3-5);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
       <div>
-        <p style="font-size:14px;font-weight:700;color:var(--text-primary)">${dLabel}${eHoje?' &nbsp;<span style=\\"color:var(--blue-mid);font-size:12px\\">Hoje</span>':''}</p>
-        <p style="font-size:11px;color:var(--text-muted)">${tarefas.length} atividade${tarefas.length!==1?'s':''}${pendentes.length?' · '+pendentes.length+' pendente'+(pendentes.length>1?'s':''):''}</p>
+        <p style="font-size:var(--fs-300);font-weight:700;color:var(--text-primary)">${dLabel}${eHoje?' &nbsp;<span style=\\"color:var(--blue-mid);font-size:var(--fs-100)\\">Hoje</span>':''}</p>
+        <p style="font-size:var(--fs-090);color:var(--text-muted)">${tarefas.length} atividade${tarefas.length!==1?'s':''}${pendentes.length?' · '+pendentes.length+' pendente'+(pendentes.length>1?'s':''):''}</p>
       </div>
-      <button onclick="abrirNovaAtividade('${dStr}')" style="font-size:12px;font-weight:700;padding:6px 14px;background:var(--blue-dark);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer">+ Nova</button>
+      <button onclick="abrirNovaAtividade('${dStr}')" style="font-size:var(--fs-100);font-weight:700;padding:var(--space-1-5) var(--space-3-5);background:var(--blue-dark);color:var(--neutral-0);border:none;border-radius:var(--radius-lg);cursor:pointer">+ Nova</button>
     </div>
-    <div style="flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px">
+    <div style="flex:1;overflow-y:auto;padding:var(--space-2-5) var(--space-3);display:flex;flex-direction:column;gap:var(--space-2)">
       ${tarefas.length ? tarefas.map(t => {
         const isVenc = !t.resolvido && !t.reagendado && ePassado;
         const isReag = t.reagendado;
-        const borderColor = t.resolvido ? 'var(--green)' : isReag ? '#64748b' : isVenc ? 'var(--red)' : 'var(--blue-mid)';
+        const borderColor = t.resolvido ? 'var(--green)' : isReag ? 'var(--text-subtle)' : isVenc ? 'var(--red)' : 'var(--blue-mid)';
         const opacity = t.resolvido || isReag ? '0.55' : '1';
-        return `<div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${borderColor};border-radius:var(--radius-sm);padding:12px 14px;opacity:${opacity}">
-          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px">
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${borderColor};border-radius:var(--radius-lg);padding:var(--space-3) var(--space-3-5);opacity:${opacity}">
+          <div style="display:flex;align-items:flex-start;gap:var(--space-2);margin-bottom:var(--space-1-5)">
             <div style="flex:1;min-width:0">
-              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
-                <span style="font-size:10px;font-weight:700;color:var(--blue-mid);background:var(--blue-pale);padding:1px 6px;border-radius:10px">TAREFA</span>
-                ${isVenc?'<span style="font-size:10px;color:var(--red);font-weight:700;background:var(--red-bg);padding:1px 6px;border-radius:10px">Atrasada</span>':''}
-                ${isReag?`<span style="font-size:10px;color:#64748b;font-weight:700;background:var(--surface2);padding:1px 6px;border-radius:10px">Reagendado${t.qtd_reagendamentos>1?' ('+t.qtd_reagendamentos+'x)':''}</span>`:''}
-                ${t.resolvido?'<span style="font-size:10px;color:var(--green);font-weight:700">✓ Resolvida</span>':''}
+              <div style="display:flex;align-items:center;gap:var(--space-1-5);flex-wrap:wrap;margin-bottom:var(--space-1)">
+                <span style="font-size:var(--fs-075);font-weight:700;color:var(--blue-mid);background:var(--blue-pale);padding:1px var(--space-1-5);border-radius:var(--radius-10)">TAREFA</span>
+                ${isVenc?'<span style="font-size:var(--fs-075);color:var(--red);font-weight:700;background:var(--red-bg);padding:1px var(--space-1-5);border-radius:var(--radius-10)">Atrasada</span>':''}
+                ${isReag?`<span style="font-size:var(--fs-075);color:var(--text-subtle);font-weight:700;background:var(--surface2);padding:1px var(--space-1-5);border-radius:var(--radius-10)">Reagendado${t.qtd_reagendamentos>1?' ('+t.qtd_reagendamentos+'x)':''}</span>`:''}
+                ${t.resolvido?'<span style="font-size:var(--fs-075);color:var(--green);font-weight:700"><i class="ic ic-sm" data-ic="check"></i> Resolvida</span>':''}
               </div>
-              <p style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;text-decoration:underline dotted" onclick="abrirClienteAgenda('${t.id_cliente}','${esc(t.nome_cliente)}')">${t.nome_cliente}</p>
-              <p style="font-size:12px;color:var(--text-secondary);line-height:1.5">${t.texto||'—'}</p>
-              ${t.criado_por?`<p style="font-size:10px;color:var(--text-muted);margin-top:4px">Por: ${t.criado_por}</p>`:''}
+              <p style="font-size:var(--fs-200);font-weight:700;color:var(--text-primary);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;text-decoration:underline dotted" onclick="abrirClienteAgenda('${t.id_cliente}','${esc(t.nome_cliente)}')">${t.nome_cliente}</p>
+              <p style="font-size:var(--fs-100);color:var(--text-secondary);line-height:1.5">${t.texto||'—'}</p>
+              ${t.criado_por?`<p style="font-size:var(--fs-075);color:var(--text-muted);margin-top:var(--space-1)">Por: ${t.criado_por}</p>`:''}
             </div>
-            ${!t.resolvido && !t.reagendado ? `<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-              <button onclick="resolverNotaAgenda('${t.id}','${t.id_cliente}','${esc(t.nome_cliente)}')" style="font-size:11px;font-weight:700;padding:4px 10px;background:var(--green-bg);color:var(--green);border:1.5px solid rgba(15,157,110,.3);border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap">✓ Resolver</button>
-              <button onclick="reagendarNota('${t.id}','${t.data_prevista}',${t.qtd_reagendamentos||0})" style="font-size:11px;font-weight:600;padding:4px 10px;background:var(--surface2);color:var(--text-secondary);border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap">↻ Reagendar</button>
+            ${!t.resolvido && !t.reagendado ? `<div style="display:flex;flex-direction:column;gap:var(--space-1);flex-shrink:0">
+              <button onclick="resolverNotaAgenda('${t.id}','${t.id_cliente}','${esc(t.nome_cliente)}')" style="font-size:var(--fs-090);font-weight:700;padding:var(--space-1) var(--space-2-5);background:var(--green-bg);color:var(--green);border:1.5px solid var(--success-veil);border-radius:var(--radius-lg);cursor:pointer;white-space:nowrap"><i class="ic ic-sm" data-ic="check"></i> Resolver</button>
+              <button onclick="reagendarNota('${t.id}','${t.data_prevista}',${t.qtd_reagendamentos||0})" style="font-size:var(--fs-090);font-weight:600;padding:var(--space-1) var(--space-2-5);background:var(--surface2);color:var(--text-secondary);border:1.5px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;white-space:nowrap">↻ Reagendar</button>
             </div>` : ''}
           </div>
         </div>`;
-      }).join('') : `<div style="text-align:center;padding:40px 16px;color:var(--text-muted)">
-        <div style="font-size:32px;margin-bottom:10px">📅</div>
-        <p style="font-size:13px;font-weight:500">Nenhuma atividade</p>
-        <p style="font-size:11px;margin-top:4px">Clique em + Nova para adicionar</p>
+      }).join('') : `<div style="text-align:center;padding:var(--space-10) var(--space-4);color:var(--text-muted)">
+        <div style="font-size:32px;margin-bottom:var(--space-2-5)"><i class="ic ic-sm" data-ic="calendar"></i></div>
+        <p style="font-size:var(--fs-200);font-weight:500">Nenhuma atividade</p>
+        <p style="font-size:var(--fs-090);margin-top:var(--space-1)">Clique em + Nova para adicionar</p>
       </div>`}
     </div>`;
 }

@@ -17,9 +17,9 @@ async function renderAlertasCRM() {
 
   if (alertasOcultos) {
     el.innerHTML = `
-      <div style="height:28px;border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:6px;background:var(--surface2)">
-        <span style="font-size:10px;color:var(--text-muted)">Alertas ocultos</span>
-        <button onclick="toggleAlertasCRM()" style="font-size:10px;font-weight:600;color:var(--blue-mid);background:none;border:none;cursor:pointer">Mostrar</button>
+      <div style="height:28px;border-bottom:1px solid var(--border);padding:0 var(--space-3);display:flex;align-items:center;gap:var(--space-1-5);background:var(--surface2)">
+        <span style="font-size:var(--fs-075);color:var(--text-muted)">Alertas ocultos</span>
+        <button onclick="toggleAlertasCRM()" style="font-size:var(--fs-075);font-weight:600;color:var(--blue-mid);background:none;border:none;cursor:pointer">Mostrar</button>
       </div>`;
     return;
   }
@@ -43,11 +43,11 @@ async function renderAlertasCRM() {
 
   // Uma única linha compacta
   el.innerHTML = `
-    <div style="height:30px;border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:6px;background:var(--surface2);flex-shrink:0">
-      ${nHj>0  ? `<span onclick="setMainTab('agenda')" style="background:var(--blue-pale);color:var(--blue-dark);font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;cursor:pointer;white-space:nowrap">📌 ${nHj} hoje</span>` : ''}
-      ${nAtr>0 ? `<span onclick="setMainTab('agenda')" style="background:var(--red-bg);color:var(--red);font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;cursor:pointer;white-space:nowrap">⚠ ${nAtr} atrasada${nAtr>1?'s':''}</span>` : ''}
-      ${nProx>0? `<span onclick="setMainTab('agenda')" style="background:var(--surface);color:var(--text-muted);font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;border:1px solid var(--border);cursor:pointer;white-space:nowrap">📅 ${nProx} próx. 7 dias</span>` : ''}
-      <button onclick="toggleAlertasCRM()" style="margin-left:auto;font-size:10px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0 4px;flex-shrink:0">Ocultar ✕</button>
+    <div style="height:30px;border-bottom:1px solid var(--border);padding:0 var(--space-3);display:flex;align-items:center;gap:var(--space-1-5);background:var(--surface2);flex-shrink:0">
+      ${nHj>0  ? `<span onclick="setMainTab('agenda')" style="background:var(--blue-pale);color:var(--blue-dark);font-size:var(--fs-075);font-weight:700;padding:var(--space-0-5) 9px;border-radius:var(--radius-pill);cursor:pointer;white-space:nowrap"><i class="ic ic-sm" data-ic="map-pin"></i> ${nHj} hoje</span>` : ''}
+      ${nAtr>0 ? `<span onclick="setMainTab('agenda')" style="background:var(--red-bg);color:var(--red);font-size:var(--fs-075);font-weight:700;padding:var(--space-0-5) 9px;border-radius:var(--radius-pill);cursor:pointer;white-space:nowrap"><i class="ic ic-sm" data-ic="alert-triangle"></i> ${nAtr} atrasada${nAtr>1?'s':''}</span>` : ''}
+      ${nProx>0? `<span onclick="setMainTab('agenda')" style="background:var(--surface);color:var(--text-muted);font-size:var(--fs-075);font-weight:600;padding:var(--space-0-5) 9px;border-radius:var(--radius-pill);border:1px solid var(--border);cursor:pointer;white-space:nowrap"><i class="ic ic-sm" data-ic="calendar"></i> ${nProx} próx. 7 dias</span>` : ''}
+      <button onclick="toggleAlertasCRM()" style="margin-left:auto;font-size:var(--fs-075);color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0 var(--space-1);flex-shrink:0">Ocultar <i class="ic ic-sm" data-ic="x"></i></button>
     </div>`;
 }
 
@@ -66,8 +66,8 @@ function renderUmbler() {
   // Altura de ~5 itens visíveis (~80px cada) com scroll para o resto
   el.innerHTML=`
     <div class="umbl-header${open?'':' coll'}" onclick="toggleUmbler()" style="border-bottom:1px solid var(--border)">
-      <span style="font-size:11px;color:#f87171">${open?'▼':'▶'}</span>
-      <span class="umbl-title">📲 Contatos Sem Tratativa</span>
+      <span style="font-size:var(--fs-090);color:var(--danger-500)">${open?'▼':'▶'}</span>
+      <span class="umbl-title"><i class="ic ic-sm" data-ic="smartphone"></i> Contatos Sem Tratativa</span>
       <span class="umbl-badge">${S.umbler.length}</span>
     </div>
     ${open?`<div class="umbl-body" style="max-height:400px;overflow-y:auto">
@@ -76,14 +76,14 @@ function renderUmbler() {
         return `<div class="umbl-item">
         <div class="umbl-nome">${c.nome_contato||'Sem nome'}</div>
         <div class="umbl-info"><span>${fmtP(c.telefone)}</span><span>${sN(c.nome_atendente)}</span><span>${fmtDT(c.ultimo_contato)}</span></div>
-        ${sug ? `<div style="display:flex;align-items:center;gap:6px;margin:4px 0;padding:5px 8px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:6px">
-          <span style="font-size:11px;color:var(--blue-mid);font-weight:600">🔗 Possível: ${sug.nome}</span>
-          <button class="btn-vinc" style="margin-left:auto;border-color:var(--blue-mid);color:var(--blue-mid);font-size:10px;padding:2px 7px" onclick="abrirVincComSugestao('${esc(c.telefone)}','${esc(c.nome_contato)}','${esc(c.nome_atendente)}',${sug.id},'${esc(sug.nome)}')">Vincular</button>
+        ${sug ? `<div style="display:flex;align-items:center;gap:var(--space-1-5);margin:var(--space-1) 0;padding:5px var(--space-2);background:var(--blue-veil);border:1px solid var(--blue-veil-strong);border-radius:var(--radius-md)">
+          <span style="font-size:var(--fs-090);color:var(--blue-mid);font-weight:600"><i class="ic ic-sm" data-ic="external-link"></i> Possível: ${sug.nome}</span>
+          <button class="btn-vinc" style="margin-left:auto;border-color:var(--blue-mid);color:var(--blue-mid);font-size:var(--fs-075);padding:var(--space-0-5) 7px" onclick="abrirVincComSugestao('${esc(c.telefone)}','${esc(c.nome_contato)}','${esc(c.nome_atendente)}',${sug.id},'${esc(sug.nome)}')">Vincular</button>
         </div>` : ''}
         <div class="umbl-acts">
-          <button class="btn-vinc" onclick="abrirVinc('${esc(c.telefone)}','${esc(c.nome_contato)}','${esc(c.nome_atendente)}')">🔗 Vincular</button>
-          ${!sug ? `<button class="btn-vinc" style="border-color:var(--blue-mid);color:var(--blue-mid)" onclick="abrirNovoContato('${esc(c.telefone)}','${esc(c.nome_contato)}','${esc(c.nome_atendente)}')">👤 Criar Novo</button>` : ''}
-          <button class="btn-nc" onclick="naoComercial('${esc(c.telefone)}')">✕ Não comercial</button>
+          <button class="btn-vinc" onclick="abrirVinc('${esc(c.telefone)}','${esc(c.nome_contato)}','${esc(c.nome_atendente)}')"><i class="ic ic-sm" data-ic="external-link"></i> Vincular</button>
+          ${!sug ? `<button class="btn-vinc" style="border-color:var(--blue-mid);color:var(--blue-mid)" onclick="abrirNovoContato('${esc(c.telefone)}','${esc(c.nome_contato)}','${esc(c.nome_atendente)}')"><i class="ic ic-sm" data-ic="user"></i> Criar Novo</button>` : ''}
+          <button class="btn-nc" onclick="naoComercial('${esc(c.telefone)}')"><i class="ic ic-sm" data-ic="x"></i> Não comercial</button>
         </div>
       </div>`;
       }).join('')}
@@ -99,8 +99,8 @@ function renderLista() {
     const data=filteredProsp();
     if(!data.length){
       el.innerHTML=`<div class="empty-msg">
-        <p style="margin-bottom:8px">Nenhum cliente disponível na prospecção</p>
-        <p style="font-size:11px;color:#334155">Aparecem aqui os clientes sem vendedor, os liberados por prazo vencido e os de vendedor inativado</p>
+        <p style="margin-bottom:var(--space-2)">Nenhum cliente disponível na prospecção</p>
+        <p style="font-size:var(--fs-090);color:var(--neutral-700)">Aparecem aqui os clientes sem vendedor, os liberados por prazo vencido e os de vendedor inativado</p>
       </div>`;
       return;
     }
@@ -109,26 +109,26 @@ function renderLista() {
       const sel=S.selId===c.id_cliente;
       const dc=c.dias_sem_compra??dias(c.ultima_compra);
       return`<div class="prosp-geral-card${sel?' sel':''}">
-        <div style="display:flex;align-items:flex-start;gap:8px">
+        <div style="display:flex;align-items:flex-start;gap:var(--space-2)">
           <div style="flex:1;min-width:0" onclick="selCliente(${c.id_cliente})">
             <div class="pg-row1">
               <span class="pg-nome">${c.nome_cliente}</span>
               ${bdg(c.status_crm||'PROSPECCAO')}
-              ${c.nome_ultimo_responsavel?`<span title="${c.ex_vendedor_inativo?'Vendedor saiu da equipe':'Vínculo liberado por prazo vencido'} — disponível para assumir" style="font-size:9.5px;font-weight:700;background:var(--orange-bg);color:var(--orange);border-radius:4px;padding:1px 6px;white-space:nowrap">era de ${sN(c.nome_ultimo_responsavel)}</span>`:''}
+              ${c.nome_ultimo_responsavel?`<span title="${c.ex_vendedor_inativo?'Vendedor saiu da equipe':'Vínculo liberado por prazo vencido'} — disponível para assumir" style="font-size:9.5px;font-weight:700;background:var(--orange-bg);color:var(--orange);border-radius:var(--radius-sm);padding:1px var(--space-1-5);white-space:nowrap">era de ${sN(c.nome_ultimo_responsavel)}</span>`:''}
             </div>
             <div class="pg-meta">
               <span>${dim.cidade?dim.cidade+(dim.uf?' - '+dim.uf:''):'—'}</span>
-              <span>Sem compra há <strong style="color:#f87171">${dc<9999?dc+'d':'—'}</strong></span>
+              <span>Sem compra há <strong style="color:var(--danger-500)">${dc<9999?dc+'d':'—'}</strong></span>
             </div>
-            ${dim.cnpj_cpf?`<div style="font-size:10px;color:#334155;margin-top:2px;font-family:monospace">${fmtC(dim.cnpj_cpf)}</div>`:''}
+            ${dim.cnpj_cpf?`<div style="font-size:var(--fs-075);color:var(--neutral-700);margin-top:var(--space-0-5);font-family:monospace">${fmtC(dim.cnpj_cpf)}</div>`:''}
           </div>
-          <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+          <div style="display:flex;flex-direction:column;gap:var(--space-1);flex-shrink:0">
             <button class="btn-assumir" onclick="assumirCliente(${c.id_cliente},'${esc(c.nome_cliente)}')">+ Assumir</button>
             <button onclick="descartarCliente(${c.id_cliente},'${esc(c.nome_cliente)}')"
-              style="font-size:11px;padding:4px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-muted);background:none;cursor:pointer;font-weight:500;transition:all .15s"
+              style="font-size:var(--fs-090);padding:var(--space-1) var(--space-2-5);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--text-muted);background:none;cursor:pointer;font-weight:500;transition:all .15s"
               onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
               onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
-              ✕ Descartar
+              <i class="ic ic-sm" data-ic="x"></i> Descartar
             </button>
           </div>
         </div>
@@ -152,18 +152,18 @@ function renderLista() {
       const diasAtrib=Math.floor((Date.now()-new Date(c.vinculo_em).getTime())/86400000);
       const restante=CFG.prospeccao_prazo_contato_dias-diasAtrib;
       if(restante>7) prazoBdg=`<span class="prazo-ok">Prazo: ${restante}d</span>`;
-      else if(restante>0) prazoBdg=`<span class="prazo-warn">⚠ ${restante}d</span>`;
+      else if(restante>0) prazoBdg=`<span class="prazo-warn"><i class="ic ic-sm" data-ic="alert-triangle"></i> ${restante}d</span>`;
       else prazoBdg=`<span class="prazo-urg">Vencido</span>`;
     }
 
     return`<div class="cl-item${sel?' sel':''}" style="cursor:default">
-      <div style="display:flex;align-items:flex-start;gap:4px">
+      <div style="display:flex;align-items:flex-start;gap:var(--space-1)">
         <div style="flex:1;min-width:0" onclick="selCliente(${c.id_cliente})" style="cursor:pointer">
           <div class="cl-row1">
             <span class="cl-nome">${c.nome_cliente}</span>
             ${bdg(st)}
-            ${dc>=30?'<span style="color:#f59e0b;font-size:12px;flex-shrink:0">⚠</span>':''}
-            ${S.overdueIds.has(c.id_cliente)?'<span style="color:#ef4444;font-size:12px;flex-shrink:0">🔔</span>':''}
+            ${dc>=30?'<span style="color:var(--warning-500);font-size:var(--fs-100);flex-shrink:0"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>':''}
+            ${S.overdueIds.has(c.id_cliente)?'<span style="color:var(--danger-500);font-size:var(--fs-100);flex-shrink:0"><i class="ic ic-sm" data-ic="bell"></i></span>':''}
             ${prazoBdg}
           </div>
           ${semaforo(c)}
@@ -175,9 +175,9 @@ function renderLista() {
         </div>
         <button onclick="event.stopPropagation();descartarCliente(${c.id_cliente},'${esc(c.nome_cliente)}')"
           title="Descartar cliente"
-          style="flex-shrink:0;margin-top:2px;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);background:none;color:var(--text-muted);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .15s"
+          style="flex-shrink:0;margin-top:var(--space-0-5);width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);background:none;color:var(--text-muted);cursor:pointer;font-size:var(--fs-090);display:flex;align-items:center;justify-content:center;transition:all .15s"
           onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'"
-          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)';this.style.background='none'">✕</button>
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)';this.style.background='none'"><i class="ic ic-sm" data-ic="x"></i></button>
       </div>
     </div>`;
   }).join('');

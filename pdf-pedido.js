@@ -60,7 +60,12 @@ window.pedGerarPDF = async function(idPedido) {
   const empCNPJ     = cfg.pdf_empresa_cnpj     || '';
   const empEndereco = cfg.pdf_empresa_endereco || '';
   const empTel      = cfg.pdf_empresa_telefone || '';
-  const logoUrl     = cfg.pdf_logo_url         || 'logo.png';
+  // 'logo.png' era o padrao antigo e NAO existe mais (era um JPEG renomeado,
+  // com o fundo preto embutido). Quem tiver esse valor gravado em
+  // pdf_logo_url cai na logo nova em vez de sair com PDF sem logo — o <img>
+  // tem onerror que esconde, entao a falha seria muda.
+  const logoUrl     = (cfg.pdf_logo_url && cfg.pdf_logo_url !== 'logo.png')
+                        ? cfg.pdf_logo_url : 'logo-stonni-ink.png';
   const rodape      = cfg.pdf_rodape           || '';
 
   // Formatadores
@@ -115,25 +120,25 @@ window.pedGerarPDF = async function(idPedido) {
 <title>${titulo} ${ped.codigo}</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #1a1a2e; background: #fff; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #161C22; background: #fff; }
 
   /* ── LAYOUT ── */
   .pagina { width: 210mm; min-height: 297mm; padding: 14mm 14mm 18mm; margin: 0 auto; }
 
   /* ── HEADER ── */
   .header { display: flex; justify-content: space-between; align-items: flex-start;
-    border-bottom: 2px solid #1A3A8F; padding-bottom: 12px; margin-bottom: 14px; }
+    border-bottom: 2px solid #145EA8; padding-bottom: 12px; margin-bottom: 14px; }
   .header-logo img { max-height: 52px; max-width: 160px; object-fit: contain; }
   .header-empresa { font-size: 10px; color: #555; text-align: right; line-height: 1.6; }
-  .header-empresa strong { font-size: 13px; color: #1A3A8F; display: block; margin-bottom: 2px; }
-  .doc-titulo { background: #1A3A8F; color: #fff; font-size: 18px; font-weight: 700;
+  .header-empresa strong { font-size: 13px; color: #145EA8; display: block; margin-bottom: 2px; }
+  .doc-titulo { background: #145EA8; color: #fff; font-size: 18px; font-weight: 700;
     letter-spacing: 2px; padding: 6px 16px; border-radius: 4px; margin-bottom: 4px; text-align: center; }
   .doc-codigo { font-size: 11px; color: #666; text-align: center; }
 
   /* ── SEÇÕES ── */
   .secao { margin-bottom: 14px; }
   .secao-titulo { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-    color: #1A3A8F; border-bottom: 1px solid #dde3f0; padding-bottom: 4px; margin-bottom: 8px; }
+    color: #145EA8; border-bottom: 1px solid #dde3f0; padding-bottom: 4px; margin-bottom: 8px; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   .campo { margin-bottom: 6px; }
@@ -142,7 +147,7 @@ window.pedGerarPDF = async function(idPedido) {
 
   /* ── TABELA ITENS ── */
   table { width: 100%; border-collapse: collapse; font-size: 10px; }
-  thead tr { background: #1A3A8F; color: #fff; }
+  thead tr { background: #145EA8; color: #fff; }
   thead th { padding: 6px 8px; text-align: left; font-weight: 600; font-size: 9px;
     text-transform: uppercase; letter-spacing: 0.5px; }
   tbody tr { border-bottom: 1px solid #eef0f5; }
@@ -157,13 +162,13 @@ window.pedGerarPDF = async function(idPedido) {
   .totais-wrap { display: flex; justify-content: flex-end; margin-top: 10px; }
   .totais table { width: 300px; }
   .totais td { padding: 4px 8px; }
-  .totais tr.total-final td { border-top: 2px solid #1A3A8F; padding-top: 8px;
-    font-size: 13px; font-weight: 700; color: #1A3A8F; }
-  .verde { color: #22a06b; font-weight: 700; }
+  .totais tr.total-final td { border-top: 2px solid #145EA8; padding-top: 8px;
+    font-size: 13px; font-weight: 700; color: #145EA8; }
+  .verde { color: #16A063; font-weight: 700; }
 
   /* ── CONDIÇÕES ── */
   .condicoes { background: #f0f3f8; border-radius: 6px; padding: 10px 14px; }
-  .badge { display: inline-block; background: #1A3A8F; color: #fff; font-size: 9px;
+  .badge { display: inline-block; background: #145EA8; color: #fff; font-size: 9px;
     font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; }
 
   /* ── RODAPÉ ── */
@@ -181,13 +186,13 @@ window.pedGerarPDF = async function(idPedido) {
   /* ── BARRA DE AÇÕES (só na tela) ── */
   @media screen {
     .barra-acoes {
-      position: fixed; top: 0; left: 0; right: 0; background: #1A3A8F; color: #fff;
+      position: fixed; top: 0; left: 0; right: 0; background: #145EA8; color: #fff;
       padding: 10px 20px; display: flex; align-items: center; gap: 12px;
       z-index: 999; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     .barra-acoes strong { font-size: 14px; flex: 1; }
     .btn-pdf {
-      background: #fff; color: #1A3A8F; border: none; padding: 7px 18px;
+      background: #fff; color: #145EA8; border: none; padding: 7px 18px;
       border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;
     }
     .btn-pdf:hover { background: #e8edfa; }
@@ -266,7 +271,7 @@ window.pedGerarPDF = async function(idPedido) {
             <td>Subtotal produtos</td>
             <td class="mono direita">R$ ${fmtVal(valorProdutos)}</td>
           </tr>
-          ${valorDesconto > 0.01 ? `<tr><td colspan="2">Desconto</td><td class="mono direita" style="color:#22a06b"><strong>- R$ ${fmtVal(valorDesconto)}</strong></td></tr>` : ''}
+          ${valorDesconto > 0.01 ? `<tr><td colspan="2">Desconto</td><td class="mono direita" style="color:#16A063"><strong>- R$ ${fmtVal(valorDesconto)}</strong></td></tr>` : ''}
           ${linhasIPI}
           ${valorST > 0.01 ? `<tr><td colspan="2">ST (${stEstado})</td><td class="mono direita">+ R$ ${fmtVal(valorST)}</td></tr>` : ''}
           ${linhasFrete}

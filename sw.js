@@ -6,12 +6,20 @@
 //
 //  ⚠️ Ao subir um deploy, BUMPAR CACHE_VERSION para invalidar o cache antigo.
 // ============================================================
-const CACHE_VERSION = 'stonni-v4-20260814';
+const CACHE_VERSION = 'stonni-v6-20260916';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
-  './logo.png',
+  './icon-192.png',
+  './icon-512.png',
+  // O ?v= tem de ser IDENTICO ao do <link>/<img> no index.html: caches.match
+  // casa a URL inteira, query string incluida. Se divergir, o arranque offline
+  // pinta o app sem estilo nenhum — e nao da erro, so fica feio.
+  './ds/stonni-ds.css?v=20260915',
+  './ds/stonni-icones.css?v=20260915',
+  './logo-stonni-ink.png?v=20260916',
+  './logo-stonni-white.png?v=20260916',
 ];
 
 // Instala: pré-cacheia a casca (para abrir offline). Não falha o SW se algum item faltar.

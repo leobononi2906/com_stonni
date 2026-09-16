@@ -19,12 +19,12 @@ async function renderConfiguracoes(el) {
     <div class="cfg-wrap">
       <div class="cfg-tabs-scroll">
         <div class="cfg-tabs">
-          <button class="cfg-tab active" onclick="cfgAba('geral',this)">⚙️ Geral</button>
-          <button class="cfg-tab" onclick="cfgAba('catalogo',this)">🛍️ Catálogo</button>
-          <button class="cfg-tab" onclick="cfgAba('precos',this)">💲 Tabelas & Preços</button>
-          <button class="cfg-tab" onclick="cfgAba('acoes',this)">🎯 Ações & Promoções</button>
-          <button class="cfg-tab" onclick="cfgAba('pdf',this)">📄 PDF do Pedido</button>
-          <button class="cfg-tab" onclick="cfgAba('logs',this)">📋 Logs</button>
+          <button class="cfg-tab active" onclick="cfgAba('geral',this)"><i class="ic ic-sm" data-ic="settings"></i> Geral</button>
+          <button class="cfg-tab" onclick="cfgAba('catalogo',this)"><i class="ic ic-sm" data-ic="shopping-bag"></i> Catálogo</button>
+          <button class="cfg-tab" onclick="cfgAba('precos',this)"><i class="ic ic-sm" data-ic="dollar-sign"></i> Tabelas & Preços</button>
+          <button class="cfg-tab" onclick="cfgAba('acoes',this)"><i class="ic ic-sm" data-ic="target"></i> Ações & Promoções</button>
+          <button class="cfg-tab" onclick="cfgAba('pdf',this)"><i class="ic ic-sm" data-ic="file-text"></i> PDF do Pedido</button>
+          <button class="cfg-tab" onclick="cfgAba('logs',this)"><i class="ic ic-sm" data-ic="clipboard-list"></i> Logs</button>
         </div>
       </div>
       <div id="cfg-body"></div>
@@ -68,42 +68,42 @@ async function cfgCarregarGeral(el) {
     bling_sync_ativo: 'Sincronização Bling ativa', bling_deposito_id: 'ID do depósito Bling',
   };
   const GRUPOS = [
-    { titulo: '📕 Catálogo', desc: 'Aparência do catálogo e da capa', chaves: ['catalogo_titulo','catalogo_subtitulo','catalogo_capa_url'] },
-    { titulo: '🛒 Pedido', desc: 'Regras do pedido do representante', chaves: ['empresa_padrao_pedido','pedido_valor_minimo','frete_gratis_acima','prazos_pagamento','alerta_dias_sem_compra','permite_pedido_bloqueado'] },
-    { titulo: '🔌 Integração Bling', desc: 'Sincronização de fotos e estoque com o Bling', chaves: ['bling_sync_ativo','bling_deposito_id'] },
+    { titulo: '<i class="ic ic-sm" data-ic="book-open"></i> Catálogo', desc: 'Aparência do catálogo e da capa', chaves: ['catalogo_titulo','catalogo_subtitulo','catalogo_capa_url'] },
+    { titulo: '<i class="ic ic-sm" data-ic="shopping-cart"></i> Pedido', desc: 'Regras do pedido do representante', chaves: ['empresa_padrao_pedido','pedido_valor_minimo','frete_gratis_acima','prazos_pagamento','alerta_dias_sem_compra','permite_pedido_bloqueado'] },
+    { titulo: '<i class="ic ic-sm" data-ic="zap"></i> Integração Bling', desc: 'Sincronização de fotos e estoque com o Bling', chaves: ['bling_sync_ativo','bling_deposito_id'] },
   ];
   // Chaves ainda não classificadas caem em "Outros" (não some nada)
   const usadas = new Set([...PDF_CHAVES, ...BLING_AUTO, ...OCULTOS, ...GRUPOS.flatMap(g => g.chaves)]);
   const outras = (configs || []).filter(c => !usadas.has(c.chave));
-  if (outras.length) GRUPOS.push({ titulo: '⚙️ Outros', desc: '', chaves: outras.map(c => c.chave) });
+  if (outras.length) GRUPOS.push({ titulo: '<i class="ic ic-sm" data-ic="settings"></i> Outros', desc: '', chaves: outras.map(c => c.chave) });
 
   const _item = (chave) => {
     const c = byKey[chave]; if (!c) return '';
     const ajuda = (LABELS[chave] && c.descricao && c.descricao !== LABELS[chave]) ? c.descricao : '';
-    return `<div class="form-field"><label>${LABELS[chave] || c.descricao || chave}</label>${cfgInputPorTipo(c)}${ajuda ? `<span style="font-size:11px;color:var(--text-muted)">${ajuda}</span>` : ''}</div>`;
+    return `<div class="form-field"><label>${LABELS[chave] || c.descricao || chave}</label>${cfgInputPorTipo(c)}${ajuda ? `<span style="font-size:var(--fs-090);color:var(--text-muted)">${ajuda}</span>` : ''}</div>`;
   };
-  const _grupo = (g) => `<div class="cfg-section" style="margin-top:22px"><div style="font-size:13px;font-weight:700;color:var(--text-primary)">${g.titulo}</div>${g.desc ? `<div style="font-size:12px;color:var(--text-muted);margin:2px 0 12px">${g.desc}</div>` : '<div style="height:12px"></div>'}<div class="cfg-grid-2">${g.chaves.map(_item).join('')}</div></div>`;
+  const _grupo = (g) => `<div class="cfg-section" style="margin-top:22px"><div style="font-size:var(--fs-200);font-weight:700;color:var(--text-primary)">${g.titulo}</div>${g.desc ? `<div style="font-size:var(--fs-100);color:var(--text-muted);margin:var(--space-0-5) 0 var(--space-3)">${g.desc}</div>` : '<div style="height:12px"></div>'}<div class="cfg-grid-2">${g.chaves.map(_item).join('')}</div></div>`;
   const _mask = v => { const s = String(v || ''); return s.length > 10 ? s.slice(0, 6) + '••••' + s.slice(-4) : (s ? '••••' : '—'); };
-  const _blingAuto = BLING_AUTO.map(k => byKey[k]).filter(Boolean).map(c => `<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--border)"><code style="font-size:11px;color:var(--text-secondary)">${c.chave}</code><span style="font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace">${_mask(c.valor)}</span></div>`).join('');
+  const _blingAuto = BLING_AUTO.map(k => byKey[k]).filter(Boolean).map(c => `<div style="display:flex;justify-content:space-between;gap:var(--space-3);padding:7px 0;border-bottom:1px solid var(--border)"><code style="font-size:var(--fs-090);color:var(--text-secondary)">${c.chave}</code><span style="font-size:var(--fs-100);color:var(--text-muted);font-family:var(--font-mono)">${_mask(c.valor)}</span></div>`).join('');
 
   el.innerHTML = `
     <div class="section-header">
       <span class="section-title">Configurações — Catálogo & Pedidos</span>
-      <button class="btn btn-primary" onclick="cfgSalvarGeral()">💾 Salvar</button>
+      <button class="btn btn-primary" onclick="cfgSalvarGeral()"><i class="ic ic-sm" data-ic="save"></i> Salvar</button>
     </div>
-    <div style="font-size:12px;color:var(--text-muted)">Ajustes do portal do representante. O visual do PDF fica na aba <strong>PDF do Pedido</strong>. O CRM tem configuração própria.</div>
+    <div style="font-size:var(--fs-100);color:var(--text-muted)">Ajustes do portal do representante. O visual do PDF fica na aba <strong>PDF do Pedido</strong>. O CRM tem configuração própria.</div>
 
     ${GRUPOS.map(_grupo).join('')}
 
-    <details style="margin-top:18px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--text-muted)">🔒 Bling — tokens (gerenciados automaticamente)</summary>
-      <div style="margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px">
-        ${_blingAuto || '<span style="font-size:12px;color:var(--text-muted)">—</span>'}
-        <div style="font-size:11px;color:var(--text-muted);margin-top:8px">Renovados sozinhos pela integração — não precisa editar aqui.</div>
+    <details style="margin-top:var(--space-4-5)">
+      <summary style="cursor:pointer;font-size:var(--fs-100);color:var(--text-muted)"><i class="ic ic-sm" data-ic="lock"></i> Bling — tokens (gerenciados automaticamente)</summary>
+      <div style="margin-top:var(--space-2-5);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3-5)">
+        ${_blingAuto || '<span style="font-size:var(--fs-100);color:var(--text-muted)">—</span>'}
+        <div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-2)">Renovados sozinhos pela integração — não precisa editar aqui.</div>
       </div>
     </details>
 
-    <div id="cfg-geral-msg" style="margin-top:12px;font-size:13px;"></div>
+    <div id="cfg-geral-msg" style="margin-top:var(--space-3);font-size:var(--fs-200);"></div>
   `;
 }
 
@@ -113,10 +113,10 @@ async function cfgCarregarPDF(el) {
   const cfgPDF = Object.fromEntries((configs || []).map(c => [c.chave, c.valor]));
   el.innerHTML = `
     <div class="section-header">
-      <span class="section-title">📄 PDF do Pedido</span>
-      <button class="btn btn-primary" onclick="cfgSalvarPDF()">💾 Salvar</button>
+      <span class="section-title"><i class="ic ic-sm" data-ic="file-text"></i> PDF do Pedido</span>
+      <button class="btn btn-primary" onclick="cfgSalvarPDF()"><i class="ic ic-sm" data-ic="save"></i> Salvar</button>
     </div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Personaliza o documento (PDF) gerado nos pedidos. Gestores podem alterar sem precisar de programação.</div>
+    <div style="font-size:var(--fs-100);color:var(--text-muted);margin-bottom:var(--space-4)">Personaliza o documento (PDF) gerado nos pedidos. Gestores podem alterar sem precisar de programação.</div>
     <div class="cfg-grid-2">
       <div class="form-field"><label>Título do documento</label><input type="text" id="cfg-pdf-titulo" class="cfg-input" placeholder="Ex: PEDIDO, ORÇAMENTO, PROPOSTA" value="${cfgPDF['pdf_titulo'] || 'PEDIDO'}"></div>
       <div class="form-field"><label>Nome da empresa</label><input type="text" id="cfg-pdf-empresa-nome" class="cfg-input" placeholder="Ex: Stonni — Bononi Acessórios" value="${cfgPDF['pdf_empresa_nome'] || ''}"></div>
@@ -126,9 +126,9 @@ async function cfgCarregarPDF(el) {
       <div class="form-field"><label>Telefone</label><input type="text" id="cfg-pdf-empresa-telefone" class="cfg-input" placeholder="(00) 00000-0000" value="${cfgPDF['pdf_empresa_telefone'] || ''}"></div>
     </div>
     <div class="form-field"><label>Endereço</label><input type="text" id="cfg-pdf-empresa-endereco" class="cfg-input" placeholder="Rua, número, cidade — UF" value="${cfgPDF['pdf_empresa_endereco'] || ''}"></div>
-    <div class="form-field"><label>URL do logo</label><input type="text" id="cfg-pdf-logo-url" class="cfg-input" placeholder="logo.png ou https://..." value="${cfgPDF['pdf_logo_url'] || 'logo.png'}"><span style="font-size:11px;color:var(--text-muted)">Use "logo.png" para o logo padrão do portal, ou cole uma URL externa.</span></div>
+    <div class="form-field"><label>URL do logo</label><input type="text" id="cfg-pdf-logo-url" class="cfg-input" placeholder="logo-stonni-ink.png ou https://..." value="${(cfgPDF['pdf_logo_url'] && cfgPDF['pdf_logo_url'] !== 'logo.png') ? cfgPDF['pdf_logo_url'] : 'logo-stonni-ink.png'}"><span style="font-size:var(--fs-090);color:var(--text-muted)">Use "logo-stonni-ink.png" para o logo padrão do portal (versão para fundo claro, que é o papel), ou cole uma URL externa.</span></div>
     <div class="form-field"><label>Texto do rodapé</label><textarea id="cfg-pdf-rodape" class="cfg-input" rows="2" placeholder="Ex: Este documento não tem valor fiscal...">${cfgPDF['pdf_rodape'] || ''}</textarea></div>
-    <div id="cfg-pdf-status" style="font-size:12px;color:var(--green);margin-top:8px;display:none">✅ Configurações de PDF salvas!</div>
+    <div id="cfg-pdf-status" style="font-size:var(--fs-100);color:var(--green);margin-top:var(--space-2);display:none"><i class="ic ic-sm" data-ic="check-circle"></i> Configurações de PDF salvas!</div>
   `;
 }
 
@@ -136,9 +136,9 @@ function cfgInputPorTipo(c) {
   const id = `cfg_${c.chave}`;
   if (c.tipo === 'boolean') {
     const checked = c.valor === 'true' ? 'checked' : '';
-    return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+    return `<label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer">
       <input type="checkbox" id="${id}" ${checked} style="width:16px;height:16px;accent-color:var(--blue-dark)">
-      <span style="font-size:12px;color:var(--text-secondary)">${c.valor === 'true' ? 'Ativado' : 'Desativado'}</span>
+      <span style="font-size:var(--fs-100);color:var(--text-secondary)">${c.valor === 'true' ? 'Ativado' : 'Desativado'}</span>
     </label>`;
   }
   if (c.tipo === 'number') return `<input type="number" id="${id}" value="${c.valor}" class="cfg-input" step="0.01">`;
@@ -163,7 +163,7 @@ async function cfgSalvarGeral() {
       body: JSON.stringify({ valor, atualizado_em: new Date().toISOString() })
     }).catch(() => erros++);
   }
-  msg.textContent = erros === 0 ? '✅ Configurações salvas!' : `⚠️ ${erros} erro(s) ao salvar.`;
+  msg.textContent = erros === 0 ? 'Configurações salvas!' : `${erros} erro(s) ao salvar.`;
   msg.style.color = erros === 0 ? 'var(--green)' : 'var(--red)';
   setTimeout(() => msg.textContent = '', 4000);
 }
@@ -208,15 +208,15 @@ async function cfgCarregarPrecos(el) {
   function renderListaTabelas() {
     return (tabelas || []).map(t => `
       <div class="preco-tab-item ${t.id === tabelaSel ? 'active' : ''}" onclick="cfgSelTab(${t.id},this)">
-        <div style="font-weight:600;font-size:13px">${t.nome}</div>
-        <div style="font-size:11px;margin-top:2px">
+        <div style="font-weight:600;font-size:var(--fs-200)">${t.nome}</div>
+        <div style="font-size:var(--fs-090);margin-top:var(--space-0-5)">
           <span style="color:${t.ativa ? 'var(--green)' : 'var(--text-muted)'}">${t.ativa ? '● Ativa' : '○ Inativa'}</span>
           ${t.markup_global != null && t.markup_global !== 0
-            ? `<span style="color:${t.markup_global > 0 ? 'var(--orange)' : 'var(--blue-mid)'};margin-left:6px">${t.markup_global > 0 ? '+' : ''}${t.markup_global}%</span>`
-            : '<span style="color:var(--text-muted);margin-left:6px">padrão</span>'}
+            ? `<span style="color:${t.markup_global > 0 ? 'var(--orange)' : 'var(--blue-mid)'};margin-left:var(--space-1-5)">${t.markup_global > 0 ? '+' : ''}${t.markup_global}%</span>`
+            : '<span style="color:var(--text-muted);margin-left:var(--space-1-5)">padrão</span>'}
         </div>
       </div>
-    `).join('') + `<button class="btn btn-outline btn-sm" style="margin-top:8px;width:100%" onclick="cfgNovaTabela()">+ Nova tabela</button>`;
+    `).join('') + `<button class="btn btn-outline btn-sm" style="margin-top:var(--space-2);width:100%" onclick="cfgNovaTabela()">+ Nova tabela</button>`;
   }
 
   function renderRegrasTabela(idTabela) {
@@ -224,60 +224,60 @@ async function cfgCarregarPrecos(el) {
     if (!t) return '<div class="empty-state"><p>Selecione uma tabela</p></div>';
     const r = (regras || []).filter(r => r.id_tabela === idTabela);
     return `
-      <div class="table-card" style="margin-bottom:16px">
+      <div class="table-card" style="margin-bottom:var(--space-4)">
         <div class="table-card-header">
-          <span class="table-card-title">⚙️ ${t.nome}</span>
+          <span class="table-card-title"><i class="ic ic-sm" data-ic="settings"></i> ${t.nome}</span>
           <button class="btn btn-outline btn-sm" onclick="cfgEditarTabela(${t.id})">Editar tabela</button>
         </div>
-        <div style="padding:16px 20px;display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+        <div style="padding:var(--space-4) var(--space-5);display:flex;gap:var(--space-6);align-items:center;flex-wrap:wrap">
           <div>
-            <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;margin-bottom:4px">Markup global</div>
-            <div style="font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:${(t.markup_global||0) === 0 ? 'var(--text-muted)' : (t.markup_global > 0 ? 'var(--orange)' : 'var(--blue-mid)')}">${(t.markup_global||0) > 0 ? '+' : ''}${t.markup_global || 0}%</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">sobre o preço base (Bononi SC)</div>
+            <div style="font-size:var(--fs-090);text-transform:uppercase;color:var(--text-muted);font-weight:600;margin-bottom:var(--space-1)">Markup global</div>
+            <div style="font-size:var(--fs-650);font-weight:700;font-family:var(--font-mono);color:${(t.markup_global||0) === 0 ? 'var(--text-muted)' : (t.markup_global > 0 ? 'var(--orange)' : 'var(--blue-mid)')}">${(t.markup_global||0) > 0 ? '+' : ''}${t.markup_global || 0}%</div>
+            <div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-0-5)">sobre o preço base (Bononi SC)</div>
           </div>
           <div style="flex:1;min-width:160px">
-            <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">
+            <div style="font-size:var(--fs-100);color:var(--text-secondary);line-height:1.6">
               ${(t.markup_global||0) === 0 ? 'Preço igual ao preço base da tabela' : `Preço = preço base ${(t.markup_global||0) > 0 ? '+' : ''}${t.markup_global}%`}
               <br><span style="color:var(--text-muted)">Regras de desconto aplicadas <strong>sobre</strong> esse preço</span>
             </div>
           </div>
         </div>
       </div>
-      <div class="section-header" style="margin-bottom:14px">
+      <div class="section-header" style="margin-bottom:var(--space-3-5)">
         <span class="section-title">Regras de preço</span>
         <button class="btn btn-primary btn-sm" onclick="cfgNovaRegra(${idTabela})">+ Adicionar regra</button>
       </div>
-      ${r.length === 0 ? `<div class="empty-state"><div class="empty-state-icon">📋</div><h3>Nenhuma regra</h3><p>Adicione descontos (por quantidade, grupo ou valor) ou preço fixo por quantidade.</p></div>` : `
+      ${r.length === 0 ? `<div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="clipboard-list"></i></div><h3>Nenhuma regra</h3><p>Adicione descontos (por quantidade, grupo ou valor) ou preço fixo por quantidade.</p></div>` : `
         <div class="table-card">
           <table class="data-table hide-mobile">
             <thead><tr><th>Tipo</th><th>Condição</th><th>Valor</th><th>Descrição</th><th>Status</th><th></th></tr></thead>
             <tbody>
               ${r.map(rg => `<tr>
                 <td><span class="badge badge-b">${cfgTipoLabel(rg.tipo)}</span></td>
-                <td style="font-size:12px;color:var(--text-secondary)">${cfgCondicaoLabel(rg)}</td>
+                <td style="font-size:var(--fs-100);color:var(--text-secondary)">${cfgCondicaoLabel(rg)}</td>
                 <td class="mono" style="color:var(--green);font-weight:600">${cfgRegraValorLabel(rg)}</td>
-                <td style="font-size:12px">${rg.descricao || '—'}</td>
+                <td style="font-size:var(--fs-100)">${rg.descricao || '—'}</td>
                 <td><span class="badge ${rg.ativa ? 'badge-aprovado' : 'badge-cancelado'}">${rg.ativa ? 'Ativa' : 'Inativa'}</span></td>
                 <td>
                   <button class="btn btn-outline btn-sm" onclick="cfgEditarRegra(${rg.id})">Editar</button>
-                  <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);margin-left:4px" onclick="cfgExcluirRegra(${rg.id})">✕</button>
+                  <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);margin-left:var(--space-1)" onclick="cfgExcluirRegra(${rg.id})"><i class="ic ic-sm" data-ic="x"></i></button>
                 </td>
               </tr>`).join('')}
             </tbody>
           </table>
-          <div class="show-mobile" style="padding:8px">
+          <div class="show-mobile" style="padding:var(--space-2)">
             ${r.map(rg => `
               <div class="cfg-card-row">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-1-5)">
                   <span class="badge badge-b">${cfgTipoLabel(rg.tipo)}</span>
                   <span class="mono" style="color:var(--green);font-weight:600">${cfgRegraValorLabel(rg)}</span>
                 </div>
-                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">${cfgCondicaoLabel(rg)}</div>
-                ${rg.descricao ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">${rg.descricao}</div>` : ''}
-                <div style="display:flex;gap:8px;align-items:center">
+                <div style="font-size:var(--fs-100);color:var(--text-secondary);margin-bottom:var(--space-1-5)">${cfgCondicaoLabel(rg)}</div>
+                ${rg.descricao ? `<div style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-2)">${rg.descricao}</div>` : ''}
+                <div style="display:flex;gap:var(--space-2);align-items:center">
                   <span class="badge ${rg.ativa ? 'badge-aprovado' : 'badge-cancelado'}">${rg.ativa ? 'Ativa' : 'Inativa'}</span>
                   <button class="btn btn-outline btn-sm" onclick="cfgEditarRegra(${rg.id})">Editar</button>
-                  <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="cfgExcluirRegra(${rg.id})">✕</button>
+                  <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="cfgExcluirRegra(${rg.id})"><i class="ic ic-sm" data-ic="x"></i></button>
                 </div>
               </div>`).join('')}
           </div>
@@ -286,11 +286,11 @@ async function cfgCarregarPrecos(el) {
   }
 
   el.innerHTML = `
-    <div class="section-header"><span class="section-title">💲 Tabelas & Preços</span></div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Preço base de cada tabela + regras <strong>permanentes</strong> (desconto por quantidade, por grupo, preço fixo...). Promoções com data ficam em <strong>Ações & Promoções</strong>.</div>
+    <div class="section-header"><span class="section-title"><i class="ic ic-sm" data-ic="dollar-sign"></i> Tabelas & Preços</span></div>
+    <div style="font-size:var(--fs-100);color:var(--text-muted);margin-bottom:var(--space-4)">Preço base de cada tabela + regras <strong>permanentes</strong> (desconto por quantidade, por grupo, preço fixo...). Promoções com data ficam em <strong>Ações & Promoções</strong>.</div>
     <div class="precos-layout">
       <div class="precos-sidebar">
-        <div class="hide-mobile" style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;letter-spacing:0.5px">Tabelas</div>
+        <div class="hide-mobile" style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:var(--space-2);letter-spacing:0.5px">Tabelas</div>
         <div id="preco-tabs-list">${renderListaTabelas()}</div>
       </div>
       <div id="preco-regras-area" class="precos-content">
@@ -335,12 +335,12 @@ function cfgFormTabela(t = {}) {
     <div class="form-field">
       <label>Markup global sobre preco_aux2 (%)</label>
       <input type="number" id="tb-markup" class="cfg-input" value="${t.markup_global||0}" step="0.1" placeholder="Ex: 5 = +5% | -3 = -3% | 0 = preço base">
-      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Positivo = acréscimo · Negativo = desconto · Zero = igual à tabela base</div>
+      <div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-1)">Positivo = acréscimo · Negativo = desconto · Zero = igual à tabela base</div>
     </div>
     <div class="form-field">
       <label>Desconto à vista (%)</label>
       <input type="number" id="tb-avista" class="cfg-input" value="${t.desconto_avista_perc||0}" step="0.1" min="0" max="100" placeholder="Ex: 3">
-      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Aplicado automaticamente quando representante seleciona prazo À VISTA</div>
+      <div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-1)">Aplicado automaticamente quando representante seleciona prazo À VISTA</div>
     </div>
     <div class="form-field">
       <label>Status</label>
@@ -453,10 +453,10 @@ window.cfgAtualizarCamposRegra = function() {
   const descField = document.getElementById('rg-desconto-field');
   if (descField) descField.style.display = (tipo === 'preco_fixo_qtd') ? 'none' : '';
   if (tipo === 'quantidade')   el.innerHTML = `<div class="form-field"><label>Produto (opcional)</label><select id="rg-prod" class="cfg-input">${cfgOpcoesProduto('')}</select></div><div class="form-field"><label>Quantidade mínima (peças)</label><input type="number" id="rg-qtd" class="cfg-input" min="1" placeholder="Ex: 10"></div>`;
-  else if (tipo === 'preco_fixo_qtd') el.innerHTML = `<div class="form-field"><label>Produto (opcional)</label><select id="rg-prod-fixo" class="cfg-input">${cfgOpcoesProduto('')}</select></div><div class="cfg-grid-2"><div class="form-field"><label>Quantidade mínima (peças)</label><input type="number" id="rg-qtd-fixo" class="cfg-input" min="1" placeholder="Ex: 5"></div><div class="form-field"><label>Preço fixo por unidade (R$)</label><input type="number" id="rg-preco-fixo" class="cfg-input" min="0" step="0.01" placeholder="Ex: 1999,00"></div></div><div class="alert alert-info" style="margin-top:4px"><span class="alert-icon">💡</span>Escolha o produto e a quantidade: ao atingir, o preço unitário vira o valor fixo. Ex.: <strong>gerador, 5 peças, R$ 1.999,00</strong>. Deixe "produto" vazio para valer a qualquer item.</div>`;
+  else if (tipo === 'preco_fixo_qtd') el.innerHTML = `<div class="form-field"><label>Produto (opcional)</label><select id="rg-prod-fixo" class="cfg-input">${cfgOpcoesProduto('')}</select></div><div class="cfg-grid-2"><div class="form-field"><label>Quantidade mínima (peças)</label><input type="number" id="rg-qtd-fixo" class="cfg-input" min="1" placeholder="Ex: 5"></div><div class="form-field"><label>Preço fixo por unidade (R$)</label><input type="number" id="rg-preco-fixo" class="cfg-input" min="0" step="0.01" placeholder="Ex: 1999,00"></div></div><div class="alert alert-info" style="margin-top:var(--space-1)"><span class="alert-icon"><i class="ic ic-sm" data-ic="lightbulb"></i></span>Escolha o produto e a quantidade: ao atingir, o preço unitário vira o valor fixo. Ex.: <strong>gerador, 5 peças, R$ 1.999,00</strong>. Deixe "produto" vazio para valer a qualquer item.</div>`;
   else if (tipo === 'valor_pedido') el.innerHTML = `<div class="form-field"><label>Valor mínimo do pedido (R$)</label><input type="number" id="rg-valor" class="cfg-input" min="0" step="0.01" placeholder="Ex: 3000"></div>`;
   else if (tipo === 'qtd_grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo do produto</label><select id="rg-nome-grupo" class="cfg-input" onchange="cfgQgAtualizarSubgrupos()">${cfgOpcoesGrupo('')}</select></div><div class="form-field"><label>Subgrupo (opcional)</label><select id="rg-nome-subgrupo-qg" class="cfg-input">${cfgOpcoesSubgrupo('','')}</select></div></div><div class="form-field"><label>Quantidade mínima (peças do grupo)</label><input type="number" id="rg-qtd-grupo" class="cfg-input" min="1" placeholder="Ex: 3"></div>`;
-  else if (tipo === 'grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><select id="rg-nome-grupo-sel" class="cfg-input" onchange="cfgAtualizarSubgrupos()">${cfgOpcoesGrupo('')}</select></div><div class="form-field"><label>Subgrupo (opcional)</label><select id="rg-nome-subgrupo-sel" class="cfg-input">${cfgOpcoesSubgrupo('','')}</select></div></div><div style="font-size:11px;color:var(--text-muted);margin-top:-6px">Vazio no subgrupo = vale para todo o grupo.</div>`;
+  else if (tipo === 'grupo')   el.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><select id="rg-nome-grupo-sel" class="cfg-input" onchange="cfgAtualizarSubgrupos()">${cfgOpcoesGrupo('')}</select></div><div class="form-field"><label>Subgrupo (opcional)</label><select id="rg-nome-subgrupo-sel" class="cfg-input">${cfgOpcoesSubgrupo('','')}</select></div></div><div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:-6px">Vazio no subgrupo = vale para todo o grupo.</div>`;
   else el.innerHTML = `<div class="alert alert-info"><span class="alert-icon">ℹ️</span>Aplica em todos os produtos de todas as ordens.</div>`;
 };
 
@@ -543,62 +543,62 @@ async function cfgCarregarAcoes(el) {
   }
 
   const linhasDesktop = !(acoes||[]).length
-    ? `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">🎯</div><h3>Nenhuma ação</h3><p>Crie descontos temporários ou preços fixos por produto ou grupo.</p></div></td></tr>`
+    ? `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="target"></i></div><h3>Nenhuma ação</h3><p>Crie descontos temporários ou preços fixos por produto ou grupo.</p></div></td></tr>`
     : (acoes||[]).map(a => {
         const s = statusAcao(a);
         const escopoLabel = a.escopo === 'produto' ? `Produto SKU ${a.id_produto}` : `Grupo ${a.nome_grupo || (a.id_grupo ? 'ID '+a.id_grupo : '—')}${a.nome_subgrupo ? ` / ${a.nome_subgrupo}` : (a.id_subgrupo ? ` / Sub ${a.id_subgrupo}` : '')}`;
         const valorLabel = a.tipo === 'desconto' ? `<span style="color:var(--green);font-weight:600">-${a.valor}%</span>` : `<span style="color:var(--blue-mid);font-weight:600">R$ ${a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>`;
         const validade = a.data_fim ? `${a.data_inicio ? fmtData(a.data_inicio)+' → ' : ''}${fmtData(a.data_fim)}` : (a.data_inicio ? `A partir de ${fmtData(a.data_inicio)}` : 'Sem prazo');
         return `<tr>
-          <td><strong>${a.nome}</strong>${a.obs ? `<div style="font-size:11px;color:var(--text-muted)">${a.obs}</div>` : ''}</td>
+          <td><strong>${a.nome}</strong>${a.obs ? `<div style="font-size:var(--fs-090);color:var(--text-muted)">${a.obs}</div>` : ''}</td>
           <td><span class="badge ${a.tipo==='desconto' ? 'badge-aprovado' : 'badge-b'}">${a.tipo==='desconto' ? 'Desconto' : 'Preço Fixo'}</span></td>
-          <td style="font-size:12px;color:var(--text-secondary)">${escopoLabel}</td>
+          <td style="font-size:var(--fs-100);color:var(--text-secondary)">${escopoLabel}</td>
           <td class="mono">${valorLabel}</td>
-          <td style="font-size:12px;color:var(--text-muted)">${validade}</td>
+          <td style="font-size:var(--fs-100);color:var(--text-muted)">${validade}</td>
           <td><span class="badge ${s.classe}">${s.label}</span></td>
           <td>
             <button class="btn btn-outline btn-sm" onclick="cfgEditarAcao(${a.id})">Editar</button>
-            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);margin-left:4px" onclick="cfgExcluirAcao(${a.id})">✕</button>
+            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);margin-left:var(--space-1)" onclick="cfgExcluirAcao(${a.id})"><i class="ic ic-sm" data-ic="x"></i></button>
           </td>
         </tr>`;
       }).join('');
 
   const cardsMobile = !(acoes||[]).length
-    ? `<div class="empty-state"><div class="empty-state-icon">🎯</div><h3>Nenhuma ação</h3><p>Crie descontos temporários ou preços fixos.</p></div>`
+    ? `<div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="target"></i></div><h3>Nenhuma ação</h3><p>Crie descontos temporários ou preços fixos.</p></div>`
     : (acoes||[]).map(a => {
         const s = statusAcao(a);
         const validade = a.data_fim ? `${a.data_inicio ? fmtData(a.data_inicio)+' → ' : ''}${fmtData(a.data_fim)}` : 'Sem prazo';
         return `<div class="cfg-card-row">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-            <strong style="font-size:13px">${a.nome}</strong>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-1-5)">
+            <strong style="font-size:var(--fs-200)">${a.nome}</strong>
             <span class="badge ${s.classe}">${s.label}</span>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-2)">
             <span class="badge ${a.tipo==='desconto' ? 'badge-aprovado' : 'badge-b'}">${a.tipo==='desconto' ? 'Desconto' : 'Preço Fixo'}</span>
-            <span class="mono" style="font-size:12px;font-weight:600;color:${a.tipo==='desconto'?'var(--green)':'var(--blue-mid)'}">${a.tipo==='desconto' ? '-'+a.valor+'%' : 'R$ '+a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+            <span class="mono" style="font-size:var(--fs-100);font-weight:600;color:${a.tipo==='desconto'?'var(--green)':'var(--blue-mid)'}">${a.tipo==='desconto' ? '-'+a.valor+'%' : 'R$ '+a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
           </div>
-          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">📅 ${validade}</div>
-          <div style="display:flex;gap:8px">
+          <div style="font-size:var(--fs-100);color:var(--text-muted);margin-bottom:var(--space-2)"><i class="ic ic-sm" data-ic="calendar"></i> ${validade}</div>
+          <div style="display:flex;gap:var(--space-2)">
             <button class="btn btn-outline btn-sm" onclick="cfgEditarAcao(${a.id})" style="flex:1">Editar</button>
-            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="cfgExcluirAcao(${a.id})">✕</button>
+            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="cfgExcluirAcao(${a.id})"><i class="ic ic-sm" data-ic="x"></i></button>
           </div>
         </div>`;
       }).join('');
 
   el.innerHTML = `
     <div class="section-header">
-      <span class="section-title">🎯 Ações & Promoções</span>
+      <span class="section-title"><i class="ic ic-sm" data-ic="target"></i> Ações & Promoções</span>
       <button class="btn btn-primary" onclick="cfgNovaAcao()">+ Nova ação</button>
     </div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Campanhas <strong>temporárias</strong> (com data de início/fim) — desconto ou preço fixo por produto ou grupo. Regras permanentes ficam em <strong>Tabelas & Preços</strong>. <strong>${(acoes||[]).length}</strong> ação(ões) cadastrada(s).</div>
-    <div id="sync-todos-progress" style="display:none;margin-top:10px"></div>
-    <div class="table-card hide-mobile" style="margin-top:14px">
+    <div style="font-size:var(--fs-100);color:var(--text-muted);margin-bottom:var(--space-3-5)">Campanhas <strong>temporárias</strong> (com data de início/fim) — desconto ou preço fixo por produto ou grupo. Regras permanentes ficam em <strong>Tabelas & Preços</strong>. <strong>${(acoes||[]).length}</strong> ação(ões) cadastrada(s).</div>
+    <div id="sync-todos-progress" style="display:none;margin-top:var(--space-2-5)"></div>
+    <div class="table-card hide-mobile" style="margin-top:var(--space-3-5)">
       <table class="data-table">
         <thead><tr><th>Nome</th><th>Tipo</th><th>Escopo</th><th>Valor</th><th>Validade</th><th>Status</th><th></th></tr></thead>
         <tbody>${linhasDesktop}</tbody>
       </table>
     </div>
-    <div class="show-mobile" style="margin-top:14px">${cardsMobile}</div>
+    <div class="show-mobile" style="margin-top:var(--space-3-5)">${cardsMobile}</div>
   `;
 }
 
@@ -662,7 +662,7 @@ window.cfgAtualizarCamposAcao = function() {
   } else {
     const gSel = document.getElementById('ac-nome-grupo-h')?.value || '';
     const sSel = document.getElementById('ac-nome-subgrupo-h')?.value || '';
-    campos.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><select id="ac-grupo-sel" class="cfg-input" onchange="cfgAcaoAtualizarSubgrupos()">${cfgOpcoesGrupo(gSel)}</select></div><div class="form-field"><label>Subgrupo (opcional)</label><select id="ac-subgrupo-sel" class="cfg-input">${cfgOpcoesSubgrupo(gSel, sSel)}</select></div></div><div style="font-size:11px;color:var(--text-muted);margin-top:-6px">Vazio no subgrupo = vale para todo o grupo.</div>`;
+    campos.innerHTML = `<div class="cfg-grid-2"><div class="form-field"><label>Grupo</label><select id="ac-grupo-sel" class="cfg-input" onchange="cfgAcaoAtualizarSubgrupos()">${cfgOpcoesGrupo(gSel)}</select></div><div class="form-field"><label>Subgrupo (opcional)</label><select id="ac-subgrupo-sel" class="cfg-input">${cfgOpcoesSubgrupo(gSel, sSel)}</select></div></div><div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:-6px">Vazio no subgrupo = vale para todo o grupo.</div>`;
   }
 };
 
@@ -721,19 +721,19 @@ window.cfgAbrirTags = async function() {
 
   const listaHtml = tags.length
     ? tags.map(t=>`
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);margin-bottom:6px">
-          <span style="flex:1;font-size:13px;font-weight:500">${t.nome}</span>
-          <span class="badge ${t.ativo?'badge-aprovado':'badge-cancelado'}" style="font-size:10px">${t.ativo?'Ativa':'Inativa'}</span>
+        <div style="display:flex;align-items:center;gap:var(--space-2-5);padding:var(--space-2) var(--space-3);background:var(--surface2);border-radius:var(--radius-md);border:1px solid var(--border);margin-bottom:var(--space-1-5)">
+          <span style="flex:1;font-size:var(--fs-200);font-weight:500">${t.nome}</span>
+          <span class="badge ${t.ativo?'badge-aprovado':'badge-cancelado'}" style="font-size:var(--fs-075)">${t.ativo?'Ativa':'Inativa'}</span>
           <button class="btn btn-outline btn-sm" onclick="cfgEditarTag(${t.id})">Editar</button>
-          <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="cfgExcluirTag(${t.id})">✕</button>
+          <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="cfgExcluirTag(${t.id})"><i class="ic ic-sm" data-ic="x"></i></button>
         </div>`).join('')
-    : '<div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Nenhuma tag ainda.</div>';
+    : '<div style="font-size:var(--fs-200);color:var(--text-muted);margin-bottom:var(--space-3)">Nenhuma tag ainda.</div>';
 
-  abrirDrawer('🏷️ Tags do Catálogo', 'Classifique produtos com tags personalizadas',
+  abrirDrawer('<i class="ic ic-sm" data-ic="tag"></i> Tags do Catálogo', 'Classifique produtos com tags personalizadas',
     `${listaHtml}
-     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:8px">
-       <div style="font-size:13px;font-weight:600;margin-bottom:10px">Nova tag</div>
-       <div style="display:flex;gap:10px">
+     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-3-5);margin-top:var(--space-2)">
+       <div style="font-size:var(--fs-200);font-weight:600;margin-bottom:var(--space-2-5)">Nova tag</div>
+       <div style="display:flex;gap:var(--space-2-5)">
          <input type="text" id="tag-nova-nome" class="cfg-input" placeholder="Ex: Motor Home" style="flex:1">
          <button class="btn btn-primary" onclick="cfgSalvarTag()">+ Adicionar</button>
        </div>
@@ -789,8 +789,8 @@ async function cfgCarregarCatalogo(el) {
   window._cfgProdutos = produtos || [];
 
   el.innerHTML = `
-    <div class="section-header" style="flex-wrap:wrap;gap:10px">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:1;min-width:0">
+    <div class="section-header" style="flex-wrap:wrap;gap:var(--space-2-5)">
+      <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;flex:1;min-width:0">
         <input type="text" id="cat-busca" placeholder="Buscar produto..." class="cfg-input" style="flex:1;min-width:120px;max-width:240px" oninput="cfgFiltrarCatalogo()">
         <select id="cat-filtro-status" class="cfg-input" style="width:130px;flex-shrink:0" onchange="cfgFiltrarCatalogo()">
           <option value="">Todos</option>
@@ -799,16 +799,16 @@ async function cfgCarregarCatalogo(el) {
           <option value="inativo">Inativos</option>
         </select>
       </div>
-      <button class="btn btn-outline" onclick="cfgSincronizarTodos()" style="flex-shrink:0" id="btn-sync-todos">🔄 Sincronizar todos</button>
-      <button class="btn btn-outline" onclick="cfgAbrirTags()" style="flex-shrink:0">🏷️ Tags</button>
-      <button class="btn btn-outline" onclick="cfgExportarTabelaPreco()" style="flex-shrink:0">📥 Tabela de Preços</button>
+      <button class="btn btn-outline" onclick="cfgSincronizarTodos()" style="flex-shrink:0" id="btn-sync-todos"><i class="ic ic-sm" data-ic="refresh-cw"></i> Sincronizar todos</button>
+      <button class="btn btn-outline" onclick="cfgAbrirTags()" style="flex-shrink:0"><i class="ic ic-sm" data-ic="tag"></i> Tags</button>
+      <button class="btn btn-outline" onclick="cfgExportarTabelaPreco()" style="flex-shrink:0"><i class="ic ic-sm" data-ic="download"></i> Tabela de Preços</button>
       <button class="btn btn-primary" onclick="cfgAdicionarProduto()" style="flex-shrink:0">+ Produto</button>
     </div>
-    <div id="sync-todos-progress" style="display:none;margin-top:10px"></div>
-    <div class="table-card hide-mobile" style="margin-top:14px">
+    <div id="sync-todos-progress" style="display:none;margin-top:var(--space-2-5)"></div>
+    <div class="table-card hide-mobile" style="margin-top:var(--space-3-5)">
       <div class="table-card-header">
         <span class="table-card-title">Produtos no catálogo</span>
-        <span style="font-size:12px;color:var(--text-muted)">${(produtos||[]).length} produto(s)</span>
+        <span style="font-size:var(--fs-100);color:var(--text-muted)">${(produtos||[]).length} produto(s)</span>
       </div>
       <table class="data-table">
         <thead><tr>
@@ -818,12 +818,12 @@ async function cfgCarregarCatalogo(el) {
         <tbody id="cat-tbody">${cfgRenderLinhasProduto(produtos||[])}</tbody>
       </table>
     </div>
-    <div class="show-mobile" style="margin-top:14px" id="cat-cards">${cfgRenderCardsProduto(produtos||[])}</div>
+    <div class="show-mobile" style="margin-top:var(--space-3-5)" id="cat-cards">${cfgRenderCardsProduto(produtos||[])}</div>
   `;
 }
 
 function cfgRenderLinhasProduto(lista) {
-  if (!lista.length) return `<tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon">🛍️</div><h3>Catálogo vazio</h3><p>Adicione produtos pelo SKU do ERP.</p></div></td></tr>`;
+  if (!lista.length) return `<tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="shopping-bag"></i></div><h3>Catálogo vazio</h3><p>Adicione produtos pelo SKU do ERP.</p></div></td></tr>`;
   return lista.map(p => {
     const foto = p.foto_exibir_miniatura || p.fotos_exibir?.[0] || null;
     const isEsgotado = p.esgotado || p.esgotado_manual;
@@ -831,39 +831,39 @@ function cfgRenderLinhasProduto(lista) {
     const badgeMap = { inativo:'badge-cancelado', esgotado:'badge-esgotado', disponivel:'badge-disponivel' };
     const labelMap = { inativo:'Inativo', esgotado: p.esgotado_manual ? 'Fora de linha' : 'Esgotado', disponivel:'Disponível' };
     return `<tr data-id="${p.id}">
-      <td>${foto ? `<img src="${foto}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">` : `<div style="width:52px;height:52px;background:var(--surface2);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:20px;border:1px solid var(--border)">📦</div>`}</td>
-      <td><div style="font-weight:500;font-size:13px">${p.nome}</div>${p.aplicacao ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">📍 ${p.aplicacao}</div>` : ''}</td>
-      <td class="mono" style="font-size:12px">${p.referencia||'—'}</td>
-      <td style="font-size:12px;color:var(--text-secondary)">${p.grupo||'—'}</td>
+      <td>${foto ? `<img src="${foto}" style="width:52px;height:52px;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--border)">` : `<div style="width:52px;height:52px;background:var(--surface2);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:var(--fs-600);border:1px solid var(--border)"><i class="ic ic-sm" data-ic="package"></i></div>`}</td>
+      <td><div style="font-weight:500;font-size:var(--fs-200)">${p.nome}</div>${p.aplicacao ? `<div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-0-5)"><i class="ic ic-sm" data-ic="map-pin"></i> ${p.aplicacao}</div>` : ''}</td>
+      <td class="mono" style="font-size:var(--fs-100)">${p.referencia||'—'}</td>
+      <td style="font-size:var(--fs-100);color:var(--text-secondary)">${p.grupo||'—'}</td>
       <td class="right mono" style="font-weight:600">R$ ${(p.preco_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-      <td style="font-size:12px;color:var(--text-muted)">${p.estoque_total != null ? `${Math.floor(p.estoque_total)} un.${p.estoque_manual != null ? ' <span title="Estoque manual" style="color:var(--orange);font-weight:700">(!)</span>' : ''}` : '—'}</td>
-      <td style="text-align:center">${p.peso_kg ? `<span title="Peso: ${p.peso_kg}kg · ${p.largura_cm||'?'}×${p.altura_cm||'?'}×${p.comprimento_cm||'?'}cm" style="font-size:16px;cursor:default">✅</span>` : `<span title="Medidas não cadastradas" style="font-size:16px;cursor:default;opacity:.35">⬜</span>`}</td>
+      <td style="font-size:var(--fs-100);color:var(--text-muted)">${p.estoque_total != null ? `${Math.floor(p.estoque_total)} un.${p.estoque_manual != null ? ' <span title="Estoque manual" style="color:var(--orange);font-weight:700">(!)</span>' : ''}` : '—'}</td>
+      <td style="text-align:center">${p.peso_kg ? `<span title="Peso: ${p.peso_kg}kg · ${p.largura_cm||'?'}×${p.altura_cm||'?'}×${p.comprimento_cm||'?'}cm" style="font-size:var(--fs-450);cursor:default"><i class="ic ic-sm" data-ic="check-circle"></i></span>` : `<span title="Medidas não cadastradas" style="font-size:var(--fs-450);cursor:default;opacity:.35"></span>`}</td>
       <td><span class="badge ${badgeMap[status]} badge-status">${labelMap[status]}</span></td>
-      <td><div style="display:flex;gap:6px;align-items:center;justify-content:flex-end"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id})" title="Excluir produto">✕</button></div></td>
+      <td><div style="display:flex;gap:var(--space-1-5);align-items:center;justify-content:flex-end"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id})" title="Excluir produto"><i class="ic ic-sm" data-ic="x"></i></button></div></td>
     </tr>`;
   }).join('');
 }
 
 function cfgRenderCardsProduto(lista) {
-  if (!lista.length) return `<div class="empty-state"><div class="empty-state-icon">🛍️</div><h3>Catálogo vazio</h3><p>Adicione produtos pelo SKU do ERP.</p></div>`;
+  if (!lista.length) return `<div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="shopping-bag"></i></div><h3>Catálogo vazio</h3><p>Adicione produtos pelo SKU do ERP.</p></div>`;
   return lista.map(p => {
     const foto = p.foto_exibir_miniatura || p.fotos_exibir?.[0] || null;
     const isEsgotado = p.esgotado || p.esgotado_manual;
     const status = !p.ativo ? 'inativo' : isEsgotado ? 'esgotado' : 'disponivel';
     const badgeMap = { inativo:'badge-cancelado', esgotado:'badge-esgotado', disponivel:'badge-disponivel' };
     const labelMap = { inativo:'Inativo', esgotado: p.esgotado_manual ? 'Fora de linha' : 'Esgotado', disponivel:'Disponível' };
-    return `<div class="cfg-card-row" style="display:flex;gap:12px;align-items:flex-start">
-      ${foto ? `<img src="${foto}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0">` : `<div style="width:56px;height:56px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid var(--border);flex-shrink:0">📦</div>`}
+    return `<div class="cfg-card-row" style="display:flex;gap:var(--space-3);align-items:flex-start">
+      ${foto ? `<img src="${foto}" style="width:56px;height:56px;object-fit:cover;border-radius:var(--radius-lg);border:1px solid var(--border);flex-shrink:0">` : `<div style="width:56px;height:56px;background:var(--surface2);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:var(--fs-650);border:1px solid var(--border);flex-shrink:0"><i class="ic ic-sm" data-ic="package"></i></div>`}
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:13px;margin-bottom:2px">${p.nome}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Ref: ${p.referencia||'—'} · ${p.grupo||'—'}</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span class="mono" style="font-weight:700;color:var(--blue-dark);font-size:13px">R$ ${(p.preco_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+        <div style="font-weight:600;font-size:var(--fs-200);margin-bottom:var(--space-0-5)">${p.nome}</div>
+        <div style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-1-5)">Ref: ${p.referencia||'—'} · ${p.grupo||'—'}</div>
+        <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap">
+          <span class="mono" style="font-weight:700;color:var(--blue-dark);font-size:var(--fs-200)">R$ ${(p.preco_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
           <span class="badge ${badgeMap[status]} badge-status">${labelMap[status]}</span>
-          ${p.estoque_total != null ? `<span style="font-size:11px;color:var(--text-muted)">${p.estoque_total} un.${p.estoque_manual != null ? ' <span title="Estoque manual" style="color:var(--orange);font-weight:700">(!)</span>' : ''}</span>` : ''}
+          ${p.estoque_total != null ? `<span style="font-size:var(--fs-090);color:var(--text-muted)">${p.estoque_total} un.${p.estoque_manual != null ? ' <span title="Estoque manual" style="color:var(--orange);font-weight:700">(!)</span>' : ''}</span>` : ''}
         </div>
       </div>
-      <div style="display:flex;gap:6px;flex-shrink:0"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id})}')" title="Excluir">✕</button></div>
+      <div style="display:flex;gap:var(--space-1-5);flex-shrink:0"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id})}')" title="Excluir"><i class="ic ic-sm" data-ic="x"></i></button></div>
     </div>`;
   }).join('');
 }
@@ -915,16 +915,16 @@ window.cfgSincronizarTodos = async function() {
   let ok = 0, erro = 0;
   for (let i = 0; i < comSyncFotos.length; i++) {
     const p = comSyncFotos[i];
-    prog.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:13px;font-weight:600">🔄 Sincronizando fotos...</span>
-        <span style="font-size:12px;color:var(--text-muted)">${i+1} / ${comSyncFotos.length}</span>
+    prog.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-4)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-2)">
+        <span style="font-size:var(--fs-200);font-weight:600"><i class="ic ic-sm" data-ic="refresh-cw"></i> Sincronizando fotos...</span>
+        <span style="font-size:var(--fs-100);color:var(--text-muted)">${i+1} / ${comSyncFotos.length}</span>
       </div>
-      <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden">
+      <div style="background:var(--border);border-radius:var(--radius-sm);height:6px;overflow:hidden">
         <div style="background:var(--blue-mid);height:100%;width:${Math.round((i/comSyncFotos.length)*100)}%;transition:width .3s"></div>
       </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Produto: ${p.nome} (${p.referencia})</div>
-      <div style="font-size:11px;margin-top:2px">✅ ${ok} ok &nbsp; ❌ ${erro} erro(s)</div>
+      <div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-1-5)">Produto: ${p.nome} (${p.referencia})</div>
+      <div style="font-size:var(--fs-090);margin-top:var(--space-0-5)"><i class="ic ic-sm" data-ic="check-circle"></i> ${ok} ok &nbsp; <i class="ic ic-sm" data-ic="alert-circle"></i> ${erro} erro(s)</div>
     </div>`;
     try {
       const skuLimpo = String(parseInt(p.referencia));
@@ -939,9 +939,9 @@ window.cfgSincronizarTodos = async function() {
     await new Promise(r => setTimeout(r, 300));
   }
 
-  prog.innerHTML = `<div style="background:var(--green-bg);border:1px solid var(--green);border-radius:var(--radius-sm);padding:12px 16px;font-size:13px">
-    ✅ Sincronização concluída — ${ok} produto(s) atualizados${erro ? ` · ${erro} com erro` : ''}.
-    <button class="btn btn-outline btn-sm" style="margin-left:12px" onclick="cfgAba('catalogo',null)">Recarregar</button>
+  prog.innerHTML = `<div style="background:var(--green-bg);border:1px solid var(--green);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-4);font-size:var(--fs-200)">
+    <i class="ic ic-sm" data-ic="check-circle"></i> Sincronização concluída — ${ok} produto(s) atualizados${erro ? ` · ${erro} com erro` : ''}.
+    <button class="btn btn-outline btn-sm" style="margin-left:var(--space-3)" onclick="cfgAba('catalogo',null)">Recarregar</button>
   </div>`;
   btn.disabled = false;
 };
@@ -949,9 +949,9 @@ window.cfgSincronizarTodos = async function() {
 window.cfgAdicionarProduto = function() {
   abrirDrawer('Adicionar Produto ao Catálogo', 'Busque pelo código (SKU) ou pelo nome do produto', `
     <div class="alert alert-info"><span class="alert-icon">ℹ️</span>Digite o <strong>código (SKU)</strong> ou parte do <strong>nome</strong> do produto. Os dados e o preço base virão automaticamente do ERP. As fotos serão buscadas após salvar.</div>
-    <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:20px">
+    <div style="display:flex;gap:var(--space-2-5);align-items:flex-end;margin-bottom:var(--space-5)">
       <div class="form-field" style="flex:1;margin:0"><label>SKU ou nome do produto</label><input type="text" id="np-sku" class="cfg-input" placeholder="Ex: 18744  ·  ou: geladeira 45L" onkeydown="if(event.key==='Enter') cfgBuscarERP()"></div>
-      <button class="btn btn-primary" onclick="cfgBuscarERP()" style="flex-shrink:0">🔍 Buscar</button>
+      <button class="btn btn-primary" onclick="cfgBuscarERP()" style="flex-shrink:0"><i class="ic ic-sm" data-ic="search"></i> Buscar</button>
     </div>
     <div id="np-erp-resultado"></div>
     <input type="hidden" id="np-id-erp">
@@ -971,17 +971,17 @@ window.cfgAdicionarProduto = function() {
       </div>
       <div class="form-field"><label>Descrição</label><textarea id="np-desc" class="cfg-input" rows="2"></textarea></div>
       <input type="hidden" id="np-id-grupo"><input type="hidden" id="np-id-subgrupo">
-      <div style="margin-top:12px">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px">Tags</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px" id="np-tags-wrap">
-          ${(window._cfgTags||[]).map(t=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px"><input type="checkbox" class="np-tag-check" value="${t.nome}" style="accent-color:#1A3A8F"> ${t.nome}</label>`).join('') || '<span style="font-size:12px;color:var(--text-muted)">Crie tags em 🏷️ Tags</span>'}
+      <div style="margin-top:var(--space-3)">
+        <div style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:var(--space-1-5)">Tags</div>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-1-5)" id="np-tags-wrap">
+          ${(window._cfgTags||[]).map(t=>`<label style="display:flex;align-items:center;gap:5px;font-size:var(--fs-100);cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-1) var(--space-2-5)"><input type="checkbox" class="np-tag-check" value="${t.nome}" style="accent-color:var(--action-primary-bg)"> ${t.nome}</label>`).join('') || '<span style="font-size:var(--fs-100);color:var(--text-muted)">Crie tags em <i class="ic ic-sm" data-ic="tag"></i> Tags</span>'}
         </div>
       </div>
-      <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="np-ativo" checked style="accent-color:var(--blue-dark)"> Ativo no catálogo</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="np-esgotado" style="accent-color:var(--red)"> Esgotado</label>
+      <div style="display:flex;gap:var(--space-4);margin-top:var(--space-2);flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:var(--space-1-5);cursor:pointer;font-size:var(--fs-200)"><input type="checkbox" id="np-ativo" checked style="accent-color:var(--blue-dark)"> Ativo no catálogo</label>
+        <label style="display:flex;align-items:center;gap:var(--space-1-5);cursor:pointer;font-size:var(--fs-200)"><input type="checkbox" id="np-esgotado" style="accent-color:var(--red)"> Esgotado</label>
       </div>
-      <div class="alert alert-info" style="margin-top:14px"><span class="alert-icon">📷</span>As fotos serão buscadas no Bling após salvar.</div>
+      <div class="alert alert-info" style="margin-top:var(--space-3-5)"><span class="alert-icon"><i class="ic ic-sm" data-ic="camera"></i></span>As fotos serão buscadas no Bling após salvar.</div>
     </div>
   `, `
     <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
@@ -1001,23 +1001,23 @@ window.cfgBuscarERP = async function() {
   if (/^\d+$/.test(termo)) { await cfgSelecionarProdutoERP(parseInt(termo)); return; }
 
   // Texto → busca por nome (empresa 8 = Bononi SC, sem repetir por empresa)
-  res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Buscando por nome...</div>';
+  res.innerHTML = '<div style="color:var(--text-muted);font-size:var(--fs-200)"><i class="ic ic-sm" data-ic="search"></i> Buscando por nome...</div>';
   const rows = await supa('vw_fb_produtos_compras', `nome=ilike.*${encodeURIComponent(termo)}*&id_empresa=eq.8&select=id_produto,referencia,nome,grupo,preco_aux2,estoque_fisico&order=nome&limit=30`);
   if (!rows?.length) {
-    res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Nenhum produto encontrado com "<strong>${termo}</strong>". Tente outra palavra ou busque pelo código (SKU).</div>`;
+    res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>Nenhum produto encontrado com "<strong>${termo}</strong>". Tente outra palavra ou busque pelo código (SKU).</div>`;
     return;
   }
   // Marca os que já estão no catálogo (não deixa escolher duplicado)
   const idsBusca = rows.map(r => r.id_produto);
   const noCat = await supa('ped_catalogo_produtos', `id_produto_erp=in.(${idsBusca.join(',')})&select=id_produto_erp`);
   const setCat = new Set((noCat || []).map(x => x.id_produto_erp));
-  res.innerHTML = `<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${rows.length} produto(s) encontrado(s) — clique para selecionar:</div>
-    <div style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto">
+  res.innerHTML = `<div style="font-size:var(--fs-100);color:var(--text-muted);margin-bottom:var(--space-2)">${rows.length} produto(s) encontrado(s) — clique para selecionar:</div>
+    <div style="display:flex;flex-direction:column;gap:var(--space-1-5);max-height:340px;overflow-y:auto">
     ${rows.map(p => {
       const jaTem = setCat.has(p.id_produto);
-      return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--border);border-radius:8px;padding:9px 12px;background:${jaTem ? 'var(--surface2)' : 'var(--surface)'}">
-        <div style="min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nome?.trim() || '—'}</div>
-        <div style="font-size:11px;color:var(--text-muted)">SKU ${p.id_produto} · ${p.grupo || '—'} · R$ ${Number(p.preco_aux2||0).toLocaleString('pt-BR',{minimumFractionDigits:2})} · ${p.estoque_fisico??0} un.</div></div>
+      return `<div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-2-5);border:1px solid var(--border);border-radius:var(--radius-lg);padding:9px var(--space-3);background:${jaTem ? 'var(--surface2)' : 'var(--surface)'}">
+        <div style="min-width:0"><div style="font-size:var(--fs-200);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nome?.trim() || '—'}</div>
+        <div style="font-size:var(--fs-090);color:var(--text-muted)">SKU ${p.id_produto} · ${p.grupo || '—'} · R$ ${Number(p.preco_aux2||0).toLocaleString('pt-BR',{minimumFractionDigits:2})} · ${p.estoque_fisico??0} un.</div></div>
         ${jaTem
           ? '<span class="badge" style="background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);flex-shrink:0">já no catálogo</span>'
           : `<button class="btn btn-primary btn-sm" style="flex-shrink:0" onclick="cfgSelecionarProdutoERP(${p.id_produto})">Selecionar</button>`}
@@ -1028,15 +1028,15 @@ window.cfgBuscarERP = async function() {
 // Seleciona um produto (por SKU): trava duplicado, busca dados do ERP e preenche o formulário
 window.cfgSelecionarProdutoERP = async function(sku) {
   const res = document.getElementById('np-erp-resultado');
-  res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Verificando catálogo...</div>';
+  res.innerHTML = '<div style="color:var(--text-muted);font-size:var(--fs-200)"><i class="ic ic-sm" data-ic="search"></i> Verificando catálogo...</div>';
   // TRAVA: bloqueia produto que já está no catálogo (mesmo id_produto_erp)
   const jaNoCatalogo = await supa('ped_catalogo_produtos', `id_produto_erp=eq.${sku}&select=id,nome,ativo`);
   if (jaNoCatalogo?.length) {
     const j = jaNoCatalogo[0];
-    res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon">🚫</span><div>Este produto <strong>já está no catálogo</strong>: <strong>${j.nome || '—'}</strong>${j.ativo ? '' : ' <em>(inativo)</em>'}.<br><span style="font-size:12px">Não é possível adicionar de novo. Para alterar, edite pela lista do catálogo.</span></div></div>`;
+    res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon"><i class="ic ic-sm" data-ic="ban"></i></span><div>Este produto <strong>já está no catálogo</strong>: <strong>${j.nome || '—'}</strong>${j.ativo ? '' : ' <em>(inativo)</em>'}.<br><span style="font-size:var(--fs-100)">Não é possível adicionar de novo. Para alterar, edite pela lista do catálogo.</span></div></div>`;
     return;
   }
-  res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Buscando no ERP...</div>';
+  res.innerHTML = '<div style="color:var(--text-muted);font-size:var(--fs-200)"><i class="ic ic-sm" data-ic="search"></i> Buscando no ERP...</div>';
   // Tenta empresa 8 (Bononi SC) primeiro, fallback para qualquer empresa do grupo
   let rows = await supa('vw_fb_produtos_compras', `id_produto=eq.${sku}&id_empresa=eq.8&select=id_produto,referencia,nome,complemento,id_grupo,grupo,id_subgrupo,subgrupo,preco_aux2,estoque_fisico`);
   if (!rows?.length) {
@@ -1045,7 +1045,7 @@ window.cfgSelecionarProdutoERP = async function(sku) {
   const p = rows?.[0];
   document.getElementById('np-id-erp').value = sku;
   if (!p) {
-    res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Produto <strong>${sku}</strong> não encontrado no ERP. Pode ser um produto novo — verifique se a integração com o Firebird já sincronizou. Preencha manualmente enquanto isso.</div>`;
+    res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>Produto <strong>${sku}</strong> não encontrado no ERP. Pode ser um produto novo — verifique se a integração com o Firebird já sincronizou. Preencha manualmente enquanto isso.</div>`;
     document.getElementById('np-ref').value = sku;
     document.getElementById('np-form-produto').style.display = 'block';
     document.getElementById('np-btn-salvar').style.display = 'inline-flex';
@@ -1061,7 +1061,7 @@ window.cfgSelecionarProdutoERP = async function(sku) {
   document.getElementById('np-estoque').value     = `${p.estoque_fisico ?? 0} un.`;
   document.getElementById('np-desc').value        = p.complemento?.trim() || '';
   if ((p.estoque_fisico ?? 0) <= 0) document.getElementById('np-esgotado').checked = true;
-  res.innerHTML = `<div class="alert alert-success"><span class="alert-icon">✅</span><div><strong>${p.nome?.trim()}</strong><br><span style="font-size:12px">Preço: <strong>R$ ${Number(p.preco_aux2||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong> · Estoque SC: <strong>${p.estoque_fisico??0} un.</strong></span></div></div>`;
+  res.innerHTML = `<div class="alert alert-success"><span class="alert-icon"><i class="ic ic-sm" data-ic="check-circle"></i></span><div><strong>${p.nome?.trim()}</strong><br><span style="font-size:var(--fs-100)">Preço: <strong>R$ ${Number(p.preco_aux2||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong> · Estoque SC: <strong>${p.estoque_fisico??0} un.</strong></span></div></div>`;
   document.getElementById('np-form-produto').style.display = 'block';
   document.getElementById('np-btn-salvar').style.display = 'inline-flex';
 };
@@ -1125,7 +1125,7 @@ window.cfgUploadFotoManual = async function(id, input) {
   if (!file.type.startsWith('image/')) { alert('Selecione uma imagem.'); input.value=''; return; }
   if (file.size > 5 * 1024 * 1024) { alert('Imagem muito grande (máx. 5MB).'); input.value=''; return; }
   const msg = document.getElementById('ep-foto-msg');
-  if (msg) { msg.textContent = '📤 Enviando foto...'; msg.style.color = 'var(--text-muted)'; }
+  if (msg) { msg.textContent = 'Enviando foto...'; msg.style.color = 'var(--text-muted)'; }
   try {
     const ext = ((file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')) || 'jpg';
     const path = `manual/${id}-${Date.now()}.${ext}`;
@@ -1188,48 +1188,48 @@ window.cfgEditarProduto = async function(id) {
   const fotos = p.fotos || [];
   const fotosErp = p.fotos_erp || [];
   const fotosManual = p.fotos_manual || [];
-  const origemLabel = ({ bling:'🔵 Bling', erp:'🟢 ERP', manual:'✏️ Manual' })[p.origem_foto] || '— sem foto';
+  const origemLabel = ({ bling:'<i class="ic ic-sm" data-ic="circle"></i> Bling', erp:'<i class="ic ic-sm" data-ic="circle"></i> ERP', manual:'<i class="ic ic-sm" data-ic="pencil"></i> Manual' })[p.origem_foto] || '— sem foto';
   abrirDrawer('Editar Produto', p.nome, `
-    <div style="margin-bottom:4px">
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px">
+    <div style="margin-bottom:var(--space-1)">
+      <div style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:var(--space-1-5)">
         Fotos automáticas (Bling ▸ ERP) — <span style="font-weight:400">no catálogo aparece: <b>${origemLabel}</b></span>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
         ${fotos.map((f,fi) => `
-          <div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid ${fi===0?'#1A3A8F':'var(--border)'};transition:border .15s">
-            <img src="${f}" onclick="cfgDefinirCapa(${id},${fi})" title="${fi===0?'✅ Capa (Bling)':'Clique para definir como capa'}" style="width:72px;height:72px;object-fit:contain;background:#f5f6fa;display:block;cursor:pointer">
-            ${fi===0 ? '<div style=\"position:absolute;bottom:0;left:0;right:0;background:#1A3A8F;color:#fff;font-size:9px;font-weight:700;text-align:center;padding:2px\">BLING</div>' : ''}
-            <button onclick="event.stopPropagation();cfgRemoverFoto(${id},${fi})" title="Apagar esta foto" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:rgba(217,48,37,.92);color:#fff;font-size:12px;line-height:1;cursor:pointer;padding:0">×</button>
+          <div style="position:relative;border-radius:var(--radius-lg);overflow:hidden;border:2px solid ${fi===0?'var(--action-primary-bg)':'var(--border)'};transition:border .15s">
+            <img src="${f}" onclick="cfgDefinirCapa(${id},${fi})" title="${fi===0?'Capa (Bling)':'Clique para definir como capa'}" style="width:72px;height:72px;object-fit:contain;background:var(--surface-page);display:block;cursor:pointer">
+            ${fi===0 ? '<div style=\"position:absolute;bottom:0;left:0;right:0;background:var(--action-primary-bg);color:var(--neutral-0);font-size:9px;font-weight:700;text-align:center;padding:var(--space-0-5)\">BLING</div>' : ''}
+            <button onclick="event.stopPropagation();cfgRemoverFoto(${id},${fi})" title="Apagar esta foto" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:var(--danger-600);color:var(--neutral-0);font-size:var(--fs-100);line-height:1;cursor:pointer;padding:0">×</button>
           </div>`).join('')}
         ${fotosErp.map(f => `
-          <div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid #0F9D6E">
-            <img src="${f}" title="Foto do ERP (automática)" style="width:72px;height:72px;object-fit:contain;background:#f5f6fa;display:block">
-            <div style="position:absolute;bottom:0;left:0;right:0;background:#0F9D6E;color:#fff;font-size:9px;font-weight:700;text-align:center;padding:2px">ERP</div>
+          <div style="position:relative;border-radius:var(--radius-lg);overflow:hidden;border:2px solid var(--success-600)">
+            <img src="${f}" title="Foto do ERP (automática)" style="width:72px;height:72px;object-fit:contain;background:var(--surface-page);display:block">
+            <div style="position:absolute;bottom:0;left:0;right:0;background:var(--success-600);color:var(--neutral-0);font-size:9px;font-weight:700;text-align:center;padding:var(--space-0-5)">ERP</div>
           </div>`).join('')}
-        ${(!fotos.length && !fotosErp.length) ? '<div style="font-size:12px;color:var(--text-muted)">Sem foto do Bling nem do ERP — use a foto manual abaixo, ou sincronize com o Bling.</div>' : ''}
+        ${(!fotos.length && !fotosErp.length) ? '<div style="font-size:var(--fs-100);color:var(--text-muted)">Sem foto do Bling nem do ERP — use a foto manual abaixo, ou sincronize com o Bling.</div>' : ''}
       </div>
-      <div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#B45309;letter-spacing:.5px;margin-bottom:6px">✏️ Foto manual <span style="font-weight:400;color:var(--text-muted)">— aparece só quando não tem Bling nem ERP</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <div style="margin-top:var(--space-3);border-top:1px dashed var(--border);padding-top:var(--space-2-5)">
+        <div style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--warning-600);letter-spacing:.5px;margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="pencil"></i> Foto manual <span style="font-weight:400;color:var(--text-muted)">— aparece só quando não tem Bling nem ERP</span></div>
+        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-2)">
           ${fotosManual.map((f,fi) => `
-            <div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid #E8B04B">
-              <img src="${f}" style="width:72px;height:72px;object-fit:contain;background:#f5f6fa;display:block">
-              <div style="position:absolute;bottom:0;left:0;right:0;background:#B45309;color:#fff;font-size:9px;font-weight:700;text-align:center;padding:2px">MANUAL</div>
-              <button onclick="cfgRemoverFotoManual(${id},${fi})" title="Apagar foto manual" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:rgba(217,48,37,.92);color:#fff;font-size:12px;line-height:1;cursor:pointer;padding:0">×</button>
+            <div style="position:relative;border-radius:var(--radius-lg);overflow:hidden;border:2px solid var(--warning-500)">
+              <img src="${f}" style="width:72px;height:72px;object-fit:contain;background:var(--surface-page);display:block">
+              <div style="position:absolute;bottom:0;left:0;right:0;background:var(--warning-600);color:var(--neutral-0);font-size:9px;font-weight:700;text-align:center;padding:var(--space-0-5)">MANUAL</div>
+              <button onclick="cfgRemoverFotoManual(${id},${fi})" title="Apagar foto manual" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:var(--danger-600);color:var(--neutral-0);font-size:var(--fs-100);line-height:1;cursor:pointer;padding:0">×</button>
             </div>`).join('')}
         </div>
         <input type="file" id="ep-foto-file" accept="image/*" style="display:none" onchange="cfgUploadFotoManual(${id}, this)">
-        <button class="btn btn-outline btn-sm" onclick="document.getElementById('ep-foto-file').click()">📷 Adicionar foto manual</button>
-        <span id="ep-foto-msg" style="font-size:11px;color:var(--text-muted);margin-left:8px">Fica guardada mesmo se o Bling/ERP chegar depois (aí eles aparecem por cima).</span>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('ep-foto-file').click()"><i class="ic ic-sm" data-ic="camera"></i> Adicionar foto manual</button>
+        <span id="ep-foto-msg" style="font-size:var(--fs-090);color:var(--text-muted);margin-left:var(--space-2)">Fica guardada mesmo se o Bling/ERP chegar depois (aí eles aparecem por cima).</span>
       </div>
     </div>
-    <button class="btn btn-outline btn-sm" onclick="cfgSincronizarBling(${id},'${p.referencia}')" style="margin:10px 0 4px;width:100%">🔄 Sincronizar com Bling</button>
-    <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Atualiza fotos + peso + dimensões</div>
-    <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap">
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="ep-sync-fotos" ${p.sync_fotos!==false?'checked':''} style="accent-color:var(--blue-dark)"> Sincronizar fotos</label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="ep-sync-medidas" ${p.sync_medidas!==false?'checked':''} style="accent-color:var(--blue-dark)"> Sincronizar medidas</label>
+    <button class="btn btn-outline btn-sm" onclick="cfgSincronizarBling(${id},'${p.referencia}')" style="margin:var(--space-2-5) 0 var(--space-1);width:100%"><i class="ic ic-sm" data-ic="refresh-cw"></i> Sincronizar com Bling</button>
+    <div style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-2-5)">Atualiza fotos + peso + dimensões</div>
+    <div style="display:flex;gap:var(--space-4);margin-bottom:var(--space-3);flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:var(--space-1-5);font-size:var(--fs-100);cursor:pointer"><input type="checkbox" id="ep-sync-fotos" ${p.sync_fotos!==false?'checked':''} style="accent-color:var(--blue-dark)"> Sincronizar fotos</label>
+      <label style="display:flex;align-items:center;gap:var(--space-1-5);font-size:var(--fs-100);cursor:pointer"><input type="checkbox" id="ep-sync-medidas" ${p.sync_medidas!==false?'checked':''} style="accent-color:var(--blue-dark)"> Sincronizar medidas</label>
     </div>
-    <div id="ep-reload-msg" style="font-size:12px;margin-bottom:12px"></div>
+    <div id="ep-reload-msg" style="font-size:var(--fs-100);margin-bottom:var(--space-3)"></div>
     <div class="cfg-grid-2">
       <div class="form-field"><label>Nome</label><input type="text" id="ep-nome" class="cfg-input" value="${p.nome||''}"></div>
       <div class="form-field"><label>Referência</label><input type="text" id="ep-ref" class="cfg-input" value="${p.referencia||''}"></div>
@@ -1246,14 +1246,14 @@ window.cfgEditarProduto = async function(id) {
       <div class="form-field"><label>ST PR (R$/un)</label><input type="number" id="ep-st-pr" class="cfg-input" value="${p.st_pr||0}" step="0.01" min="0" placeholder="0,00"></div>
     </div>
     <div class="form-field"><label>Descrição</label><textarea id="ep-desc" class="cfg-input" rows="2">${p.descricao||''}</textarea></div>
-    <div style="margin-top:4px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px">Tags</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${(window._cfgTags||[]).map(t=>{const ok=(p.tags||[]).includes(t.nome);return `<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;background:var(--surface2);border:1px solid ${ok?'#1A3A8F':'var(--border)'};border-radius:6px;padding:4px 10px"><input type="checkbox" class="ep-tag-check" value="${t.nome}" ${ok?'checked':''} style="accent-color:#1A3A8F"> ${t.nome}</label>`;}).join('') || '<span style="font-size:12px;color:var(--text-muted)">Crie tags em 🏷️ Tags</span>'}
+    <div style="margin-top:var(--space-1);margin-bottom:var(--space-3)">
+      <div style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:var(--space-1-5)">Tags</div>
+      <div style="display:flex;flex-wrap:wrap;gap:var(--space-1-5)">
+        ${(window._cfgTags||[]).map(t=>{const ok=(p.tags||[]).includes(t.nome);return `<label style="display:flex;align-items:center;gap:5px;font-size:var(--fs-100);cursor:pointer;background:var(--surface2);border:1px solid ${ok?'var(--action-primary-bg)':'var(--border)'};border-radius:var(--radius-md);padding:var(--space-1) var(--space-2-5)"><input type="checkbox" class="ep-tag-check" value="${t.nome}" ${ok?'checked':''} style="accent-color:var(--action-primary-bg)"> ${t.nome}</label>`;}).join('') || '<span style="font-size:var(--fs-100);color:var(--text-muted)">Crie tags em <i class="ic ic-sm" data-ic="tag"></i> Tags</span>'}
       </div>
     </div>
-    <div style="margin-top:14px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">📦 Dimensões para frete</div>
+    <div style="margin-top:var(--space-3-5);padding:var(--space-3) var(--space-3-5);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">
+      <div style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:var(--space-2-5)"><i class="ic ic-sm" data-ic="package"></i> Dimensões para frete</div>
       <div class="cfg-grid-2">
         <div class="form-field" style="margin:0"><label>Peso (kg)</label><input type="number" id="ep-peso" class="cfg-input" value="${p.peso_kg||''}" step="0.001" placeholder="Ex: 19"></div>
         <div class="form-field" style="margin:0"><label>Altura (cm)</label><input type="number" id="ep-altura" class="cfg-input" value="${p.altura_cm||''}" step="0.1" placeholder="Ex: 55"></div>
@@ -1261,36 +1261,36 @@ window.cfgEditarProduto = async function(id) {
         <div class="form-field" style="margin:0"><label>Comprimento (cm)</label><input type="number" id="ep-comprimento" class="cfg-input" value="${p.comprimento_cm||''}" step="0.1" placeholder="Ex: 53"></div>
       </div>
     </div>
-    <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;align-items:center">
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="ep-ativo" ${p.ativo?'checked':''} style="accent-color:var(--blue-dark)"> Ativo</label>
+    <div style="display:flex;gap:var(--space-4);margin-top:var(--space-3);flex-wrap:wrap;align-items:center">
+      <label style="display:flex;align-items:center;gap:var(--space-1-5);cursor:pointer;font-size:var(--fs-200)"><input type="checkbox" id="ep-ativo" ${p.ativo?'checked':''} style="accent-color:var(--blue-dark)"> Ativo</label>
     </div>
-    <div style="margin-top:14px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">📦 Estoque & Disponibilidade</div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;padding:8px 10px;background:${p.esgotado?'var(--red-bg)':'var(--surface)'};border:1px solid ${p.esgotado?'var(--red)':'var(--border)'};border-radius:6px">
-        <span style="font-size:18px">${p.esgotado ? '🔴' : '🟢'}</span>
+    <div style="margin-top:var(--space-3-5);padding:var(--space-3) var(--space-3-5);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">
+      <div style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:var(--space-2-5)"><i class="ic ic-sm" data-ic="package"></i> Estoque & Disponibilidade</div>
+      <div style="display:flex;gap:var(--space-2);align-items:center;margin-bottom:var(--space-2-5);padding:var(--space-2) var(--space-2-5);background:${p.esgotado?'var(--red-bg)':'var(--surface)'};border:1px solid ${p.esgotado?'var(--red)':'var(--border)'};border-radius:var(--radius-md)">
+        <span style="font-size:var(--fs-550)">${p.esgotado ? '<i class="ic ic-sm" data-ic="circle"></i>' : '<i class="ic ic-sm" data-ic="circle"></i>'}</span>
         <div>
-          <div style="font-size:12px;font-weight:600">${p.esgotado ? 'Esgotado no ERP' : 'Disponível no ERP'}</div>
-          <div style="font-size:11px;color:var(--text-muted)">Estoque ERP: ${p.estoque_total != null ? Math.floor(p.estoque_total) + ' un.' : '—'} · Sincronização automática</div>
+          <div style="font-size:var(--fs-100);font-weight:600">${p.esgotado ? 'Esgotado no ERP' : 'Disponível no ERP'}</div>
+          <div style="font-size:var(--fs-090);color:var(--text-muted)">Estoque ERP: ${p.estoque_total != null ? Math.floor(p.estoque_total) + ' un.' : '—'} · Sincronização automática</div>
         </div>
       </div>
-      <div class="cfg-grid-2" style="margin-bottom:10px">
+      <div class="cfg-grid-2" style="margin-bottom:var(--space-2-5)">
         <div class="form-field" style="margin:0">
           <label>Estoque manual (un.)</label>
           <input type="number" id="ep-estoque-manual" class="cfg-input" value="${p.estoque_manual ?? ''}" min="0" placeholder="Vazio = usa ERP">
-          <span style="font-size:10px;color:var(--text-muted)">Quando preenchido, prevalece sobre o ERP</span>
+          <span style="font-size:var(--fs-075);color:var(--text-muted)">Quando preenchido, prevalece sobre o ERP</span>
         </div>
         <div class="form-field" style="margin:0">
-          <label style="display:block;margin-bottom:6px">Fora de linha (manual)</label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px">
+          <label style="display:block;margin-bottom:var(--space-1-5)">Fora de linha (manual)</label>
+          <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;margin-top:var(--space-2)">
             <input type="checkbox" id="ep-esgotado-check" ${p.esgotado_manual?'checked':''} style="accent-color:var(--red);width:18px;height:18px">
-            <span style="font-size:13px">🔒 Tirar de linha manualmente</span>
+            <span style="font-size:var(--fs-200)"><i class="ic ic-sm" data-ic="lock"></i> Tirar de linha manualmente</span>
           </label>
-          <span style="font-size:10px;color:var(--text-muted)">O sync não remove essa marcação</span>
+          <span style="font-size:var(--fs-075);color:var(--text-muted)">O sync não remove essa marcação</span>
         </div>
       </div>
     </div>
   `, `
-    <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red);margin-right:auto" onclick="cfgExcluirProduto(${id})" >🗑️ Excluir</button>
+    <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red);margin-right:auto" onclick="cfgExcluirProduto(${id})" ><i class="ic ic-sm" data-ic="trash"></i> Excluir</button>
     <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
     <button class="btn btn-primary" onclick="cfgAtualizarProduto(${id})">Salvar</button>
   `);
@@ -1301,7 +1301,7 @@ window.cfgEditarProduto = async function(id) {
 
 window.cfgSincronizarBling = async function(id, sku) {
   const msg = document.getElementById('ep-reload-msg');
-  msg.textContent = '🔍 Sincronizando com Bling...'; msg.style.color = 'var(--text-muted)';
+  msg.textContent = 'Sincronizando com Bling...'; msg.style.color = 'var(--text-muted)';
   const syncFotos   = document.getElementById('ep-sync-fotos')?.checked !== false;
   const syncMedidas = document.getElementById('ep-sync-medidas')?.checked !== false;
   try {
@@ -1327,9 +1327,9 @@ window.cfgSincronizarBling = async function(id, sku) {
     const msgs = [];
     if (fotos.length) msgs.push(`${fotos.length} foto(s)`);
     if (rDim?.peso_kg) msgs.push('dimensões');
-    msg.textContent = msgs.length ? `✅ Sincronizado: ${msgs.join(' · ')}` : '⚠️ Sem dados no Bling para este produto.';
+    msg.textContent = msgs.length ? `Sincronizado: ${msgs.join(' · ')}` : 'Sem dados no Bling para este produto.';
     msg.style.color = msgs.length ? 'var(--green)' : 'var(--orange)';
-  } catch(e) { msg.textContent = '❌ Erro ao sincronizar.'; msg.style.color = 'var(--red)'; }
+  } catch(e) { msg.textContent = 'Erro ao sincronizar.'; msg.style.color = 'var(--red)'; }
 };
 
 
@@ -1398,27 +1398,27 @@ async function cfgCarregarRepresentantes(el) {
   el.innerHTML = `
     <!-- GESTORES -->
     <div class="cfg-section">
-      <div class="section-header" style="margin-bottom:14px">
-        <span class="section-title">🔐 Gestores (${(gestores||[]).length})</span>
+      <div class="section-header" style="margin-bottom:var(--space-3-5)">
+        <span class="section-title"><i class="ic ic-sm" data-ic="lock"></i> Gestores (${(gestores||[]).length})</span>
         <button class="btn btn-primary" onclick="cfgNovoGestor()">+ Novo gestor</button>
       </div>
       <div class="table-card hide-mobile">
         <table class="data-table">
           <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Aprovar</th><th>Reprovar</th><th>Faturar</th><th>Catálogo</th><th>Config</th><th>Status</th><th></th></tr></thead>
-          <tbody>${!(gestores||[]).length ? `<tr><td colspan="10"><div class="empty-state"><div class="empty-state-icon">🔐</div><h3>Nenhum gestor</h3></div></td></tr>` : cfgRenderLinhasGestor(gestores)}</tbody>
+          <tbody>${!(gestores||[]).length ? `<tr><td colspan="10"><div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="lock"></i></div><h3>Nenhum gestor</h3></div></td></tr>` : cfgRenderLinhasGestor(gestores)}</tbody>
         </table>
       </div>
       <div class="show-mobile">
-        ${!(gestores||[]).length ? `<div class="empty-state"><div class="empty-state-icon">🔐</div><h3>Nenhum gestor</h3></div>` :
+        ${!(gestores||[]).length ? `<div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="lock"></i></div><h3>Nenhum gestor</h3></div>` :
           (gestores||[]).map(g => {
-            const chk = v => v ? '✅' : '—';
+            const chk = v => v ? '<i class="ic ic-sm" data-ic="check-circle"></i>' : '—';
             return `<div class="cfg-card-row">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-1-5)">
                 <strong>${g.nome}</strong>
                 <span class="badge ${g.ativo ? 'badge-aprovado' : 'badge-cancelado'}">${g.ativo ? 'Ativo' : 'Inativo'}</span>
               </div>
-              <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${g.email} · ${g.perfil?.toUpperCase()}</div>
-              <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">Aprovar ${chk(g.pode_aprovar)} · Reprovar ${chk(g.pode_reprovar)} · Faturar ${chk(g.pode_faturar)} · Catálogo ${chk(g.pode_catalogo)} · Config ${chk(g.pode_config)}</div>
+              <div style="font-size:var(--fs-100);color:var(--text-muted);margin-bottom:var(--space-2)">${g.email} · ${g.perfil?.toUpperCase()}</div>
+              <div style="font-size:var(--fs-090);color:var(--text-secondary);margin-bottom:var(--space-2)">Aprovar ${chk(g.pode_aprovar)} · Reprovar ${chk(g.pode_reprovar)} · Faturar ${chk(g.pode_faturar)} · Catálogo ${chk(g.pode_catalogo)} · Config ${chk(g.pode_config)}</div>
               <button class="btn btn-outline btn-sm" onclick="cfgEditarGestor(${g.id})" style="width:100%">Editar</button>
             </div>`;
           }).join('')}
@@ -1427,27 +1427,27 @@ async function cfgCarregarRepresentantes(el) {
 
     <!-- REPRESENTANTES -->
     <div class="cfg-section" style="margin-top:28px">
-      <div class="section-header" style="margin-bottom:14px">
-        <span class="section-title">👥 Representantes (${(reps||[]).length})</span>
+      <div class="section-header" style="margin-bottom:var(--space-3-5)">
+        <span class="section-title"><i class="ic ic-sm" data-ic="users"></i> Representantes (${(reps||[]).length})</span>
         <button class="btn btn-primary" onclick="cfgNovoRepresentante()">+ Novo representante</button>
       </div>
       <div class="table-card hide-mobile">
         <table class="data-table">
           <thead><tr><th>Nome</th><th>E-mail</th><th>Região</th><th>Tabela de preço</th><th>Comissão</th><th>Status</th><th></th></tr></thead>
-          <tbody>${!(reps||[]).length ? `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">👥</div><h3>Nenhum representante</h3></div></td></tr>` : cfgRenderLinhasRep(reps, tabelas)}</tbody>
+          <tbody>${!(reps||[]).length ? `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="users"></i></div><h3>Nenhum representante</h3></div></td></tr>` : cfgRenderLinhasRep(reps, tabelas)}</tbody>
         </table>
       </div>
       <div class="show-mobile">
-        ${!(reps||[]).length ? `<div class="empty-state"><div class="empty-state-icon">👥</div><h3>Nenhum representante</h3></div>` :
+        ${!(reps||[]).length ? `<div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="users"></i></div><h3>Nenhum representante</h3></div>` :
           (reps||[]).map(r => {
             const t = (tabelas||[]).find(t => t.id === r.id_tabela_preco);
             return `<div class="cfg-card-row">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-1)">
                 <strong>${r.nome||''}</strong>
                 <span class="badge ${r.ativo ? 'badge-aprovado' : 'badge-cancelado'}">${r.ativo ? 'Ativo' : 'Inativo'}</span>
               </div>
-              <div style="font-size:12px;color:var(--text-muted);margin-bottom:2px">${r.email||'—'}</div>
-              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">${r.regiao||'—'} · ${t ? t.nome : 'Padrão'} · ${r.comissao_perc||0}% comissão</div>
+              <div style="font-size:var(--fs-100);color:var(--text-muted);margin-bottom:var(--space-0-5)">${r.email||'—'}</div>
+              <div style="font-size:var(--fs-100);color:var(--text-secondary);margin-bottom:var(--space-2)">${r.regiao||'—'} · ${t ? t.nome : 'Padrão'} · ${r.comissao_perc||0}% comissão</div>
               <button class="btn btn-outline btn-sm" onclick="cfgEditarRepresentante(${r.id})" style="width:100%">Editar</button>
             </div>`;
           }).join('')}
@@ -1468,16 +1468,16 @@ function cfgFormGestor(g) {
     '<option value="gestor" ' + sel(g.perfil,'gestor') + '>Gestor</option>' +
     '<option value="admin" ' + sel(g.perfil,'admin') + '>Admin</option>' +
     '</select></div>' +
-    '<div style="margin-top:14px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">' +
-    '<div style="font-size:12px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Permissões</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="gs-aprovar" ' + chk(g.pode_aprovar) + ' style="accent-color:var(--blue-dark)"> Aprovar pedidos</label>' +
-    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="gs-reprovar" ' + chk(g.pode_reprovar) + ' style="accent-color:var(--blue-dark)"> Reprovar pedidos</label>' +
-    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="gs-faturar" ' + chk(g.pode_faturar) + ' style="accent-color:var(--blue-dark)"> Faturar (NF/boleto)</label>' +
-    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="gs-catalogo" ' + chk(g.pode_catalogo) + ' style="accent-color:var(--blue-dark)"> Gerenciar catálogo</label>' +
-    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="gs-config" ' + (g.pode_config===true?'checked':'') + ' style="accent-color:var(--blue-dark)"> Acessar configurações</label>' +
+    '<div style="margin-top:var(--space-3-5);padding:var(--space-3-5);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)">' +
+    '<div style="font-size:var(--fs-100);font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:var(--space-3)">Permissões</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2-5)">' +
+    '<label style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--fs-200);cursor:pointer"><input type="checkbox" id="gs-aprovar" ' + chk(g.pode_aprovar) + ' style="accent-color:var(--blue-dark)"> Aprovar pedidos</label>' +
+    '<label style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--fs-200);cursor:pointer"><input type="checkbox" id="gs-reprovar" ' + chk(g.pode_reprovar) + ' style="accent-color:var(--blue-dark)"> Reprovar pedidos</label>' +
+    '<label style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--fs-200);cursor:pointer"><input type="checkbox" id="gs-faturar" ' + chk(g.pode_faturar) + ' style="accent-color:var(--blue-dark)"> Faturar (NF/boleto)</label>' +
+    '<label style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--fs-200);cursor:pointer"><input type="checkbox" id="gs-catalogo" ' + chk(g.pode_catalogo) + ' style="accent-color:var(--blue-dark)"> Gerenciar catálogo</label>' +
+    '<label style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--fs-200);cursor:pointer"><input type="checkbox" id="gs-config" ' + (g.pode_config===true?'checked':'') + ' style="accent-color:var(--blue-dark)"> Acessar configurações</label>' +
     '</div></div>' +
-    '<div class="form-field" style="margin-top:12px"><label>Status</label><select id="gs-ativo" class="cfg-input">' +
+    '<div class="form-field" style="margin-top:var(--space-3)"><label>Status</label><select id="gs-ativo" class="cfg-input">' +
     '<option value="true" ' + (g.ativo!==false?'selected':'') + '>Ativo</option>' +
     '<option value="false" ' + (g.ativo===false?'selected':'') + '>Inativo</option>' +
     '</select></div>';
@@ -1618,13 +1618,13 @@ function cfgRenderLinhasRep(reps, tabelas) {
   return (reps||[]).map(function(r) {
     const t = (tabelas||[]).find(function(t) { return t.id === r.id_tabela_preco; });
     const markup = t ? t.markup_global : null;
-    const markupStr = (markup != null && markup !== 0) ? ' <span style="font-size:10px;color:' + (markup>0?'var(--orange)':'var(--blue-mid)') + '">(' + (markup>0?'+':'') + markup + '%)</span>' : '';
+    const markupStr = (markup != null && markup !== 0) ? ' <span style="font-size:var(--fs-075);color:' + (markup>0?'var(--orange)':'var(--blue-mid)') + '">(' + (markup>0?'+':'') + markup + '%)</span>' : '';
     return '<tr>' +
       '<td><strong>' + (r.nome||'') + '</strong></td>' +
-      '<td style="font-size:12px;color:var(--text-secondary)">' + (r.email||'—') + '</td>' +
-      '<td style="font-size:12px">' + (r.regiao||'—') + '</td>' +
-      '<td style="font-size:12px">' + (t ? t.nome : 'Padrão') + markupStr + '</td>' +
-      '<td class="mono" style="font-size:12px">' + (r.comissao_perc||0) + '%</td>' +
+      '<td style="font-size:var(--fs-100);color:var(--text-secondary)">' + (r.email||'—') + '</td>' +
+      '<td style="font-size:var(--fs-100)">' + (r.regiao||'—') + '</td>' +
+      '<td style="font-size:var(--fs-100)">' + (t ? t.nome : 'Padrão') + markupStr + '</td>' +
+      '<td class="mono" style="font-size:var(--fs-100)">' + (r.comissao_perc||0) + '%</td>' +
       '<td><span class="badge ' + (r.ativo ? 'badge-aprovado' : 'badge-cancelado') + '">' + (r.ativo ? 'Ativo' : 'Inativo') + '</span></td>' +
       '<td><button class="btn btn-outline btn-sm" onclick="cfgEditarRepresentante(' + r.id + ')">Editar</button></td>' +
       '</tr>';
@@ -1634,10 +1634,10 @@ function cfgRenderLinhasRep(reps, tabelas) {
 function cfgRenderLinhasGestor(gestores) {
   return (gestores||[]).map(function(g) {
     var perfBadge = g.perfil === 'admin' ? 'badge-faturado' : 'badge-aprovado';
-    var chk = function(v) { return v ? '✅' : '—'; };
+    var chk = function(v) { return v ? '<i class="ic ic-sm" data-ic="check-circle"></i>' : '—'; };
     return '<tr>' +
       '<td><strong>' + g.nome + '</strong></td>' +
-      '<td style="font-size:12px;color:var(--text-secondary)">' + g.email + '</td>' +
+      '<td style="font-size:var(--fs-100);color:var(--text-secondary)">' + g.email + '</td>' +
       '<td><span class="badge ' + perfBadge + '">' + g.perfil.toUpperCase() + '</span></td>' +
       '<td style="text-align:center">' + chk(g.pode_aprovar) + '</td>' +
       '<td style="text-align:center">' + chk(g.pode_reprovar) + '</td>' +
@@ -1662,33 +1662,33 @@ function cfgRenderLinhasGestor(gestores) {
     .cfg-wrap { max-width: 1100px; }
 
     /* ── TABS — scrollável no mobile ── */
-    .cfg-tabs-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; padding-bottom: 2px; }
-    .cfg-tabs { display: flex; gap: 4px; min-width: max-content; }
-    .cfg-tab { padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; font-size: 13px; font-weight: 500; color: var(--text-secondary); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
-    .cfg-tab.active { background: var(--blue-dark); border-color: var(--blue-dark); color: #fff; }
+    .cfg-tabs-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom:var(--space-5); padding-bottom:var(--space-0-5); }
+    .cfg-tabs { display: flex; gap:var(--space-1); min-width: max-content; }
+    .cfg-tab { padding:var(--space-2) var(--space-3-5); border-radius: var(--radius-lg); border: 1px solid var(--border); background: transparent; font-size:var(--fs-200); font-weight: 500; color: var(--text-secondary); cursor: pointer; font-family: var(--font-sans); transition: all 0.15s; white-space: nowrap; }
+    .cfg-tab.active { background: var(--blue-dark); border-color: var(--blue-dark); color: var(--neutral-0); }
     .cfg-tab:hover:not(.active) { background: var(--surface2); }
 
     /* ── INPUTS ── */
-    .cfg-input { width: 100%; height: 38px; padding: 0 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-primary); background: var(--surface2); outline: none; transition: border-color 0.15s; }
-    .cfg-input:focus { border-color: var(--blue-mid); background: #fff; }
-    textarea.cfg-input { height: auto; padding: 10px 12px; resize: vertical; }
+    .cfg-input { width: 100%; height:38px; padding:0 var(--space-3); border: 1.5px solid var(--border); border-radius: var(--radius-lg); font-family: var(--font-sans); font-size:var(--fs-200); color: var(--text-primary); background: var(--surface2); outline: none; transition: border-color 0.15s; }
+    .cfg-input:focus { border-color: var(--blue-mid); background: var(--neutral-0); }
+    textarea.cfg-input { height: auto; padding:var(--space-2-5) var(--space-3); resize: vertical; }
 
     /* ── GRIDS ── */
-    .cfg-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .cfg-section { margin-bottom: 24px; }
+    .cfg-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap:var(--space-3); }
+    .cfg-section { margin-bottom:var(--space-6); }
 
     /* ── TABELAS DE PREÇO ── */
-    .precos-layout { display: grid; grid-template-columns: 200px 1fr; gap: 16px; align-items: start; }
-    .preco-tab-item { padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); cursor: pointer; margin-bottom: 6px; transition: all 0.15s; }
+    .precos-layout { display: grid; grid-template-columns: 200px 1fr; gap:var(--space-4); align-items: start; }
+    .preco-tab-item { padding:var(--space-2-5) var(--space-3-5); border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--surface); cursor: pointer; margin-bottom:var(--space-1-5); transition: all 0.15s; }
     .preco-tab-item:hover { border-color: var(--blue-mid); }
     .preco-tab-item.active { border-color: var(--blue-dark); background: var(--blue-pale); }
 
     /* ── CARDS MOBILE ── */
-    .cfg-card-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 10px; }
-    .cfg-card-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .cfg-card-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding:var(--space-3-5); margin-bottom:var(--space-2-5); }
+    .cfg-card-item { padding:var(--space-3) 0; border-bottom: 1px solid var(--border); }
     .cfg-card-item:last-child { border-bottom: none; }
-    .cfg-card-label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; letter-spacing: 0.3px; }
-    .cfg-cards-geral { padding: 4px 0; }
+    .cfg-card-label { font-size:var(--fs-090); text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom:var(--space-1-5); letter-spacing: 0.3px; }
+    .cfg-cards-geral { padding:var(--space-1) 0; }
 
     /* ── SHOW/HIDE ── */
     .hide-mobile { display: table; }
@@ -1700,9 +1700,9 @@ function cfgRenderLinhasGestor(gestores) {
       .show-mobile { display: block !important; }
       .cfg-grid-2 { grid-template-columns: 1fr; }
       .precos-layout { grid-template-columns: 1fr; }
-      .precos-sidebar { display: flex; gap: 8px; flex-wrap: wrap; overflow-x: auto; padding-bottom: 4px; }
+      .precos-sidebar { display: flex; gap:var(--space-2); flex-wrap: wrap; overflow-x: auto; padding-bottom:var(--space-1); }
       .precos-sidebar .preco-tab-item { flex: 0 0 auto; min-width: 120px; margin-bottom: 0; }
-      .section-header { flex-wrap: wrap; gap: 8px; }
+      .section-header { flex-wrap: wrap; gap:var(--space-2); }
       .section-header .btn { flex: 1; min-width: 120px; justify-content: center; }
     }
   `;
@@ -1715,22 +1715,24 @@ function cfgRenderLinhasGestor(gestores) {
 async function cfgCarregarStatus(el) {
   const lista = await supa('ped_status', 'order=ordem&select=*') || [];
 
-  const cores = { 'ENVIADO':'#f59e0b','APROVADO':'#22c55e','FATURADO':'#3b82f6','REPROVADO':'#ef4444','CANCELADO':'#6b7280' };
+  // Hex literal de proposito: espelha o que fica gravado em ped_status.cor,
+  // que vem de um <input type="color"> e so aceita #rrggbb. Valores do DS.
+  const cores = { 'ENVIADO':'#E8890B','APROVADO':'#16A063','FATURADO':'#3A88D2','REPROVADO':'#E03131','CANCELADO':'#66727F' };
 
   el.innerHTML = `
-    <div class="section-header" style="margin-bottom:16px">
-      <h2 style="font-size:16px;font-weight:700">Status dos Pedidos</h2>
+    <div class="section-header" style="margin-bottom:var(--space-4)">
+      <h2 style="font-size:var(--fs-450);font-weight:700">Status dos Pedidos</h2>
       <button class="btn btn-primary" onclick="cfgNovoStatus()">+ Novo status</button>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:8px;max-width:600px">
+    <div style="display:flex;flex-direction:column;gap:var(--space-2);max-width:600px">
       ${lista.map(s => `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-          <div style="width:12px;height:12px;border-radius:50%;background:${s.cor||'#888'};flex-shrink:0"></div>
-          <span style="flex:1;font-size:13px;font-weight:600">${s.nome}</span>
-          <span style="font-size:11px;color:var(--text-muted)">Ordem: ${s.ordem}</span>
-          ${s.final ? '<span class="badge badge-cancelado" style="font-size:10px">Final</span>' : ''}
-          <span class="badge ${s.ativo ? 'badge-aprovado' : 'badge-cancelado'}" style="font-size:10px">${s.ativo?'Ativo':'Inativo'}</span>
+        <div style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)">
+          <div style="width:12px;height:12px;border-radius:50%;background:${s.cor||'var(--neutral-500)'};flex-shrink:0"></div>
+          <span style="flex:1;font-size:var(--fs-200);font-weight:600">${s.nome}</span>
+          <span style="font-size:var(--fs-090);color:var(--text-muted)">Ordem: ${s.ordem}</span>
+          ${s.final ? '<span class="badge badge-cancelado" style="font-size:var(--fs-075)">Final</span>' : ''}
+          <span class="badge ${s.ativo ? 'badge-aprovado' : 'badge-cancelado'}" style="font-size:var(--fs-075)">${s.ativo?'Ativo':'Inativo'}</span>
           <button class="btn btn-outline btn-sm" onclick="cfgEditarStatus(${s.id})">Editar</button>
         </div>`).join('')}
     </div>`;
@@ -1738,9 +1740,9 @@ async function cfgCarregarStatus(el) {
 
 window.cfgNovoStatus = function() {
   abrirDrawer('Novo Status', 'Crie um novo status para os pedidos', `
-    <div style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;flex-direction:column;gap:var(--space-3-5)">
       <div class="form-field"><label>Nome do status</label><input type="text" id="st-nome" class="cfg-input" placeholder="Ex: EM SEPARAÇÃO"></div>
-      <div class="form-field"><label>Cor</label><input type="color" id="st-cor" class="cfg-input" value="#1A3A8F" style="height:38px;padding:2px 6px"></div>
+      <div class="form-field"><label>Cor</label><input type="color" id="st-cor" class="cfg-input" value="#145EA8" style="height:38px;padding:var(--space-0-5) var(--space-1-5)"></div>
       <div class="form-field"><label>Ordem (posição no filtro)</label><input type="number" id="st-ordem" class="cfg-input" value="10" min="0"></div>
       <div class="form-field"><label>Status final? (pedido encerrado)</label>
         <select id="st-final" class="cfg-input"><option value="false">Não</option><option value="true">Sim</option></select>
@@ -1756,7 +1758,7 @@ window.cfgSalvarStatus = async function() {
   if (!nome) { alert('Nome obrigatório'); return; }
   await supaInsert('ped_status', {
     nome,
-    cor:   document.getElementById('st-cor')?.value || '#1A3A8F',
+    cor:   document.getElementById('st-cor')?.value || '#145EA8', // literal: vai pro banco
     ordem: parseInt(document.getElementById('st-ordem')?.value)||10,
     final: document.getElementById('st-final')?.value === 'true',
     ativo: true
@@ -1770,9 +1772,9 @@ window.cfgEditarStatus = async function(id) {
   const res = await supa('ped_status', `id=eq.${id}&select=*`);
   const s = res?.[0]; if (!s) return;
   abrirDrawer('Editar Status', s.nome, `
-    <div style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;flex-direction:column;gap:var(--space-3-5)">
       <div class="form-field"><label>Nome</label><input type="text" id="st-edit-nome" class="cfg-input" value="${s.nome}"></div>
-      <div class="form-field"><label>Cor</label><input type="color" id="st-edit-cor" class="cfg-input" value="${s.cor||'#1A3A8F'}" style="height:38px;padding:2px 6px"></div>
+      <div class="form-field"><label>Cor</label><input type="color" id="st-edit-cor" class="cfg-input" value="${s.cor||'#145EA8'}" style="height:38px;padding:var(--space-0-5) var(--space-1-5)"></div>
       <div class="form-field"><label>Ordem</label><input type="number" id="st-edit-ordem" class="cfg-input" value="${s.ordem||0}" min="0"></div>
       <div class="form-field"><label>Status final?</label>
         <select id="st-edit-final" class="cfg-input">
@@ -1822,50 +1824,50 @@ async function cfgCarregarLogs(el) {
 
   const logs = await supa('app_logs', query) || [];
 
-  const iconeTipo = { acao: '✅', erro: '🔴' };
+  const iconeTipo = { acao: '<i class="ic ic-sm" data-ic="check-circle"></i>', erro: '<i class="ic ic-sm" data-ic="circle"></i>' };
   const corTipo   = { acao: 'var(--green)', erro: 'var(--red)' };
   const categorias = [...new Set(logs.map(l=>l.categoria).filter(Boolean))].sort();
 
   el.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-      <div style="display:flex;gap:6px">
+    <div style="display:flex;align-items:center;gap:var(--space-2-5);flex-wrap:wrap;margin-bottom:var(--space-4)">
+      <div style="display:flex;gap:var(--space-1-5)">
         <button onclick="window._logTipo='';cfgAba('logs',document.querySelector('.cfg-tab.active'))" 
           class="btn btn-sm ${!window._logTipo?'btn-primary':'btn-outline'}">Todos</button>
         <button onclick="window._logTipo='acao';cfgAba('logs',document.querySelector('.cfg-tab.active'))" 
-          class="btn btn-sm ${window._logTipo==='acao'?'btn-primary':'btn-outline'}">✅ Ações</button>
+          class="btn btn-sm ${window._logTipo==='acao'?'btn-primary':'btn-outline'}"><i class="ic ic-sm" data-ic="check-circle"></i> Ações</button>
         <button onclick="window._logTipo='erro';cfgAba('logs',document.querySelector('.cfg-tab.active'))" 
-          class="btn btn-sm ${window._logTipo==='erro'?'btn-danger':'btn-outline'}">🔴 Erros</button>
+          class="btn btn-sm ${window._logTipo==='erro'?'btn-danger':'btn-outline'}"><i class="ic ic-sm" data-ic="circle"></i> Erros</button>
       </div>
       <select class="cfg-input" style="width:160px;height:36px" 
         onchange="window._logCat=this.value;cfgAba('logs',document.querySelector('.cfg-tab.active'))">
         <option value="">Todas categorias</option>
         ${categorias.map(c=>`<option value="${c}" ${window._logCat===c?'selected':''}>${c}</option>`).join('')}
       </select>
-      <span style="font-size:12px;color:var(--text-muted);margin-left:auto">${logs.length} registro(s)</span>
+      <span style="font-size:var(--fs-100);color:var(--text-muted);margin-left:auto">${logs.length} registro(s)</span>
       <button onclick="cfgLimparLogs()" class="btn btn-sm btn-outline" style="color:var(--red);border-color:var(--red)">
-        🗑️ Limpar erros
+        <i class="ic ic-sm" data-ic="trash"></i> Limpar erros
       </button>
     </div>
 
     ${logs.length === 0 ? `
       <div class="empty-state">
-        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-icon"><i class="ic ic-sm" data-ic="clipboard-list"></i></div>
         <h3>Nenhum log encontrado</h3>
         <p>As ações e erros do sistema aparecerão aqui.</p>
       </div>` : `
-    <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;flex-direction:column;gap:var(--space-2)">
       ${logs.map(l => `
-        <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${corTipo[l.tipo]||'var(--border)'};border-radius:8px;padding:12px 14px">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span style="font-size:14px">${iconeTipo[l.tipo]||'•'}</span>
-            <span style="font-size:13px;font-weight:600;flex:1">${l.descricao||''}</span>
-            ${l.categoria ? `<span style="font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:var(--text-muted)">${l.categoria}</span>` : ''}
-            <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">${new Date(l.criado_em).toLocaleString('pt-BR')}</span>
+        <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${corTipo[l.tipo]||'var(--border)'};border-radius:var(--radius-lg);padding:var(--space-3) var(--space-3-5)">
+          <div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap">
+            <span style="font-size:var(--fs-300)">${iconeTipo[l.tipo]||'•'}</span>
+            <span style="font-size:var(--fs-200);font-weight:600;flex:1">${l.descricao||''}</span>
+            ${l.categoria ? `<span style="font-size:var(--fs-075);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:var(--space-0-5) 7px;color:var(--text-muted)">${l.categoria}</span>` : ''}
+            <span style="font-size:var(--fs-090);color:var(--text-muted);white-space:nowrap">${new Date(l.criado_em).toLocaleString('pt-BR')}</span>
           </div>
-          ${l.usuario ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px">👤 ${l.usuario}</div>` : ''}
-          ${l.detalhe ? `<details style="margin-top:8px">
-            <summary style="font-size:11px;color:var(--text-muted);cursor:pointer">Ver detalhes</summary>
-            <pre style="font-size:10px;background:var(--surface2);border-radius:4px;padding:8px;margin-top:4px;overflow-x:auto;white-space:pre-wrap;word-break:break-all">${l.detalhe}</pre>
+          ${l.usuario ? `<div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-1)"><i class="ic ic-sm" data-ic="user"></i> ${l.usuario}</div>` : ''}
+          ${l.detalhe ? `<details style="margin-top:var(--space-2)">
+            <summary style="font-size:var(--fs-090);color:var(--text-muted);cursor:pointer">Ver detalhes</summary>
+            <pre style="font-size:var(--fs-075);background:var(--surface2);border-radius:var(--radius-sm);padding:var(--space-2);margin-top:var(--space-1);overflow-x:auto;white-space:pre-wrap;word-break:break-all">${l.detalhe}</pre>
           </details>` : ''}
         </div>`).join('')}
     </div>`}
@@ -1889,22 +1891,22 @@ window.cfgExportarTabelaPreco = async function() {
     `<option value="${t.id}" data-markup="${t.markup_global||0}">${t.nome}${t.markup_global ? ` (${t.markup_global > 0 ? '+' : ''}${t.markup_global}%)` : ''}</option>`
   ).join('');
 
-  abrirDrawer('📥 Exportar Tabela de Preços', 'Gera arquivo XLS para impressão interna', `
-    <div style="display:flex;flex-direction:column;gap:16px;padding:4px 0">
+  abrirDrawer('<i class="ic ic-sm" data-ic="download"></i> Exportar Tabela de Preços', 'Gera arquivo XLS para impressão interna', `
+    <div style="display:flex;flex-direction:column;gap:var(--space-4);padding:var(--space-1) 0">
       <div class="form-field">
         <label>Selecione a tabela de preço</label>
         <select id="exp-tabela-sel" class="cfg-input">${opcoesHtml}</select>
       </div>
-      <div class="alert alert-info" style="padding:10px 14px;font-size:13px">
+      <div class="alert alert-info" style="padding:var(--space-2-5) var(--space-3-5);font-size:var(--fs-200)">
         <span class="alert-icon">ℹ️</span>
         O arquivo incluirá: <strong>Referência, Nome, Preço e IPI%</strong> — ordenado por nome.
         Produtos inativos não serão incluídos.
       </div>
-      <div id="exp-status" style="font-size:13px;color:var(--text-muted)"></div>
+      <div id="exp-status" style="font-size:var(--fs-200);color:var(--text-muted)"></div>
     </div>
   `, `
     <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
-    <button class="btn btn-primary" onclick="cfgGerarXlsTabelaPreco()">📥 Baixar XLS</button>
+    <button class="btn btn-primary" onclick="cfgGerarXlsTabelaPreco()"><i class="ic ic-sm" data-ic="download"></i> Baixar XLS</button>
   `);
 };
 
@@ -1918,9 +1920,9 @@ window.cfgGerarXlsTabelaPreco = async function() {
 
   const produtos = await supa('ped_catalogo_produtos', 'ativo=eq.true&order=nome&select=referencia,nome,preco_base,ipi_perc') || [];
 
-  if (!produtos.length) { status.textContent = '⚠️ Nenhum produto ativo encontrado.'; return; }
+  if (!produtos.length) { status.textContent = 'Nenhum produto ativo encontrado.'; return; }
 
-  status.textContent = `✅ ${produtos.length} produto(s) encontrado(s). Gerando XLS...`;
+  status.textContent = `${produtos.length} produto(s) encontrado(s). Gerando XLS...`;
 
   // Carrega SheetJS dinamicamente se não estiver disponível
   if (typeof XLSX === 'undefined') {
@@ -1981,7 +1983,7 @@ window.cfgGerarXlsTabelaPreco = async function() {
   const nomArq = `tabela_precos_${nomeTab.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase()}_${agora.toISOString().slice(0,10)}.xlsx`;
   XLSX.writeFile(wb, nomArq);
 
-  status.innerHTML = `✅ Download iniciado: <strong>${nomArq}</strong>`;
+  status.innerHTML = `<i class="ic ic-sm" data-ic="check-circle"></i> Download iniciado: <strong>${nomArq}</strong>`;
 };
 
 // ============================================================
@@ -1989,9 +1991,9 @@ window.cfgGerarXlsTabelaPreco = async function() {
 // ============================================================
 window.cfgCarregarLogs = async function(el) {
   el.innerHTML = `
-    <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px">
-      <button id="logs-sub-atividade" class="btn btn-sm btn-primary" onclick="cfgLogsSubAba('atividade')">📋 Atividade</button>
-      <button id="logs-sub-erros"     class="btn btn-sm btn-outline" onclick="cfgLogsSubAba('erros')">🔴 Erros do Sistema</button>
+    <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-4);border-bottom:1px solid var(--border);padding-bottom:var(--space-3)">
+      <button id="logs-sub-atividade" class="btn btn-sm btn-primary" onclick="cfgLogsSubAba('atividade')"><i class="ic ic-sm" data-ic="clipboard-list"></i> Atividade</button>
+      <button id="logs-sub-erros"     class="btn btn-sm btn-outline" onclick="cfgLogsSubAba('erros')"><i class="ic ic-sm" data-ic="circle"></i> Erros do Sistema</button>
     </div>
     <div id="logs-body"></div>
   `;
@@ -2011,8 +2013,8 @@ window._logsPeriodo = 7;
 
 window.cfgLogsFiltroHtml = function(fnAtualizar) {
   return `
-    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
-      <span style="font-size:12px;color:var(--text-muted)">Período:</span>
+    <div style="display:flex;gap:var(--space-1-5);align-items:center;flex-wrap:wrap;margin-bottom:var(--space-3-5)">
+      <span style="font-size:var(--fs-100);color:var(--text-muted)">Período:</span>
       ${[
         {label:'Hoje', dias:0},
         {label:'7 dias', dias:7},
@@ -2022,7 +2024,7 @@ window.cfgLogsFiltroHtml = function(fnAtualizar) {
         <button class="btn btn-sm ${window._logsPeriodo===p.dias?'btn-primary':'btn-outline'}"
           onclick="window._logsPeriodo=${p.dias};${fnAtualizar}()">${p.label}</button>
       `).join('')}
-      <input type="text" id="logs-busca" class="cfg-input" style="width:200px;margin-left:8px"
+      <input type="text" id="logs-busca" class="cfg-input" style="width:200px;margin-left:var(--space-2)"
         placeholder="Buscar..." oninput="${fnAtualizar}()">
     </div>
   `;
@@ -2064,8 +2066,8 @@ window.cfgLogsAtividadeRender = function() {
   );
 
   const iconMap = {
-    'ENVIADO':'📤', 'COTACAO':'📋', 'APROVADO':'✅',
-    'FATURADO':'🧾', 'REPROVADO':'❌', 'CANCELADO':'❌', 'AGUARDANDO':'⏳'
+    'ENVIADO':'<i class="ic ic-sm" data-ic="upload"></i>', 'COTACAO':'<i class="ic ic-sm" data-ic="clipboard-list"></i>', 'APROVADO':'<i class="ic ic-sm" data-ic="check-circle"></i>',
+    'FATURADO':'<i class="ic ic-sm" data-ic="receipt"></i>', 'REPROVADO':'<i class="ic ic-sm" data-ic="alert-circle"></i>', 'CANCELADO':'<i class="ic ic-sm" data-ic="alert-circle"></i>', 'AGUARDANDO':'⏳'
   };
   const colorMap = {
     'ENVIADO':'var(--blue-mid)', 'COTACAO':'var(--text-muted)', 'APROVADO':'var(--green)',
@@ -2076,12 +2078,12 @@ window.cfgLogsAtividadeRender = function() {
   if (!el) return;
 
   if (!lista.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>Nenhuma atividade encontrada.</p></div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="clipboard-list"></i></div><p>Nenhuma atividade encontrada.</p></div>';
     return;
   }
 
   el.innerHTML = `
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${lista.length} registro(s)</div>
+    <div style="font-size:var(--fs-100);color:var(--text-muted);margin-bottom:var(--space-2)">${lista.length} registro(s)</div>
     <div class="table-card">
       <table class="data-table">
         <thead><tr>
@@ -2102,14 +2104,14 @@ window.cfgLogsAtividadeRender = function() {
             const igual = l.status_de === l.status_para;
             const acao  = igual
               ? `<span style="color:${cor}">${icPara} ${l.status_para}</span>`
-              : `<span style="color:var(--text-muted);font-size:11px">${icDe} ${l.status_de||'novo'}</span> → <span style="color:${cor};font-weight:600">${icPara} ${l.status_para}</span>`;
+              : `<span style="color:var(--text-muted);font-size:var(--fs-090)">${icDe} ${l.status_de||'novo'}</span> → <span style="color:${cor};font-weight:600">${icPara} ${l.status_para}</span>`;
             return `<tr>
-              <td class="mono" style="font-size:11px;white-space:nowrap">${dtStr}</td>
-              <td style="font-size:12px">${l.usuario||'—'}</td>
-              <td class="mono" style="font-size:12px">${l.codigo}</td>
-              <td style="font-size:11px;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.nome_cliente}</td>
-              <td style="font-size:12px;white-space:nowrap">${acao}</td>
-              <td style="font-size:11px;color:var(--text-muted)">${l.obs||'—'}</td>
+              <td class="mono" style="font-size:var(--fs-090);white-space:nowrap">${dtStr}</td>
+              <td style="font-size:var(--fs-100)">${l.usuario||'—'}</td>
+              <td class="mono" style="font-size:var(--fs-100)">${l.codigo}</td>
+              <td style="font-size:var(--fs-090);color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.nome_cliente}</td>
+              <td style="font-size:var(--fs-100);white-space:nowrap">${acao}</td>
+              <td style="font-size:var(--fs-090);color:var(--text-muted)">${l.obs||'—'}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -2146,16 +2148,16 @@ window.cfgLogsErrosRender = function() {
   if (!el) return;
 
   if (!lista.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><p>Nenhum erro encontrado no período.</p></div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="check-circle"></i></div><p>Nenhum erro encontrado no período.</p></div>';
     return;
   }
 
   const nivelCor = { ERROR:'var(--red)', WARN:'var(--orange)', INFO:'var(--blue-mid)' };
-  const nivelBg  = { ERROR:'var(--red-bg)', WARN:'rgba(255,160,0,.1)', INFO:'rgba(59,130,246,.08)' };
+  const nivelBg  = { ERROR:'var(--red-bg)', WARN:'var(--warning-veil)', INFO:'var(--blue-veil)' };
 
   el.innerHTML = `
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${lista.length} registro(s)</div>
-    <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="font-size:var(--fs-100);color:var(--text-muted);margin-bottom:var(--space-2)">${lista.length} registro(s)</div>
+    <div style="display:flex;flex-direction:column;gap:var(--space-2)">
       ${lista.map((l, i) => {
         const dt = new Date(l.criado_em);
         const dtStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
@@ -2163,28 +2165,28 @@ window.cfgLogsErrosRender = function() {
         const bg   = nivelBg[l.nivel]  || 'var(--surface2)';
         const resolvido = l.resolvido;
         return `
-          <div style="border:1px solid var(--border);border-radius:8px;padding:12px;background:${resolvido?'var(--surface)':bg};opacity:${resolvido?'.6':'1'}">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span style="font-size:11px;font-weight:700;color:${cor};background:${bg};padding:2px 8px;border-radius:12px;border:1px solid ${cor}">${l.nivel||'LOG'}</span>
-              <span style="font-size:11px;font-weight:600;color:var(--text-muted)">${l.modulo||'—'}</span>
-              ${l.funcao ? `<span style="font-size:11px;color:var(--text-muted)">· ${l.funcao}</span>` : ''}
-              <span style="font-size:11px;color:var(--text-muted);margin-left:auto">${dtStr}</span>
-              ${l.usuario ? `<span style="font-size:11px;color:var(--text-muted)">${l.usuario}</span>` : ''}
+          <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-3);background:${resolvido?'var(--surface)':bg};opacity:${resolvido?'.6':'1'}">
+            <div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap">
+              <span style="font-size:var(--fs-090);font-weight:700;color:${cor};background:${bg};padding:var(--space-0-5) var(--space-2);border-radius:var(--radius-xl);border:1px solid ${cor}">${l.nivel||'LOG'}</span>
+              <span style="font-size:var(--fs-090);font-weight:600;color:var(--text-muted)">${l.modulo||'—'}</span>
+              ${l.funcao ? `<span style="font-size:var(--fs-090);color:var(--text-muted)">· ${l.funcao}</span>` : ''}
+              <span style="font-size:var(--fs-090);color:var(--text-muted);margin-left:auto">${dtStr}</span>
+              ${l.usuario ? `<span style="font-size:var(--fs-090);color:var(--text-muted)">${l.usuario}</span>` : ''}
             </div>
-            <div style="margin-top:6px;font-size:13px;font-weight:500">${l.mensagem||'—'}</div>
+            <div style="margin-top:var(--space-1-5);font-size:var(--fs-200);font-weight:500">${l.mensagem||'—'}</div>
             ${l.detalhe ? `
-              <div style="margin-top:6px">
-                <button class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px"
+              <div style="margin-top:var(--space-1-5)">
+                <button class="btn btn-sm btn-outline" style="font-size:var(--fs-090);padding:var(--space-0-5) var(--space-2)"
                   onclick="const d=document.getElementById('log-det-${i}');d.style.display=d.style.display==='none'?'block':'none'">
                   Ver detalhe
                 </button>
-                <pre id="log-det-${i}" style="display:none;margin-top:8px;font-size:10px;background:var(--surface2);padding:8px;border-radius:4px;overflow:auto;max-height:120px;white-space:pre-wrap">${l.detalhe.replace(/</g,'&lt;')}</pre>
+                <pre id="log-det-${i}" style="display:none;margin-top:var(--space-2);font-size:var(--fs-075);background:var(--surface2);padding:var(--space-2);border-radius:var(--radius-sm);overflow:auto;max-height:120px;white-space:pre-wrap">${l.detalhe.replace(/</g,'&lt;')}</pre>
               </div>` : ''}
             ${!resolvido ? `
-              <div style="margin-top:8px">
-                <button class="btn btn-sm btn-outline" style="font-size:11px;color:var(--green)"
-                  onclick="cfgLogsMarcarResolvido(${l.id})">✓ Marcar resolvido</button>
-              </div>` : `<div style="margin-top:6px;font-size:11px;color:var(--green)">✓ Resolvido${l.resolvido_por?' por '+l.resolvido_por:''}</div>`}
+              <div style="margin-top:var(--space-2)">
+                <button class="btn btn-sm btn-outline" style="font-size:var(--fs-090);color:var(--green)"
+                  onclick="cfgLogsMarcarResolvido(${l.id})"><i class="ic ic-sm" data-ic="check"></i> Marcar resolvido</button>
+              </div>` : `<div style="margin-top:var(--space-1-5);font-size:var(--fs-090);color:var(--green)"><i class="ic ic-sm" data-ic="check"></i> Resolvido${l.resolvido_por?' por '+l.resolvido_por:''}</div>`}
           </div>`;
       }).join('')}
     </div>

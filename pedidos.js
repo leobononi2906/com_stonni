@@ -19,8 +19,8 @@ window.pedMostrarIncentivo = function(msg) {
   if (anterior) anterior.remove();
   const toast = document.createElement('div');
   toast.id = 'ped-incentivo-toast';
-  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1A3A8F;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);display:flex;align-items:center;gap:10px;max-width:90vw;text-align:center';
-  toast.innerHTML = '<span>🎁 ' + msg + '</span><button onclick="this.parentElement.remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;margin-left:4px">✕</button>';
+  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--action-primary-bg);color:var(--neutral-0);padding:var(--space-3) var(--space-5);border-radius:var(--radius-10);font-size:var(--fs-200);font-weight:600;z-index:9999;box-shadow:0 4px 20px var(--surface-overlay);display:flex;align-items:center;gap:var(--space-2-5);max-width:90vw;text-align:center';
+  toast.innerHTML = '<span><i class="ic ic-sm" data-ic="gift"></i> ' + msg + '</span><button onclick="this.parentElement.remove()" style="background:var(--on-brand-veil);border:none;color:var(--neutral-0);border-radius:var(--radius-sm);padding:var(--space-0-5) var(--space-2);cursor:pointer;font-size:var(--fs-100);margin-left:var(--space-1)"><i class="ic ic-sm" data-ic="x"></i></button>';
   document.body.appendChild(toast);
   setTimeout(function() { if (toast.parentElement) toast.remove(); }, 6000);
 };
@@ -194,16 +194,16 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
           <span class="ped-etapa-num">1</span>
           <span class="ped-etapa-titulo">Identificar cliente</span>
         </div>
-        <div class="card" style="margin-top:12px">
-          <div style="display:flex;gap:10px;align-items:flex-end">
+        <div class="card" style="margin-top:var(--space-3)">
+          <div style="display:flex;gap:var(--space-2-5);align-items:flex-end">
             <div class="form-field" style="flex:1;margin:0">
               <label>CNPJ do cliente</label>
               <input type="text" id="ped-cnpj" class="ped-input" placeholder="00.000.000/0000-00"
                      oninput="pedMascaraCNPJ(this)" onkeydown="if(event.key==='Enter') pedBuscarCliente()">
             </div>
-            <button class="btn btn-primary" onclick="pedBuscarCliente()">🔍 Buscar</button>
+            <button class="btn btn-primary" onclick="pedBuscarCliente()"><i class="ic ic-sm" data-ic="search"></i> Buscar</button>
           </div>
-          <div id="ped-cliente-resultado" style="margin-top:14px"></div>
+          <div id="ped-cliente-resultado" style="margin-top:var(--space-3-5)"></div>
         </div>
       </div>
 
@@ -214,11 +214,11 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
           <span class="ped-etapa-titulo">Montar pedido</span>
           <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="pedAdicionarProduto()">+ Produto</button>
         </div>
-        <div id="ped-carrinho-body" style="margin-top:12px"></div>
+        <div id="ped-carrinho-body" style="margin-top:var(--space-3)"></div>
 
         <!-- Condições comerciais -->
-        <div class="card" style="margin-top:14px">
-          <div style="font-size:13px;font-weight:600;margin-bottom:12px">Condições comerciais</div>
+        <div class="card" style="margin-top:var(--space-3-5)">
+          <div style="font-size:var(--fs-200);font-weight:600;margin-bottom:var(--space-3)">Condições comerciais</div>
           <div class="form-row form-row-2">
             <div class="form-field">
               <label>Prazo de pagamento</label>
@@ -236,17 +236,17 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
           </div>
           <div class="form-field">
             <label>Substituição Tributária</label>
-            <div style="display:flex;gap:8px;margin-top:4px">
+            <div style="display:flex;gap:var(--space-2);margin-top:var(--space-1)">
               <button type="button" id="btn-st-nenhum" onclick="pedSetST(null)"
-                style="padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--blue-dark);color:#fff;font-size:12px;font-weight:600;cursor:pointer">
+                style="padding:var(--space-1-5) var(--space-3-5);border-radius:var(--radius-md);border:1px solid var(--border);background:var(--blue-dark);color:var(--neutral-0);font-size:var(--fs-100);font-weight:600;cursor:pointer">
                 Nenhuma
               </button>
               <button type="button" id="btn-st-sp" onclick="pedSetST('SP')"
-                style="padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-secondary);font-size:12px;font-weight:600;cursor:pointer">
+                style="padding:var(--space-1-5) var(--space-3-5);border-radius:var(--radius-md);border:1px solid var(--border);background:var(--surface2);color:var(--text-secondary);font-size:var(--fs-100);font-weight:600;cursor:pointer">
                 ST SP
               </button>
               <button type="button" id="btn-st-pr" onclick="pedSetST('PR')"
-                style="padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-secondary);font-size:12px;font-weight:600;cursor:pointer">
+                style="padding:var(--space-1-5) var(--space-3-5);border-radius:var(--radius-md);border:1px solid var(--border);background:var(--surface2);color:var(--text-secondary);font-size:var(--fs-100);font-weight:600;cursor:pointer">
                 ST PR
               </button>
             </div>
@@ -258,19 +258,19 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
         </div>
 
         <!-- Totais + frete -->
-        <div class="card" id="ped-totais-card" style="margin-top:14px;display:none">
-          <div style="font-size:13px;font-weight:600;margin-bottom:12px">Resumo do pedido</div>
+        <div class="card" id="ped-totais-card" style="margin-top:var(--space-3-5);display:none">
+          <div style="font-size:var(--fs-200);font-weight:600;margin-bottom:var(--space-3)">Resumo do pedido</div>
           <div id="ped-totais-body"></div>
-          <button class="btn btn-outline" id="btn-cotar-frete" onclick="pedCotarFrete()" style="margin-top:12px;width:100%">
-            🚚 Cotar frete em tempo real
+          <button class="btn btn-outline" id="btn-cotar-frete" onclick="pedCotarFrete()" style="margin-top:var(--space-3);width:100%">
+            <i class="ic ic-sm" data-ic="truck"></i> Cotar frete em tempo real
           </button>
-          <div id="ped-frete-resultado" style="margin-top:12px"></div>
+          <div id="ped-frete-resultado" style="margin-top:var(--space-3)"></div>
         </div>
 
-        <div style="margin-top:16px;display:flex;justify-content:flex-end">
-          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
-            <button class="btn btn-outline btn-lg" onclick="pedSalvarCotacao()">📋 Salvar Cotação</button>
-            <button class="btn btn-primary btn-lg" onclick="pedSalvarPedido()">📦 Enviar Pedido</button>
+        <div style="margin-top:var(--space-4);display:flex;justify-content:flex-end">
+          <div style="display:flex;gap:var(--space-2-5);flex-wrap:wrap;justify-content:flex-end">
+            <button class="btn btn-outline btn-lg" onclick="pedSalvarCotacao()"><i class="ic ic-sm" data-ic="clipboard-list"></i> Salvar Cotação</button>
+            <button class="btn btn-primary btn-lg" onclick="pedSalvarPedido()"><i class="ic ic-sm" data-ic="package"></i> Enviar Pedido</button>
           </div>
         </div>
       </div>
@@ -293,12 +293,12 @@ window._pedConfig = Object.fromEntries((configs||[]).map(c=>[c.chave,c.valor]));
     if (etapaClienteCard && cli) {
       etapaClienteCard.innerHTML =
         '<div class="ped-cliente-card">' +
-          '<div style="font-weight:600;font-size:14px">' + (cli.nome||'') + '</div>' +
-          '<div style="font-size:12px;color:var(--text-muted);margin-top:2px">CNPJ: ' + (cli.cnpj||'') + ' &nbsp;·&nbsp; ' + (cli.cidade||'') + '/' + (cli.uf||'') + '</div>' +
-          '<div style="font-size:12px;color:var(--green);margin-top:6px">✅ Cotação em edição</div>' +
+          '<div style="font-weight:600;font-size:var(--fs-300)">' + (cli.nome||'') + '</div>' +
+          '<div style="font-size:var(--fs-100);color:var(--text-muted);margin-top:var(--space-0-5)">CNPJ: ' + (cli.cnpj||'') + ' &nbsp;·&nbsp; ' + (cli.cidade||'') + '/' + (cli.uf||'') + '</div>' +
+          '<div style="font-size:var(--fs-100);color:var(--green);margin-top:var(--space-1-5)"><i class="ic ic-sm" data-ic="check-circle"></i> Cotação em edição</div>' +
         '</div>' +
-        '<div style="margin-top:10px;text-align:right">' +
-          '<button class="btn btn-outline btn-sm" onclick="pedTrocarCliente()" style="font-size:11px">Trocar cliente</button>' +
+        '<div style="margin-top:var(--space-2-5);text-align:right">' +
+          '<button class="btn btn-outline btn-sm" onclick="pedTrocarCliente()" style="font-size:var(--fs-090)">Trocar cliente</button>' +
         '</div>';
     }
     // Mostra etapa do carrinho
@@ -337,7 +337,7 @@ window.pedBuscarCliente = async function() {
   if (cnpjRaw.length < 14) { alert('CNPJ inválido'); return; }
 
   const res = document.getElementById('ped-cliente-resultado');
-  res.innerHTML = '<div style="color:var(--text-muted);font-size:13px">🔍 Buscando cliente...</div>';
+  res.innerHTML = '<div style="color:var(--text-muted);font-size:var(--fs-200)"><i class="ic ic-sm" data-ic="search"></i> Buscando cliente...</div>';
 
   // CNPJ no ERP vem formatado ex: "49.724.128/0001-97"
   const cnpjFmt = cnpjRaw.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
@@ -376,35 +376,35 @@ window.pedBuscarCliente = async function() {
 
   // Monta alertas HTML
   const alertasHtml = [];
-  if (qtdAberto > 0) alertasHtml.push(`<div class="alert alert-warning"><span class="alert-icon">⚠️</span><div><strong>${qtdAberto} título(s) em aberto</strong> — Total: R$ ${totalAberto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>`);
-  if (diasSemCompra !== null && diasSemCompra > limiteAlertaDias) alertasHtml.push(`<div class="alert alert-warning"><span class="alert-icon">📅</span><div><strong>${diasSemCompra} dias sem comprar</strong></div></div>`);
+  if (qtdAberto > 0) alertasHtml.push(`<div class="alert alert-warning"><span class="alert-icon"><i class="ic ic-sm" data-ic="alert-triangle"></i></span><div><strong>${qtdAberto} título(s) em aberto</strong> — Total: R$ ${totalAberto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>`);
+  if (diasSemCompra !== null && diasSemCompra > limiteAlertaDias) alertasHtml.push(`<div class="alert alert-warning"><span class="alert-icon"><i class="ic ic-sm" data-ic="calendar"></i></span><div><strong>${diasSemCompra} dias sem comprar</strong></div></div>`);
 
   res.innerHTML = `
     <div class="ped-cliente-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
-          <div style="font-size:15px;font-weight:700">${_pedidoAtual.cliente.nome}</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
+          <div style="font-size:var(--fs-400);font-weight:700">${_pedidoAtual.cliente.nome}</div>
+          <div style="font-size:var(--fs-100);color:var(--text-muted);margin-top:var(--space-0-5)">
             CNPJ: ${fmtCNPJ(cnpjRaw)}
             ${_pedidoAtual.cliente.cidade ? ` · ${_pedidoAtual.cliente.cidade}/${_pedidoAtual.cliente.uf}` : ''}
           </div>
         </div>
         <button class="btn btn-outline btn-sm" onclick="pedLimparCliente()">Trocar</button>
       </div>
-      ${alertasHtml.length ? `<div style="margin-top:12px">${alertasHtml.join('')}<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:8px"><input type="checkbox" id="ped-ciente" style="accent-color:var(--blue-dark)"> Estou ciente das pendências e desejo continuar</label></div>` : ''}
-      ${!alertasHtml.length ? `<div class="alert alert-success" style="margin-top:10px"><span class="alert-icon">✅</span>Cliente sem pendências financeiras.</div>` : ''}
+      ${alertasHtml.length ? `<div style="margin-top:var(--space-3)">${alertasHtml.join('')}<label style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--fs-200);cursor:pointer;margin-top:var(--space-2)"><input type="checkbox" id="ped-ciente" style="accent-color:var(--blue-dark)"> Estou ciente das pendências e desejo continuar</label></div>` : ''}
+      ${!alertasHtml.length ? `<div class="alert alert-success" style="margin-top:var(--space-2-5)"><span class="alert-icon"><i class="ic ic-sm" data-ic="check-circle"></i></span>Cliente sem pendências financeiras.</div>` : ''}
       ${!_pedidoAtual.cliente.cep ? `
-        <div style="margin-top:12px;padding:12px;background:var(--yellow-bg,#fffbea);border:1px solid var(--yellow,#f59e0b);border-radius:var(--radius-sm)">
-          <div style="font-size:12px;font-weight:600;color:var(--yellow,#b45309);margin-bottom:6px">⚠️ CEP não encontrado no cadastro — informe para cotar frete</div>
-          <div style="display:flex;gap:8px">
+        <div style="margin-top:var(--space-3);padding:var(--space-3);background:var(--yellow-bg,var(--warning-50));border:1px solid var(--yellow,var(--warning-500));border-radius:var(--radius-lg)">
+          <div style="font-size:var(--fs-100);font-weight:600;color:var(--yellow,var(--warning-600));margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="alert-triangle"></i> CEP não encontrado no cadastro — informe para cotar frete</div>
+          <div style="display:flex;gap:var(--space-2)">
             <input type="text" id="ped-cep-manual" class="ped-input" placeholder="00000-000" maxlength="9"
               oninput="this.value=this.value.replace(/\D/g,'').replace(/(\d{5})(\d)/,'$1-$2').slice(0,9)"
               style="max-width:140px">
             <button class="btn btn-outline btn-sm" onclick="pedSalvarCepManual()">Confirmar CEP</button>
           </div>
-        </div>` : `<div style="font-size:12px;color:var(--text-muted);margin-top:8px">📍 CEP: ${_pedidoAtual.cliente.cep.replace(/(\d{5})(\d{3})/,'$1-$2')} · ${_pedidoAtual.cliente.cidade}/${_pedidoAtual.cliente.uf}</div>`}
+        </div>` : `<div style="font-size:var(--fs-100);color:var(--text-muted);margin-top:var(--space-2)"><i class="ic ic-sm" data-ic="map-pin"></i> CEP: ${_pedidoAtual.cliente.cep.replace(/(\d{5})(\d{3})/,'$1-$2')} · ${_pedidoAtual.cliente.cidade}/${_pedidoAtual.cliente.uf}</div>`}
     </div>
-    <div style="margin-top:14px;text-align:right">
+    <div style="margin-top:var(--space-3-5);text-align:right">
       <button class="btn btn-primary" onclick="pedConfirmarCliente()">Continuar →</button>
     </div>
   `;
@@ -423,7 +423,7 @@ window.pedSalvarCepManual = function() {
     _pedidoAtual.cliente.cep = cep;
     // Atualiza display
     const aviso = document.querySelector('#ped-cliente-resultado .ped-cep-aviso');
-    if (aviso) aviso.innerHTML = `<div style="font-size:12px;color:var(--text-muted);margin-top:8px">📍 CEP: ${cep.replace(/(\d{5})(\d{3})/,'$1-$2')} (informado manualmente)</div>`;
+    if (aviso) aviso.innerHTML = `<div style="font-size:var(--fs-100);color:var(--text-muted);margin-top:var(--space-2)"><i class="ic ic-sm" data-ic="map-pin"></i> CEP: ${cep.replace(/(\d{5})(\d{3})/,'$1-$2')} (informado manualmente)</div>`;
   }
 };
 
@@ -469,7 +469,7 @@ window.pedEditarPreco = function(idx, novoValor) {
   // Se abaixo da tabela muda status para AGUARDANDO_APROVACAO ao salvar
   if (abaixo) {
     window._pedidoTemPrecoAbaixo = true;
-    pedMostrarIncentivo('⚠️ Preço abaixo da tabela — este pedido ficará aguardando aprovação do gestor.');
+    pedMostrarIncentivo('<i class="ic ic-sm" data-ic="alert-triangle"></i> Preço abaixo da tabela — este pedido ficará aguardando aprovação do gestor.');
   } else {
     window._pedidoTemPrecoAbaixo = _pedidoAtual.itens.some(i => i.abaixo_tabela);
   }
@@ -512,7 +512,7 @@ window.pedAplicarDescontoAvista = function() {
   if (mudou) {
     pedRenderCarrinho();
     if (eAvista && descPc > 0) {
-      pedMostrarIncentivo(`💰 Desconto à vista de ${descPc}% aplicado em todos os produtos!`);
+      pedMostrarIncentivo(`<i class="ic ic-sm" data-ic="dollar-sign"></i> Desconto à vista de ${descPc}% aplicado em todos os produtos!`);
     }
   }
 };
@@ -562,13 +562,13 @@ window.pedTrocarCliente = function() {
   const etapaCliente = document.getElementById('etapa-cliente');
   if (etapaCliente) {
     etapaCliente.querySelector('.card').innerHTML = `
-      <div style="display:flex;gap:10px;align-items:flex-end">
+      <div style="display:flex;gap:var(--space-2-5);align-items:flex-end">
         <div class="form-field" style="flex:1;margin:0">
           <label>CNPJ do cliente</label>
           <input type="text" id="ped-cnpj" class="ped-input" placeholder="00.000.000/0000-00"
             oninput="pedMascaraCNPJ(this)" onkeydown="if(event.key==='Enter') pedBuscarCliente()">
         </div>
-        <button class="btn btn-primary" onclick="pedBuscarCliente()">🔍 Buscar</button>
+        <button class="btn btn-primary" onclick="pedBuscarCliente()"><i class="ic ic-sm" data-ic="search"></i> Buscar</button>
       </div>`;
   }
   document.getElementById('etapa-carrinho').style.display = 'none';
@@ -583,7 +583,7 @@ window.pedSetST = function(estado) {
     if (!btn) return;
     const ativo = (s === 'nenhum' && !estado) || s === (estado||'').toLowerCase();
     btn.style.background = ativo ? 'var(--blue-dark)' : 'var(--surface2)';
-    btn.style.color      = ativo ? '#fff' : 'var(--text-secondary)';
+    btn.style.color      = ativo ? 'var(--neutral-0)' : 'var(--text-secondary)';
     btn.style.borderColor= ativo ? 'var(--blue-dark)' : 'var(--border)';
   });
   pedAtualizarTotais();
@@ -594,7 +594,7 @@ window.pedRenderCarrinho = function() {
   if (!body) return;
 
   if (!_pedidoAtual.itens.length) {
-    body.innerHTML = `<div class="card"><div class="empty-state" style="padding:30px"><div class="empty-state-icon">🛒</div><h3>Carrinho vazio</h3><p>Clique em "+ Produto" para adicionar itens.</p></div></div>`;
+    body.innerHTML = `<div class="card"><div class="empty-state" style="padding:30px"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="shopping-cart"></i></div><h3>Carrinho vazio</h3><p>Clique em "+ Produto" para adicionar itens.</p></div></div>`;
     if (totaisCard) totaisCard.style.display = 'none';
     return;
   }
@@ -617,37 +617,37 @@ window.pedRenderCarrinho = function() {
     return `
       <tr>
         <td>
-          <div style="font-weight:500;font-size:13px">${item.nome}</div>
-          <div style="font-size:11px;color:var(--text-muted)">Ref: ${item.referencia||'—'}</div>
-          ${ipiPerc > 0 && !_pedidoAtual?.st_estado ? `<div style="font-size:11px;color:var(--orange)">+ ${ipiPerc}% IPI = R$ ${valorIpi.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : ''}
+          <div style="font-weight:500;font-size:var(--fs-200)">${item.nome}</div>
+          <div style="font-size:var(--fs-090);color:var(--text-muted)">Ref: ${item.referencia||'—'}</div>
+          ${ipiPerc > 0 && !_pedidoAtual?.st_estado ? `<div style="font-size:var(--fs-090);color:var(--orange)">+ ${ipiPerc}% IPI = R$ ${valorIpi.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : ''}
         </td>
         <td style="text-align:right;min-width:140px">
-          <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px">
-            <span style="font-size:11px;color:var(--text-muted)">R$</span>
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:var(--space-1)">
+            <span style="font-size:var(--fs-090);color:var(--text-muted)">R$</span>
             <input type="number"
               class="ped-preco-input mono"
               value="${Number(item.preco_unitario).toFixed(2)}"
               step="0.01" min="0"
-              style="width:90px;text-align:right;font-size:13px;font-weight:600;border:1px solid ${abaixoTabela?'var(--red)':'var(--border)'};border-radius:4px;padding:3px 6px;background:${abaixoTabela?'var(--red-bg)':'var(--surface)'}"
+              style="width:90px;text-align:right;font-size:var(--fs-200);font-weight:600;border:1px solid ${abaixoTabela?'var(--red)':'var(--border)'};border-radius:var(--radius-sm);padding:3px var(--space-1-5);background:${abaixoTabela?'var(--red-bg)':'var(--surface)'}"
               onchange="pedEditarPreco(${idx}, this.value)"
               title="Preço de tabela: R$ ${tabelaBase.toLocaleString('pt-BR',{minimumFractionDigits:2})}">
           </div>
-          ${abaixoTabela ? `<div style="font-size:10px;color:var(--red);text-align:right;margin-top:2px">⚠️ Abaixo da tabela — sujeito a aprovação</div>` : ''}
+          ${abaixoTabela ? `<div style="font-size:var(--fs-075);color:var(--red);text-align:right;margin-top:var(--space-0-5)"><i class="ic ic-sm" data-ic="alert-triangle"></i> Abaixo da tabela — sujeito a aprovação</div>` : ''}
         </td>
         <td style="text-align:right;vertical-align:middle">
           ${Number(item.desconto_perc) > 0
-            ? `<span style="font-size:13px;font-weight:600;color:var(--green)">${Number(item.desconto_perc).toFixed(Number(item.desconto_perc) % 1 === 0 ? 0 : 1)}%</span>`
+            ? `<span style="font-size:var(--fs-200);font-weight:600;color:var(--green)">${Number(item.desconto_perc).toFixed(Number(item.desconto_perc) % 1 === 0 ? 0 : 1)}%</span>`
             : '<span style="color:var(--text-muted)">—</span>'}
         </td>
         <td>
-          <div style="display:flex;align-items:center;gap:8px">
+          <div style="display:flex;align-items:center;gap:var(--space-2)">
             <button class="ped-qty-btn" onclick="pedAlterarQtd(${idx},-1)">−</button>
             <span class="mono" style="min-width:28px;text-align:center;font-weight:600">${item.quantidade}</span>
             <button class="ped-qty-btn" onclick="pedAlterarQtd(${idx},1)">+</button>
           </div>
         </td>
         <td class="mono right" style="font-weight:600;color:var(--blue-dark)">R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-        <td><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="pedRemoverItem(${idx})">✕</button></td>
+        <td><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="pedRemoverItem(${idx})"><i class="ic ic-sm" data-ic="x"></i></button></td>
       </tr>`;
   }).join('');
 
@@ -694,15 +694,15 @@ window.pedAtualizarTotais = function() {
   // Salva no estado para usar no envio
   _pedidoAtual.valor_ipi = valorIPI;
 
-  var linhas = '<div style="display:flex;flex-direction:column;gap:8px">';
-  linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Subtotal produtos</span><span class="mono" style="font-weight:600">R$ ' + subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
-  if (valorDesconto > 0.01) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Desconto (' + _pedidoAtual.itens.filter(i=>i.desconto_perc>0).map(i=>i.regras_aplicadas?.[0]||i.desconto_perc+'%').filter((v,i,a)=>a.indexOf(v)===i).join(', ') + ')</span><span class="mono" style="color:var(--green)">- R$ ' + valorDesconto.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
-  if (temIPI) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">IPI</span><span class="mono" style="color:var(--orange)">R$ ' + valorIPI.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
-  if (valorST > 0.01) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">ST (' + stEstado + ')</span><span class="mono" style="color:var(--text-secondary)">+ R$ ' + valorST.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
-  if (freteVal > 0) linhas += '<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-secondary)">Frete (' + (_pedidoAtual.frete?.transportadora||'') + ')</span><span class="mono">R$ ' + freteVal.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
-  if (freteGratis > 0 && subtotal >= freteGratis) linhas += '<div class="alert alert-success" style="padding:8px 12px"><span class="alert-icon">🎉</span>Frete grátis acima de R$ ' + freteGratis.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</div>';
-  linhas += '<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;border-top:1px solid var(--border);padding-top:8px;margin-top:4px"><span>Total</span><span class="mono" style="color:var(--blue-dark)">R$ ' + total.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
-  if (subtotal < valorMinimo) linhas += '<div class="alert alert-warning" style="padding:8px 12px"><span class="alert-icon">⚠️</span>Pedido mínimo: R$ ' + valorMinimo.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</div>';
+  var linhas = '<div style="display:flex;flex-direction:column;gap:var(--space-2)">';
+  linhas += '<div style="display:flex;justify-content:space-between;font-size:var(--fs-200)"><span style="color:var(--text-secondary)">Subtotal produtos</span><span class="mono" style="font-weight:600">R$ ' + subtotal.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
+  if (valorDesconto > 0.01) linhas += '<div style="display:flex;justify-content:space-between;font-size:var(--fs-200)"><span style="color:var(--text-secondary)">Desconto (' + _pedidoAtual.itens.filter(i=>i.desconto_perc>0).map(i=>i.regras_aplicadas?.[0]||i.desconto_perc+'%').filter((v,i,a)=>a.indexOf(v)===i).join(', ') + ')</span><span class="mono" style="color:var(--green)">- R$ ' + valorDesconto.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
+  if (temIPI) linhas += '<div style="display:flex;justify-content:space-between;font-size:var(--fs-200)"><span style="color:var(--text-secondary)">IPI</span><span class="mono" style="color:var(--orange)">R$ ' + valorIPI.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
+  if (valorST > 0.01) linhas += '<div style="display:flex;justify-content:space-between;font-size:var(--fs-200)"><span style="color:var(--text-secondary)">ST (' + stEstado + ')</span><span class="mono" style="color:var(--text-secondary)">+ R$ ' + valorST.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
+  if (freteVal > 0) linhas += '<div style="display:flex;justify-content:space-between;font-size:var(--fs-200)"><span style="color:var(--text-secondary)">Frete (' + (_pedidoAtual.frete?.transportadora||'') + ')</span><span class="mono">R$ ' + freteVal.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
+  if (freteGratis > 0 && subtotal >= freteGratis) linhas += '<div class="alert alert-success" style="padding:var(--space-2) var(--space-3)"><span class="alert-icon"><i class="ic ic-sm" data-ic="check-circle"></i></span>Frete grátis acima de R$ ' + freteGratis.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</div>';
+  linhas += '<div style="display:flex;justify-content:space-between;font-size:var(--fs-450);font-weight:700;border-top:1px solid var(--border);padding-top:var(--space-2);margin-top:var(--space-1)"><span>Total</span><span class="mono" style="color:var(--blue-dark)">R$ ' + total.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</span></div>';
+  if (subtotal < valorMinimo) linhas += '<div class="alert alert-warning" style="padding:var(--space-2) var(--space-3)"><span class="alert-icon"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>Pedido mínimo: R$ ' + valorMinimo.toLocaleString('pt-BR',{minimumFractionDigits:2}) + '</div>';
   linhas += '</div>';
 
   document.getElementById('ped-totais-body').innerHTML = linhas;
@@ -737,7 +737,7 @@ window.pedAdicionarProduto = async function() {
   window._catProdutos = produtos;
 
   abrirDrawer('Adicionar Produto', 'Selecione o produto para adicionar ao pedido', `
-    <input type="text" id="ped-prod-busca" class="cfg-input" placeholder="Buscar produto..." oninput="pedFiltrarProdutos()" style="margin-bottom:14px">
+    <input type="text" id="ped-prod-busca" class="cfg-input" placeholder="Buscar produto..." oninput="pedFiltrarProdutos()" style="margin-bottom:var(--space-3-5)">
     <div id="ped-prod-lista" style="max-height:400px;overflow-y:auto"></div>
   `, '');
   pedFiltrarProdutos();
@@ -756,10 +756,10 @@ window.pedFiltrarProdutos = function() {
     return `
       <div class="ped-prod-item" onclick="pedAdicionarProdutoId(${p.id})">
         <div style="flex:1">
-          <div style="font-weight:500;font-size:13px">${p.nome}</div>
-          <div style="font-size:11px;color:var(--text-muted)">Ref: ${p.referencia||'—'} · ${p.grupo||'—'}</div>
+          <div style="font-weight:500;font-size:var(--fs-200)">${p.nome}</div>
+          <div style="font-size:var(--fs-090);color:var(--text-muted)">Ref: ${p.referencia||'—'} · ${p.grupo||'—'}</div>
         </div>
-        <div class="mono" style="font-weight:600;color:var(--blue-dark);font-size:13px;flex-shrink:0">
+        <div class="mono" style="font-weight:600;color:var(--blue-dark);font-size:var(--fs-200);flex-shrink:0">
           R$ ${preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}
         </div>
       </div>`;
@@ -958,22 +958,22 @@ window.pedCotarFrete = async function() {
       return '<label class="ped-frete-opcao ' + selected + '">' +
         '<input type="radio" name="ped-frete-radio" value="' + i + '" ' + checked + ' onchange="pedSelecionarFrete(' + i + ',\'' + r.transportadora + '\',' + r.valor_frete + ',' + r.prazo_dias + ')" style="accent-color:var(--blue-dark)">' +
         '<span style="flex:1"><strong>' + r.transportadora + '</strong>' +
-        '<span style="font-size:11px;color:var(--text-muted);margin-left:8px">' + r.prazo_dias + ' dia(s)</span></span>' +
+        '<span style="font-size:var(--fs-090);color:var(--text-muted);margin-left:var(--space-2)">' + r.prazo_dias + ' dia(s)</span></span>' +
         '<span class="mono" style="font-weight:600;color:' + cor + '">' + valorStr + '</span>' +
         '</label>';
     }).join('');
 
-    const redespachHtml = '<div style="margin-top:12px;padding:12px 14px;background:var(--blue-pale);border:1.5px solid var(--blue-mid);border-radius:var(--radius-sm)">' +
-      '<label style="display:flex;align-items:center;gap:10px;cursor:pointer">' +
+    const redespachHtml = '<div style="margin-top:var(--space-3);padding:var(--space-3) var(--space-3-5);background:var(--blue-pale);border:1.5px solid var(--blue-mid);border-radius:var(--radius-lg)">' +
+      '<label style="display:flex;align-items:center;gap:var(--space-2-5);cursor:pointer">' +
       '<input type="checkbox" id="ped-redespacho-sp" style="accent-color:var(--blue-dark);width:16px;height:16px" onchange="pedToggleRedespachSP(this.checked)">' +
-      '<span style="flex:1"><strong style="font-size:13px">🚚 Redespacho via SP</strong>' +
-      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px">Disponível para clientes com benefício de redespacho</span></span>' +
-      '<span class="mono" style="font-weight:700;color:var(--green);font-size:13px">GRÁTIS</span>' +
+      '<span style="flex:1"><strong style="font-size:var(--fs-200)"><i class="ic ic-sm" data-ic="truck"></i> Redespacho via SP</strong>' +
+      '<span style="font-size:var(--fs-090);color:var(--text-muted);margin-left:var(--space-2)">Disponível para clientes com benefício de redespacho</span></span>' +
+      '<span class="mono" style="font-weight:700;color:var(--green);font-size:var(--fs-200)">GRÁTIS</span>' +
       '</label></div>';
 
     document.getElementById('ped-frete-resultado').innerHTML = resultados.length
-      ? '<div style="font-size:12px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Escolha a transportadora</div>' + freteLinhas + redespachHtml
-      : '<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Não foi possível cotar o frete. Informe manualmente.</div>';
+      ? '<div style="font-size:var(--fs-100);font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:var(--space-2)">Escolha a transportadora</div>' + freteLinhas + redespachHtml
+      : '<div class="alert alert-warning"><span class="alert-icon"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>Não foi possível cotar o frete. Informe manualmente.</div>';
 
     // Seleciona o primeiro automaticamente
     if (resultados.length) {
@@ -981,7 +981,7 @@ window.pedCotarFrete = async function() {
       pedSelecionarFrete(0, resultados[0].transportadora, isGratis ? 0 : resultados[0].valor_frete, resultados[0].prazo_dias);
     }
   } catch(e) {
-    document.getElementById('ped-frete-resultado').innerHTML = '<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Erro ao cotar frete. Verifique a conexão.</div>';
+    document.getElementById('ped-frete-resultado').innerHTML = '<div class="alert alert-warning"><span class="alert-icon"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>Erro ao cotar frete. Verifique a conexão.</div>';
     appLog('ERROR', e.message || 'Erro desconhecido na cotação de frete', {
       categoria: 'FRETE',
       detalhe: {
@@ -993,7 +993,7 @@ window.pedCotarFrete = async function() {
     });
   }
 
-  btn.textContent = '🚚 Recotar frete'; btn.disabled = false;
+  btn.textContent = 'Recotar frete'; btn.disabled = false;
 };
 
 window.pedToggleRedespachSP = function(checked) {
@@ -1152,8 +1152,8 @@ window.pedEnviar = async function(tipo) {
   // Mostra toast de sucesso após navegar
   setTimeout(() => {
     const toast = document.createElement('div');
-    toast.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#22a06b;color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.2);text-align:center;max-width:90vw';
-    toast.textContent = '✅ ' + msgSucesso;
+    toast.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--success-500);color:var(--neutral-0);padding:var(--space-3) var(--space-6);border-radius:var(--radius-10);font-size:var(--fs-300);font-weight:600;z-index:9999;box-shadow:0 4px 20px var(--surface-overlay);text-align:center;max-width:90vw';
+    toast.textContent = '' + msgSucesso;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 4000);
   }, 300);
@@ -1165,19 +1165,19 @@ window.pedEnviar = async function(tipo) {
   const s = document.createElement('style');
   s.id = 'css-pedido';
   s.textContent = `
-    .ped-etapa { margin-bottom:24px; }
-    .ped-etapa-header { display:flex; align-items:center; gap:12px; }
-    .ped-etapa-num { width:28px; height:28px; border-radius:50%; background:var(--blue-dark); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .ped-etapa-titulo { font-size:15px; font-weight:600; }
-    .ped-input { width:100%; height:38px; padding:0 12px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text-primary); background:var(--surface2); outline:none; transition:border-color .15s; }
-    .ped-input:focus { border-color:var(--blue-mid); background:#fff; }
-    textarea.ped-input { height:auto; padding:10px 12px; resize:vertical; }
-    .ped-cliente-card { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; }
-    .ped-qty-btn { width:28px; height:28px; border-radius:6px; border:1px solid var(--border); background:var(--surface); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; }
+    .ped-etapa { margin-bottom:var(--space-6); }
+    .ped-etapa-header { display:flex; align-items:center; gap:var(--space-3); }
+    .ped-etapa-num { width:28px; height:28px; border-radius:50%; background:var(--blue-dark); color:var(--neutral-0); font-size:var(--fs-200); font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .ped-etapa-titulo { font-size:var(--fs-400); font-weight:600; }
+    .ped-input { width:100%; height:38px; padding:0 var(--space-3); border:1.5px solid var(--border); border-radius:var(--radius-lg); font-family:var(--font-sans); font-size:var(--fs-200); color:var(--text-primary); background:var(--surface2); outline:none; transition:border-color .15s; }
+    .ped-input:focus { border-color:var(--blue-mid); background:var(--neutral-0); }
+    textarea.ped-input { height:auto; padding:var(--space-2-5) var(--space-3); resize:vertical; }
+    .ped-cliente-card { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:var(--space-3-5) var(--space-4); }
+    .ped-qty-btn { width:28px; height:28px; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface); font-size:var(--fs-450); cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; }
     .ped-qty-btn:hover { background:var(--blue-pale); border-color:var(--blue-mid); }
-    .ped-prod-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:6px; cursor:pointer; transition:all .15s; }
+    .ped-prod-item { display:flex; align-items:center; gap:var(--space-3); padding:var(--space-2-5) var(--space-3); border:1px solid var(--border); border-radius:var(--radius-lg); margin-bottom:var(--space-1-5); cursor:pointer; transition:all .15s; }
     .ped-prod-item:hover { border-color:var(--blue-mid); background:var(--blue-pale); }
-    .ped-frete-opcao { display:flex; align-items:center; gap:10px; padding:10px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); margin-bottom:6px; cursor:pointer; transition:all .15s; font-size:13px; }
+    .ped-frete-opcao { display:flex; align-items:center; gap:var(--space-2-5); padding:var(--space-2-5) var(--space-3-5); border:1.5px solid var(--border); border-radius:var(--radius-lg); margin-bottom:var(--space-1-5); cursor:pointer; transition:all .15s; font-size:var(--fs-200); }
     .ped-frete-opcao.selected { border-color:var(--blue-dark); background:var(--blue-pale); }
   `;
   document.head.appendChild(s);

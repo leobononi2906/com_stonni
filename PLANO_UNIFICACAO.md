@@ -136,6 +136,6 @@ construído pensando nisso — checklist do que garante a migração:
 
 ## 5. Pendências / decisões em aberto
 - **Info Técnica** = apenas o novo rótulo do CRM (confirmado por Leo 11/08). Sem feature nova.
-- Ícones PWA definitivos (hoje usa `logo.png`).
+- ~~Ícones PWA definitivos~~ — **feito em 16/09/2026**: `icon-192.png` e `icon-512.png` (este também como `maskable`), gerados por `scripts/gerar-icones-pwa.py`. O `logo.png` que estava no lugar era um JPEG renomeado, declarado no manifest com dimensões que não eram as dele.
 - Fase 2 (modelo de acesso do vendedor interno) — decisão pendente.
 - Offline: catálogo cacheável para o rep em campo (fase 1); pedido offline (fila+sync) fica p/ fase futura.

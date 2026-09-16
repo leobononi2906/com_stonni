@@ -25,26 +25,26 @@ async function renderConfig() {
   el.innerHTML=`<div style="max-width:680px">
 
     <!-- Tabs Config -->
-    <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:0">
+    <div style="display:flex;gap:var(--space-1);margin-bottom:var(--space-5);border-bottom:2px solid var(--border);padding-bottom:0">
       <button id="cfg-tab-config" onclick="setCfgTab('config')"
-        style="padding:8px 16px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--blue-dark);border-bottom:2px solid var(--blue-dark);margin-bottom:-2px">
-        ⚙️ Configurações
+        style="padding:var(--space-2) var(--space-4);border:none;background:none;cursor:pointer;font-size:var(--fs-100);font-weight:600;color:var(--blue-dark);border-bottom:2px solid var(--blue-dark);margin-bottom:-2px">
+        <i class="ic ic-sm" data-ic="settings"></i> Configurações
       </button>
       <button id="cfg-tab-vendedores" onclick="setCfgTab('vendedores')"
-        style="padding:8px 16px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-muted)">
-        👥 Vendedores
+        style="padding:var(--space-2) var(--space-4);border:none;background:none;cursor:pointer;font-size:var(--fs-100);font-weight:600;color:var(--text-muted)">
+        <i class="ic ic-sm" data-ic="users"></i> Vendedores
       </button>
       <button id="cfg-tab-log" onclick="setCfgTab('log')"
-        style="padding:8px 16px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-muted)">
-        📋 Log de Ações
+        style="padding:var(--space-2) var(--space-4);border:none;background:none;cursor:pointer;font-size:var(--fs-100);font-weight:600;color:var(--text-muted)">
+        <i class="ic ic-sm" data-ic="clipboard-list"></i> Log de Ações
       </button>
     </div>
 
     <!-- Painel Vendedores -->
     <div id="cfg-painel-vendedores" style="display:none">
       <div class="cfg-section">
-        <h3>👥 Equipe de Vendas</h3>
-        <p style="font-size:11px;color:var(--text-muted);margin-bottom:12px">
+        <h3><i class="ic ic-sm" data-ic="users"></i> Equipe de Vendas</h3>
+        <p style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-3)">
           Marque como inativo quem saiu da equipe. A carteira dele passa a aparecer na
           <b>Prospecção → Geral</b> para os outros assumirem, sem perder o registro de quem era o dono.
         </p>
@@ -57,37 +57,37 @@ async function renderConfig() {
 
     <!-- Meu Perfil -->
     <div class="cfg-section">
-      <h3>👤 Meu Perfil</h3>
-      <p style="font-size:11px;color:var(--text-muted);margin-bottom:12px">
+      <h3><i class="ic ic-sm" data-ic="user"></i> Meu Perfil</h3>
+      <p style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-3)">
         Vincule seu login ao seu vendedor. O CRM abrirá automaticamente filtrado no seu nome.
       </p>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:var(--space-2-5);flex-wrap:wrap">
         <div style="flex:1;min-width:200px">
-          <label style="font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Login (e-mail)</label>
+          <label style="font-size:var(--fs-090);font-weight:600;color:var(--text-secondary);display:block;margin-bottom:var(--space-1)">Login (e-mail)</label>
           <input type="text" value="${emailLogado}" disabled
-            style="width:100%;padding:7px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:12px;box-sizing:border-box">
+            style="width:100%;padding:7px var(--space-2-5);background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--text-muted);font-size:var(--fs-100);box-sizing:border-box">
         </div>
         <div style="flex:1;min-width:200px">
-          <label style="font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Meu Vendedor</label>
+          <label style="font-size:var(--fs-090);font-weight:600;color:var(--text-secondary);display:block;margin-bottom:var(--space-1)">Meu Vendedor</label>
           <select id="cfg-meu-vendedor"
-            style="width:100%;padding:7px 10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:12px;box-sizing:border-box">
+            style="width:100%;padding:7px var(--space-2-5);background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--text-primary);font-size:var(--fs-100);box-sizing:border-box">
             <option value="">-- Não vincular --</option>
             ${S.vendedores.map(v=>`<option value="${v.id_vendedor}"${cfgUser?.id_vendedor_erp===v.id_vendedor?' selected':''}>${v.nome_vendedor}</option>`).join('')}
           </select>
         </div>
-        <div style="padding-top:18px">
+        <div style="padding-top:var(--space-4-5)">
           <button onclick="salvarCfgUsuario('${emailLogado}')"
-            style="padding:7px 16px;background:var(--blue-dark);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
+            style="padding:7px var(--space-4);background:var(--blue-dark);color:var(--neutral-0);border:none;border-radius:var(--radius-lg);font-size:var(--fs-100);font-weight:600;cursor:pointer;white-space:nowrap">
             Salvar
           </button>
         </div>
       </div>
-      ${cfgUser ? `<p style="font-size:11px;color:var(--green);margin-top:8px">✓ Perfil vinculado — CRM abre filtrado em <strong>${cfgUser.nome_vendedor}</strong></p>` : `<p style="font-size:11px;color:var(--text-muted);margin-top:8px">Sem vínculo — CRM abre com filtro "Todos"</p>`}
+      ${cfgUser ? `<p style="font-size:var(--fs-090);color:var(--green);margin-top:var(--space-2)"><i class="ic ic-sm" data-ic="check"></i> Perfil vinculado — CRM abre filtrado em <strong>${cfgUser.nome_vendedor}</strong></p>` : `<p style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-2)">Sem vínculo — CRM abre com filtro "Todos"</p>`}
     </div>
 
     <!-- Parâmetros CRM -->
     <div class="cfg-section">
-      <h3>⚙️ Parâmetros do CRM</h3>
+      <h3><i class="ic ic-sm" data-ic="settings"></i> Parâmetros do CRM</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
         ${[
           ['compra_saudavel_dias','Compra Ativo (dias)','Limite para status verde'],
@@ -103,82 +103,82 @@ async function renderConfig() {
             <input class="cfg-input" type="number" min="1" id="cfg-${k}" value="${CFG[k]}" />
           </div>`).join('')}
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:12px">
-        <button class="btn-sv" style="width:auto;padding:8px 20px" onclick="saveCfg()">Salvar Configurações</button>
+      <div style="display:flex;justify-content:flex-end;margin-top:var(--space-3)">
+        <button class="btn-sv" style="width:auto;padding:var(--space-2) var(--space-5)" onclick="saveCfg()">Salvar Configurações</button>
       </div>
     </div>
 
     <!-- Vínculos Umbler ↔ Vendedor -->
     <div class="cfg-section">
-      <h3>🔗 Atendentes Umbler → Vendedores ERP</h3>
-      <p style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Relaciona o ID do membro Umbler ao vendedor do ERP. O <strong>ID Membro</strong> é crítico — a Edge Function usa ele para resolver o atendente.</p>
+      <h3><i class="ic ic-sm" data-ic="external-link"></i> Atendentes Umbler → Vendedores ERP</h3>
+      <p style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-3)">Relaciona o ID do membro Umbler ao vendedor do ERP. O <strong>ID Membro</strong> é crítico — a Edge Function usa ele para resolver o atendente.</p>
 
       <!-- Vendedores SEM vínculo configurado — alerta -->
       ${(()=>{
         const vendSemVinc = S.vendedores.filter(v => !uvRows.some(r => r.id_vendedor_erp === v.id_vendedor));
         return vendSemVinc.length ? `
-          <div style="background:var(--orange-bg);border:1px solid rgba(224,123,0,.2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px">
-            <p style="font-size:11px;font-weight:700;color:var(--orange);margin-bottom:6px">⚠ Vendedores sem vínculo Umbler:</p>
+          <div style="background:var(--orange-bg);border:1px solid var(--warning-veil);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);margin-bottom:var(--space-3)">
+            <p style="font-size:var(--fs-090);font-weight:700;color:var(--orange);margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="alert-triangle"></i> Vendedores sem vínculo Umbler:</p>
             ${vendSemVinc.map(v=>`
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-                <span style="font-size:12px;color:var(--text-primary)">${v.nome_vendedor}</span>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-1)">
+                <span style="font-size:var(--fs-100);color:var(--text-primary)">${v.nome_vendedor}</span>
                 <button onclick="newUVforVend(${v.id_vendedor},'${esc(v.nome_vendedor)}')"
-                  style="font-size:11px;font-weight:600;padding:3px 10px;background:var(--blue-dark);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer">
+                  style="font-size:var(--fs-090);font-weight:600;padding:3px var(--space-2-5);background:var(--blue-dark);color:var(--neutral-0);border:none;border-radius:var(--radius-lg);cursor:pointer">
                   + Configurar
                 </button>
               </div>`).join('')}
           </div>` : '';
       })()}
 
-      <div id="uv-list" style="display:flex;flex-direction:column;gap:6px">
+      <div id="uv-list" style="display:flex;flex-direction:column;gap:var(--space-1-5)">
         ${uvRows.length ? uvRows.map(r=>`
-          <div class="uv-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="uv-row" style="flex-direction:column;align-items:flex-start;gap:var(--space-1-5)">
             <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
               <div>
                 <div class="uv-vname">${r.nome_vendedor_erp||'Vendedor #'+r.id_vendedor_erp}</div>
-                <div class="uv-umbler" style="display:flex;gap:10px;flex-wrap:wrap">
+                <div class="uv-umbler" style="display:flex;gap:var(--space-2-5);flex-wrap:wrap">
                   <span>Usuário: <strong>${r.usuario_umbler||'—'}</strong></span>
-                  ${r.id_membro_umbler?`<span style="font-family:'DM Mono',monospace;color:var(--text-muted)">ID: ${r.id_membro_umbler}</span>`:'<span style="color:var(--red);font-weight:600">⚠ ID Membro não configurado</span>'}
+                  ${r.id_membro_umbler?`<span style="font-family:var(--font-mono);color:var(--text-muted)">ID: ${r.id_membro_umbler}</span>`:'<span style="color:var(--red);font-weight:600"><i class="ic ic-sm" data-ic="alert-triangle"></i> ID Membro não configurado</span>'}
                   ${r.inbox_umbler?`<span style="color:var(--text-muted)">Inbox: ${r.inbox_umbler}</span>`:''}
                   <span style="${r.ativo?'color:var(--green)':'color:var(--text-muted)'}">${r.ativo?'● Ativo':'○ Inativo'}</span>
                 </div>
               </div>
               <div class="uv-acts">
-                <button class="btn-sm" onclick="editUV('${r.id}','${esc(r.usuario_umbler||'')}',${r.id_vendedor_erp||0},'${esc(r.id_membro_umbler||'')}','${esc(r.inbox_umbler||'')}',${r.ativo!==false})">✎ Editar</button>
-                <button class="btn-sm danger" onclick="delUV('${r.id}')">✕</button>
+                <button class="btn-sm" onclick="editUV('${r.id}','${esc(r.usuario_umbler||'')}',${r.id_vendedor_erp||0},'${esc(r.id_membro_umbler||'')}','${esc(r.inbox_umbler||'')}',${r.ativo!==false})"><i class="ic ic-sm" data-ic="pencil"></i> Editar</button>
+                <button class="btn-sm danger" onclick="delUV('${r.id}')"><i class="ic ic-sm" data-ic="x"></i></button>
               </div>
             </div>
           </div>`).join('')
-        : '<p style="color:var(--text-muted);font-size:12px;padding:8px 0">Nenhum vínculo cadastrado</p>'}
+        : '<p style="color:var(--text-muted);font-size:var(--fs-100);padding:var(--space-2) 0">Nenhum vínculo cadastrado</p>'}
       </div>
-      <button class="btn-sm" style="margin-top:10px;border-color:var(--blue-mid);color:var(--blue-mid)" onclick="newUV()">+ Novo Vínculo</button>
+      <button class="btn-sm" style="margin-top:var(--space-2-5);border-color:var(--blue-mid);color:var(--blue-mid)" onclick="newUV()">+ Novo Vínculo</button>
     </div>
 
     <!-- Contatos Umbler (todos, com/sem vínculo) -->
     <div class="cfg-section">
-      <h3>📲 Contatos Umbler Recentes</h3>
-      <p style="font-size:11px;color:#64748b;margin-bottom:10px">Todos os contatos recebidos. Verde = vinculado a um cliente. Vermelho = sem vínculo.</p>
-      <div style="display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto">
+      <h3><i class="ic ic-sm" data-ic="smartphone"></i> Contatos Umbler Recentes</h3>
+      <p style="font-size:var(--fs-090);color:var(--text-subtle);margin-bottom:var(--space-2-5)">Todos os contatos recebidos. Verde = vinculado a um cliente. Vermelho = sem vínculo.</p>
+      <div style="display:flex;flex-direction:column;gap:var(--space-1-5);max-height:400px;overflow-y:auto">
         ${(Array.isArray(allUmbl)?allUmbl:[]).map(c=>{
           const vinculado = telVincSet.has(c.telefone);
           const nomeCliente = telVincMap.get(c.telefone)||'';
-          return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);border-left:3px solid ${vinculado?'var(--green)':'var(--red)'}">
+          return `<div style="display:flex;align-items:center;gap:var(--space-2-5);padding:var(--space-2-5) var(--space-3);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);border-left:3px solid ${vinculado?'var(--green)':'var(--red)'}">
             <div style="flex:1;min-width:0">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
-                <span style="font-size:13px;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.nome_contato||'Sem nome'}</span>
-                ${vinculado?`<span class="tag-vinc">✓ ${nomeCliente.split(' ').slice(0,2).join(' ')}</span>`:'<span class="tag-semvinc">Sem vínculo</span>'}
+              <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-0-5)">
+                <span style="font-size:var(--fs-200);font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.nome_contato||'Sem nome'}</span>
+                ${vinculado?`<span class="tag-vinc"><i class="ic ic-sm" data-ic="check"></i> ${nomeCliente.split(' ').slice(0,2).join(' ')}</span>`:'<span class="tag-semvinc">Sem vínculo</span>'}
               </div>
-              <div style="display:flex;gap:10px;font-size:11px;color:var(--text-muted);flex-wrap:wrap">
-                <span style="font-family:'DM Mono',monospace">${fmtP(c.telefone)}</span>
+              <div style="display:flex;gap:var(--space-2-5);font-size:var(--fs-090);color:var(--text-muted);flex-wrap:wrap">
+                <span style="font-family:var(--font-mono)">${fmtP(c.telefone)}</span>
                 ${c.nome_atendente?`<span>${c.nome_atendente}</span>`:''}
                 <span>${fmtDT(c.ultimo_contato)}</span>
               </div>
             </div>
             ${!vinculado?`
-              <div style="display:flex;gap:4px;flex-shrink:0">
-                <button class="btn-sm" onclick="abrirVinc('${esc(c.telefone)}','${esc(c.nome_contato||'')}','${esc(c.nome_atendente||'')}')">🔗 Vincular</button>
-                <button class="btn-sm" style="color:var(--blue-mid)" onclick="abrirNovoContato('${esc(c.telefone)}','${esc(c.nome_contato||'')}','${esc(c.nome_atendente||'')}')">👤 Criar</button>
-                <button class="btn-sm danger" onclick="naoComercialConfig('${esc(c.telefone)}')">✕ NC</button>
+              <div style="display:flex;gap:var(--space-1);flex-shrink:0">
+                <button class="btn-sm" onclick="abrirVinc('${esc(c.telefone)}','${esc(c.nome_contato||'')}','${esc(c.nome_atendente||'')}')"><i class="ic ic-sm" data-ic="external-link"></i> Vincular</button>
+                <button class="btn-sm" style="color:var(--blue-mid)" onclick="abrirNovoContato('${esc(c.telefone)}','${esc(c.nome_contato||'')}','${esc(c.nome_atendente||'')}')"><i class="ic ic-sm" data-ic="user"></i> Criar</button>
+                <button class="btn-sm danger" onclick="naoComercialConfig('${esc(c.telefone)}')"><i class="ic ic-sm" data-ic="x"></i> NC</button>
               </div>`:''}
           </div>`;
         }).join('')||'<p class="empty-msg">Sem contatos recentes</p>'}
@@ -187,12 +187,12 @@ async function renderConfig() {
 
     <!-- Integrações -->
     <div class="cfg-section">
-      <h3>🔌 Integrações</h3>
-      <div style="display:flex;flex-direction:column;gap:8px">
+      <h3><i class="ic ic-sm" data-ic="zap"></i> Integrações</h3>
+      <div style="display:flex;flex-direction:column;gap:var(--space-2)">
         ${[['Umbler Talk (WhatsApp)','Edge Function UMBLERATC'],['ERP Firebird → Supabase','Sync automático']].map(([n,d])=>`
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#0f172a;border:1px solid #334155;border-radius:8px">
-            <div><p style="font-size:13px;font-weight:600;color:#e2e8f0">${n}</p><p style="font-size:11px;color:#64748b">${d}</p></div>
-            <span style="font-size:10px;background:#05200e;color:#4ade80;border:1px solid #166534;border-radius:999px;padding:2px 8px">Ativo</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-2-5);background:var(--neutral-900);border:1px solid var(--neutral-700);border-radius:var(--radius-lg)">
+            <div><p style="font-size:var(--fs-200);font-weight:600;color:var(--border-default)">${n}</p><p style="font-size:var(--fs-090);color:var(--text-subtle)">${d}</p></div>
+            <span style="font-size:var(--fs-075);background:var(--success-700);color:var(--success-500);border:1px solid var(--success-700);border-radius:var(--radius-pill);padding:var(--space-0-5) var(--space-2)">Ativo</span>
           </div>`).join('')}
       </div>
     </div>
@@ -201,25 +201,25 @@ async function renderConfig() {
 
     <!-- Painel Log -->
     <div id="cfg-painel-log" style="display:none">
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3);flex-wrap:wrap;align-items:center">
         <input id="log-filtro" placeholder="Buscar por ação, cliente, vendedor, erro..." 
-          style="flex:1;min-width:200px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px"
+          style="flex:1;min-width:200px;padding:var(--space-2) var(--space-3);border:1.5px solid var(--border);border-radius:var(--radius-lg);font-size:var(--fs-100)"
           oninput="renderLogAcoes(this.value, document.getElementById('log-nivel')?.value)">
         <select id="log-nivel" 
-          style="padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px"
+          style="padding:var(--space-2) var(--space-3);border:1.5px solid var(--border);border-radius:var(--radius-lg);font-size:var(--fs-100)"
           onchange="renderLogAcoes(document.getElementById('log-filtro')?.value, this.value)">
           <option value="">Todos os níveis</option>
-          <option value="INFO">✅ INFO</option>
-          <option value="WARN">⚠️ WARN</option>
-          <option value="ERROR">❌ ERROR</option>
+          <option value="INFO">INFO</option>
+          <option value="WARN">WARN</option>
+          <option value="ERROR">ERROR</option>
         </select>
         <button onclick="renderLogAcoes(document.getElementById('log-filtro')?.value, document.getElementById('log-nivel')?.value)"
-          style="padding:8px 16px;background:var(--blue-dark);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer">
-          🔄 Atualizar
+          style="padding:var(--space-2) var(--space-4);background:var(--blue-dark);color:var(--neutral-0);border:none;border-radius:var(--radius-lg);font-size:var(--fs-100);font-weight:600;cursor:pointer">
+          <i class="ic ic-sm" data-ic="refresh-cw"></i> Atualizar
         </button>
       </div>
-      <div id="log-painel" style="margin-bottom:16px"></div>
-      <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:6px">Registros brutos</div>
+      <div id="log-painel" style="margin-bottom:var(--space-4)"></div>
+      <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:var(--space-1-5)">Registros brutos</div>
       <div id="log-body" style="max-height:600px;overflow-y:auto">
         <div class="empty-msg">Clique em Atualizar para carregar os logs</div>
       </div>
@@ -277,7 +277,7 @@ async function salvarCfgUsuario(email) {
     'email');
   const f = document.getElementById('f-vend');
   if (f) { f.value = String(idVend); onVendChange(String(idVend)); }
-  toast('✅ Perfil salvo — CRM filtrado em ' + nomeVend);
+  toast('<i class="ic ic-sm" data-ic="check-circle"></i> Perfil salvo — CRM filtrado em ' + nomeVend);
   renderConfig();
 }
 
@@ -376,33 +376,33 @@ async function renderLogAcoes(filtro='', nivel='') {
     return;
   }
 
-  const corNivel = { INFO:'#0077CC', WARN:'#e07b00', ERROR:'#dc2626' };
-  const bgNivel  = { INFO:'#eff6ff', WARN:'#fff7ed', ERROR:'#fef2f2' };
+  const corNivel = { INFO:'var(--blue-500)', WARN:'var(--warning-600)', ERROR:'var(--danger-600)' };
+  const bgNivel  = { INFO:'var(--blue-50)', WARN:'var(--warning-50)', ERROR:'var(--danger-50)' };
 
   el.innerHTML = data.map(r => {
     let det = '';
     if (r.detalhe) {
       try {
         const d = typeof r.detalhe === 'string' ? JSON.parse(r.detalhe) : r.detalhe;
-        det = Object.entries(d).map(([k,v])=>`<span style="color:#64748b">${k}:</span> <strong>${v}</strong>`).join(' · ');
+        det = Object.entries(d).map(([k,v])=>`<span style="color:var(--text-subtle)">${k}:</span> <strong>${v}</strong>`).join(' · ');
       } catch(_) { det = String(r.detalhe); }
     }
     const dt = r.criado_em ? new Date(r.criado_em).toLocaleString('pt-BR') : '';
-    return `<div style="border:1px solid var(--border);border-left:4px solid ${corNivel[r.nivel]||'#94a3b8'};border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:6px;background:${bgNivel[r.nivel]||'#fff'}">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:10px;font-weight:700;color:${corNivel[r.nivel]||'#64748b'};background:${bgNivel[r.nivel]};border:1px solid ${corNivel[r.nivel]||'#e2e8f0'};border-radius:4px;padding:1px 7px">${r.nivel||'INFO'}</span>
-          <span style="font-size:12px;font-weight:700;color:var(--text-primary);font-family:'DM Mono',monospace">${r.acao||''}</span>
+    return `<div style="border:1px solid var(--border);border-left:4px solid ${corNivel[r.nivel]||'var(--neutral-400)'};border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);margin-bottom:var(--space-1-5);background:${bgNivel[r.nivel]||'var(--neutral-0)'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-1)">
+        <div style="display:flex;align-items:center;gap:var(--space-2)">
+          <span style="font-size:var(--fs-075);font-weight:700;color:${corNivel[r.nivel]||'var(--text-subtle)'};background:${bgNivel[r.nivel]};border:1px solid ${corNivel[r.nivel]||'var(--border-default)'};border-radius:var(--radius-sm);padding:1px 7px">${r.nivel||'INFO'}</span>
+          <span style="font-size:var(--fs-100);font-weight:700;color:var(--text-primary);font-family:var(--font-mono)">${r.acao||''}</span>
         </div>
-        <span style="font-size:10px;color:var(--text-muted)">${dt}</span>
+        <span style="font-size:var(--fs-075);color:var(--text-muted)">${dt}</span>
       </div>
-      <div style="font-size:11px;color:var(--text-secondary);display:flex;gap:12px;flex-wrap:wrap">
-        ${r.nome_cliente ? `<span>👤 ${r.nome_cliente}${r.id_cliente?' #'+r.id_cliente:''}</span>` : ''}
-        ${r.nome_vendedor ? `<span>🧑‍💼 ${r.nome_vendedor}</span>` : ''}
-        ${r.email_usuario ? `<span>✉ ${r.email_usuario}</span>` : ''}
+      <div style="font-size:var(--fs-090);color:var(--text-secondary);display:flex;gap:var(--space-3);flex-wrap:wrap">
+        ${r.nome_cliente ? `<span><i class="ic ic-sm" data-ic="user"></i> ${r.nome_cliente}${r.id_cliente?' #'+r.id_cliente:''}</span>` : ''}
+        ${r.nome_vendedor ? `<span><i class="ic ic-sm" data-ic="user"></i>‍<i class="ic ic-sm" data-ic="briefcase"></i> ${r.nome_vendedor}</span>` : ''}
+        ${r.email_usuario ? `<span><i class="ic ic-sm" data-ic="mail"></i> ${r.email_usuario}</span>` : ''}
       </div>
-      ${det ? `<div style="font-size:11px;margin-top:4px;color:var(--text-secondary)">${det}</div>` : ''}
-      ${r.erro ? `<div style="font-size:11px;margin-top:4px;color:#dc2626;font-family:'DM Mono',monospace;word-break:break-all">⚠ ${r.erro}</div>` : ''}
+      ${det ? `<div style="font-size:var(--fs-090);margin-top:var(--space-1);color:var(--text-secondary)">${det}</div>` : ''}
+      ${r.erro ? `<div style="font-size:var(--fs-090);margin-top:var(--space-1);color:var(--danger-600);font-family:var(--font-mono);word-break:break-all"><i class="ic ic-sm" data-ic="alert-triangle"></i> ${r.erro}</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -422,13 +422,13 @@ async function renderLogPainel() {
   try {
     rows = await sbQ('atac_log_painel', 'select=*&order=ultima_em.desc&limit=9999');
   } catch(e) {
-    el.innerHTML = `<div style="background:var(--red-bg);border:1px solid var(--red);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--red)">Falha ao carregar o painel de erros: ${e?.message||e}</div>`;
+    el.innerHTML = `<div style="background:var(--red-bg);border:1px solid var(--red);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);font-size:var(--fs-100);color:var(--red)">Falha ao carregar o painel de erros: ${e?.message||e}</div>`;
     return;
   }
   const data = Array.isArray(rows) ? rows : [];
 
   if (!data.length) {
-    el.innerHTML = '<div class="empty-msg">🎉 Nenhum erro registrado</div>';
+    el.innerHTML = '<div class="empty-msg"><i class="ic ic-sm" data-ic="check-circle"></i> Nenhum erro registrado</div>';
     return;
   }
 
@@ -436,19 +436,19 @@ async function renderLogPainel() {
   data.sort((a,b) => (ordem[a.status]??9) - (ordem[b.status]??9) || (b.ocorrencias||0) - (a.ocorrencias||0));
 
   const badge = {
-    ABERTO:    { txt:'🔴 Aberto',     cor:'var(--red)',    bg:'var(--red-bg)'    },
-    REGRESSAO: { txt:'🔁 Regressão',  cor:'var(--orange)', bg:'var(--orange-bg)' },
-    RESOLVIDO: { txt:'✅ Resolvido',  cor:'var(--green)',  bg:'var(--green-bg)'  },
+    ABERTO:    { txt:'<i class="ic ic-sm" data-ic="circle"></i> Aberto',     cor:'var(--red)',    bg:'var(--red-bg)'    },
+    REGRESSAO: { txt:'<i class="ic ic-sm" data-ic="refresh-cw"></i> Regressão',  cor:'var(--orange)', bg:'var(--orange-bg)' },
+    RESOLVIDO: { txt:'<i class="ic ic-sm" data-ic="check-circle"></i> Resolvido',  cor:'var(--green)',  bg:'var(--green-bg)'  },
   };
 
   const nAbertos = data.filter(r => r.status !== 'RESOLVIDO').length;
 
   el.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+    <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1-5)">
       <span style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted)">Erros agrupados</span>
-      ${nAbertos>0 ? `<span style="font-size:10px;font-weight:700;color:var(--red);background:var(--red-bg);border-radius:20px;padding:1px 8px">${nAbertos} em aberto</span>` : ''}
+      ${nAbertos>0 ? `<span style="font-size:var(--fs-075);font-weight:700;color:var(--red);background:var(--red-bg);border-radius:var(--radius-pill);padding:1px var(--space-2)">${nAbertos} em aberto</span>` : ''}
     </div>
-    <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface)">
+    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface)">
     <table class="data-table">
       <thead><tr>
         <th>Erro</th><th class="r">Ocorr.</th><th class="r">Usuários</th><th>Último</th><th>Status</th><th></th>
@@ -459,23 +459,23 @@ async function renderLogPainel() {
         const dt = r.ultima_em ? new Date(r.ultima_em).toLocaleString('pt-BR') : '';
         const sig = encodeURIComponent(JSON.stringify({ acao: r.acao||'', erro: r.erro||'' }));
         const reg = r.status === 'REGRESSAO'
-          ? `<div style="font-size:10px;color:var(--orange);margin-top:2px">⚠ ${r.ocorrencias_apos_fix||0} ocorrência(s) depois do fix de ${new Date(r.resolvido_em).toLocaleDateString('pt-BR')}</div>` : '';
+          ? `<div style="font-size:var(--fs-075);color:var(--orange);margin-top:var(--space-0-5)"><i class="ic ic-sm" data-ic="alert-triangle"></i> ${r.ocorrencias_apos_fix||0} ocorrência(s) depois do fix de ${new Date(r.resolvido_em).toLocaleDateString('pt-BR')}</div>` : '';
         const res = (r.status === 'RESOLVIDO' && r.resolvido_em)
-          ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px">${new Date(r.resolvido_em).toLocaleDateString('pt-BR')}${r.resolvido_por ? ' — '+r.resolvido_por : ''}${r.observacao ? ' · '+r.observacao : ''}</div>` : '';
+          ? `<div style="font-size:var(--fs-075);color:var(--text-muted);margin-top:var(--space-0-5)">${new Date(r.resolvido_em).toLocaleDateString('pt-BR')}${r.resolvido_por ? ' — '+r.resolvido_por : ''}${r.observacao ? ' · '+r.observacao : ''}</div>` : '';
         return `<tr style="cursor:default">
           <td>
-            <div style="font-size:11.5px;font-weight:700;color:var(--text-primary);font-family:'DM Mono',monospace">${r.acao||''}</div>
-            <div style="font-size:11px;color:var(--text-secondary);word-break:break-word;max-width:520px">${r.erro||'—'}</div>
+            <div style="font-size:11.5px;font-weight:700;color:var(--text-primary);font-family:var(--font-mono)">${r.acao||''}</div>
+            <div style="font-size:var(--fs-090);color:var(--text-secondary);word-break:break-word;max-width:520px">${r.erro||'—'}</div>
             ${reg}${res}
           </td>
           <td class="r mono" style="font-weight:700">${r.ocorrencias||0}</td>
           <td class="r mono">${r.usuarios||0}</td>
-          <td style="font-size:11px;color:var(--text-secondary);white-space:nowrap">${dt}</td>
-          <td><span style="font-size:10px;font-weight:700;white-space:nowrap;background:${b.bg};color:${b.cor};border-radius:4px;padding:2px 8px">${b.txt}</span></td>
+          <td style="font-size:var(--fs-090);color:var(--text-secondary);white-space:nowrap">${dt}</td>
+          <td><span style="font-size:var(--fs-075);font-weight:700;white-space:nowrap;background:${b.bg};color:${b.cor};border-radius:var(--radius-sm);padding:var(--space-0-5) var(--space-2)">${b.txt}</span></td>
           <td class="r" style="white-space:nowrap">
             ${r.status === 'RESOLVIDO'
-              ? `<button onclick="reabrirErro('${sig}')" style="font-size:10.5px;font-weight:600;color:var(--text-secondary);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 10px;cursor:pointer">↺ Reabrir</button>`
-              : `<button onclick="abrirResolverErro('${sig}')" style="font-size:10.5px;font-weight:600;color:#fff;background:var(--green);border:none;border-radius:var(--radius-sm);padding:4px 10px;cursor:pointer">✓ Resolver</button>`}
+              ? `<button onclick="reabrirErro('${sig}')" style="font-size:10.5px;font-weight:600;color:var(--text-secondary);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-1) var(--space-2-5);cursor:pointer">↺ Reabrir</button>`
+              : `<button onclick="abrirResolverErro('${sig}')" style="font-size:10.5px;font-weight:600;color:var(--neutral-0);background:var(--green);border:none;border-radius:var(--radius-lg);padding:var(--space-1) var(--space-2-5);cursor:pointer"><i class="ic ic-sm" data-ic="check"></i> Resolver</button>`}
           </td>
         </tr>`;
       }).join('')}
@@ -517,11 +517,11 @@ async function confirmarResolverErro() {
       observacao:    obs,
     }, 'acao,erro');
     await logAcao('RESOLVER_ERRO_LOG', { detalhe: { acao: _errAtual.acao, erro: _errAtual.erro, observacao: obs } });
-    toast('✅ Erro marcado como resolvido');
+    toast('<i class="ic ic-sm" data-ic="check-circle"></i> Erro marcado como resolvido');
     fecharResolverErro();
     renderLogPainel();
   } catch(e) {
-    toast('❌ Falha ao resolver: ' + (e?.message || e), 'err');
+    toast('<i class="ic ic-sm" data-ic="alert-circle"></i> Falha ao resolver: ' + (e?.message || e), 'err');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Marcar como resolvido'; }
   }
@@ -539,7 +539,7 @@ async function reabrirErro(sig) {
     toast('↺ Erro reaberto');
     renderLogPainel();
   } catch(e) {
-    toast('❌ Falha ao reabrir: ' + (e?.message || e), 'err');
+    toast('<i class="ic ic-sm" data-ic="alert-circle"></i> Falha ao reabrir: ' + (e?.message || e), 'err');
   }
 }
 
@@ -558,7 +558,7 @@ async function renderVendedoresConfig() {
   try {
     lista = await sbQ('atac_vendedores_painel', 'select=*');
   } catch(e) {
-    el.innerHTML = `<div style="background:var(--red-bg);border:1px solid var(--red);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--red)">Falha ao carregar: ${e?.message||e}</div>`;
+    el.innerHTML = `<div style="background:var(--red-bg);border:1px solid var(--red);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);font-size:var(--fs-100);color:var(--red)">Falha ao carregar: ${e?.message||e}</div>`;
     return;
   }
   lista = Array.isArray(lista) ? lista : [];
@@ -575,25 +575,25 @@ async function renderVendedoresConfig() {
     const fora = !u.no_filtro_atacado;
     return `<tr>
       <td>
-        <div style="font-weight:700;font-size:12px;color:var(--text-primary)">${escH(u.nome_vendedor||'—')}</div>
-        <div style="font-size:10px;color:var(--text-muted);font-family:'DM Mono',monospace">ID ${u.id_vendedor_erp}</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">
-          ${escH(u.departamento||'—')}${fora?' <span style="color:var(--warning);font-weight:600">· fora do atacado</span>':''}
+        <div style="font-weight:700;font-size:var(--fs-100);color:var(--text-primary)">${escH(u.nome_vendedor||'—')}</div>
+        <div style="font-size:var(--fs-075);color:var(--text-muted);font-family:var(--font-mono)">ID ${u.id_vendedor_erp}</div>
+        <div style="font-size:var(--fs-075);color:var(--text-muted);margin-top:var(--space-0-5)">
+          ${escH(u.departamento||'—')}${fora?' <span style="color:var(--warning-600);font-weight:600">· fora do atacado</span>':''}
         </div>
       </td>
-      <td style="font-size:11px;color:${semLogin?'var(--text-muted)':'var(--text-secondary)'}">${semLogin?'— sem login —':escH(u.email)}</td>
+      <td style="font-size:var(--fs-090);color:${semLogin?'var(--text-muted)':'var(--text-secondary)'}">${semLogin?'— sem login —':escH(u.email)}</td>
       <td class="r mono" style="font-weight:700">
-        ${n}${!u.ativo && n>0 ? '<div style="font-size:9px;font-weight:600;color:var(--warning);white-space:nowrap">no balcão</div>' : ''}
+        ${n}${!u.ativo && n>0 ? '<div style="font-size:9px;font-weight:600;color:var(--warning-600);white-space:nowrap">no balcão</div>' : ''}
       </td>
-      <td class="r mono cfg-vend-erp" style="font-size:11px;white-space:nowrap">${u.clientes_erp||0}</td>
-      <td class="r mono cfg-vend-erp" style="font-size:11px;white-space:nowrap">${money(u.faturamento_erp)}</td>
-      <td class="r mono cfg-vend-erp" style="font-size:11px;white-space:nowrap">${dt(u.ultima_venda_erp)}</td>
+      <td class="r mono cfg-vend-erp" style="font-size:var(--fs-090);white-space:nowrap">${u.clientes_erp||0}</td>
+      <td class="r mono cfg-vend-erp" style="font-size:var(--fs-090);white-space:nowrap">${money(u.faturamento_erp)}</td>
+      <td class="r mono cfg-vend-erp" style="font-size:var(--fs-090);white-space:nowrap">${dt(u.ultima_venda_erp)}</td>
       <td>${u.ativo
-        ? '<span style="font-size:10px;font-weight:700;background:var(--green-bg);color:var(--green);border-radius:4px;padding:2px 8px;white-space:nowrap">✅ Ativo</span>'
-        : '<span style="font-size:10px;font-weight:700;background:var(--surface2);color:var(--text-muted);border-radius:4px;padding:2px 8px;white-space:nowrap">⛔ Inativo</span>'}</td>
+        ? '<span style="font-size:var(--fs-075);font-weight:700;background:var(--green-bg);color:var(--green);border-radius:var(--radius-sm);padding:var(--space-0-5) var(--space-2);white-space:nowrap"><i class="ic ic-sm" data-ic="check-circle"></i> Ativo</span>'
+        : '<span style="font-size:var(--fs-075);font-weight:700;background:var(--surface2);color:var(--text-muted);border-radius:var(--radius-sm);padding:var(--space-0-5) var(--space-2);white-space:nowrap"><i class="ic ic-sm" data-ic="ban"></i> Inativo</span>'}</td>
       <td class="r cfg-vend-acao">
         <button onclick="abrirToggleVendedor(${u.id_vendedor_erp})"
-          style="font-size:10.5px;font-weight:600;padding:5px 12px;border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap;border:1px solid ${u.ativo?'var(--red)':'var(--green)'};background:var(--surface);color:${u.ativo?'var(--red)':'var(--green)'}">
+          style="font-size:10.5px;font-weight:600;padding:5px var(--space-3);border-radius:var(--radius-lg);cursor:pointer;white-space:nowrap;border:1px solid ${u.ativo?'var(--red)':'var(--green)'};background:var(--surface);color:${u.ativo?'var(--red)':'var(--green)'}">
           ${u.ativo ? 'Inativar' : 'Reativar'}
         </button>
       </td>
@@ -604,12 +604,12 @@ async function renderVendedoresConfig() {
 
   el.innerHTML = `
     <style>
-      .cfg-vend-acao{position:sticky;right:0;background:var(--surface);box-shadow:-6px 0 8px -6px rgba(0,0,0,.18);z-index:2}
+      .cfg-vend-acao{position:sticky;right:0;background:var(--surface);box-shadow:var(--shadow-col-sticky);z-index:2}
       thead .cfg-vend-acao{background:var(--surface2)}
-      .data-table tr:hover .cfg-vend-acao{background:#F8FAFC}
+      .data-table tr:hover .cfg-vend-acao{background:var(--surface-subtle)}
       @media(max-width:900px){ .cfg-vend-erp{display:none} }
     </style>
-    <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow-x:auto;background:var(--surface);margin-bottom:14px">
+    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow-x:auto;background:var(--surface);margin-bottom:var(--space-3-5)">
       <table class="data-table">
         <thead><tr>
           <th>Vendedor</th><th>Login</th><th class="r">Carteira</th>
@@ -623,31 +623,31 @@ async function renderVendedoresConfig() {
       </table>
     </div>
 
-    <p style="font-size:10.5px;color:var(--text-muted);margin-bottom:12px">
+    <p style="font-size:10.5px;color:var(--text-muted);margin-bottom:var(--space-3)">
       A lista mostra todo mundo do <strong>DISTRIBUIDOR</strong> e <strong>DISTRIBUIÇÃO REPRESENTANTES</strong>,
       mais qualquer um que tenha cliente na carteira do CRM — mesmo de outro setor.
       <strong>Carteira</strong> é o CRM; <strong>Clientes ERP</strong> e <strong>Faturamento</strong> vêm do ERP (distribuição).
     </p>
 
     ${semLoginLista.length ? `
-    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+    <div style="display:flex;gap:var(--space-2);align-items:flex-end;flex-wrap:wrap">
       <div style="flex:1;min-width:220px">
-        <label style="font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Cadastrar login</label>
+        <label style="font-size:var(--fs-090);font-weight:600;color:var(--text-secondary);display:block;margin-bottom:var(--space-1)">Cadastrar login</label>
         <select id="cfg-add-vend" class="cfg-input" style="width:100%">
           <option value="">Selecione...</option>
           ${semLoginLista.map(v=>`<option value="${v.id_vendedor_erp}">${escH(v.nome_vendedor)}</option>`).join('')}
         </select>
       </div>
       <div style="flex:1;min-width:200px">
-        <label style="font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Login (e-mail)</label>
+        <label style="font-size:var(--fs-090);font-weight:600;color:var(--text-secondary);display:block;margin-bottom:var(--space-1)">Login (e-mail)</label>
         <input id="cfg-add-email" class="cfg-input" style="width:100%" placeholder="vendedor@stonni.com.br">
       </div>
       <button onclick="addVendedorConfig()"
-        style="padding:8px 14px;background:var(--blue-dark);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer">
+        style="padding:var(--space-2) var(--space-3-5);background:var(--blue-dark);color:var(--neutral-0);border:none;border-radius:var(--radius-lg);font-size:var(--fs-100);font-weight:600;cursor:pointer">
         Salvar login
       </button>
     </div>
-    <p style="font-size:10.5px;color:var(--text-muted);margin-top:8px">
+    <p style="font-size:10.5px;color:var(--text-muted);margin-top:var(--space-2)">
       Sem login o vendedor não consegue usar o filtro "meus clientes". Representante não precisa de login para ser inativado.
     </p>` : ''}`;
 }
@@ -656,13 +656,13 @@ async function renderVendedoresConfig() {
 function confirmarModal({titulo, corpo, okTexto, okCor}) {
   return new Promise(res => {
     const div = document.createElement('div');
-    div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
-    div.innerHTML = `<div style="background:var(--surface);border-radius:var(--radius);padding:22px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.3)">
-      <h3 style="font-size:15px;font-weight:700;color:var(--text-primary);margin:0 0 10px">${titulo}</h3>
-      <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.55;margin-bottom:18px">${corpo}</div>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button id="_cm_n" style="padding:8px 18px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--text-secondary);font-size:12px;font-weight:600;cursor:pointer">Cancelar</button>
-        <button id="_cm_s" style="padding:8px 18px;border-radius:var(--radius-sm);border:none;background:${okCor||'var(--blue-dark)'};color:#fff;font-size:12px;font-weight:600;cursor:pointer">${okTexto||'Confirmar'}</button>
+    div.style.cssText = 'position:fixed;inset:0;background:var(--surface-overlay);z-index:9999;display:flex;align-items:center;justify-content:center;padding:var(--space-4)';
+    div.innerHTML = `<div style="background:var(--surface);border-radius:var(--radius);padding:22px;max-width:420px;width:100%;box-shadow:0 10px 40px var(--surface-overlay)">
+      <h3 style="font-size:var(--fs-400);font-weight:700;color:var(--text-primary);margin:0 0 var(--space-2-5)">${titulo}</h3>
+      <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.55;margin-bottom:var(--space-4-5)">${corpo}</div>
+      <div style="display:flex;gap:var(--space-2);justify-content:flex-end">
+        <button id="_cm_n" style="padding:var(--space-2) var(--space-4-5);border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--surface2);color:var(--text-secondary);font-size:var(--fs-100);font-weight:600;cursor:pointer">Cancelar</button>
+        <button id="_cm_s" style="padding:var(--space-2) var(--space-4-5);border-radius:var(--radius-lg);border:none;background:${okCor||'var(--blue-dark)'};color:var(--neutral-0);font-size:var(--fs-100);font-weight:600;cursor:pointer">${okTexto||'Confirmar'}</button>
       </div></div>`;
     document.body.appendChild(div);
     const fim = v => { div.remove(); res(v); };
@@ -680,7 +680,7 @@ async function abrirToggleVendedor(idErp) {
 
   const corpo = ativar
     ? `Os <strong>${n}</strong> cliente(s) que ainda estão vinculados a <strong>${escH(u.nome_vendedor)}</strong> voltam para a carteira dele e saem da Prospecção.`
-    : `<div style="background:var(--warning-bg,#FEF5E7);border-left:3px solid var(--warning);padding:9px 11px;border-radius:4px;margin-bottom:12px">
+    : `<div style="background:var(--warning-50);border-left:3px solid var(--warning-600);padding:9px 11px;border-radius:var(--radius-sm);margin-bottom:var(--space-3)">
          Os <strong>${n}</strong> cliente(s) da carteira de <strong>${escH(u.nome_vendedor)}</strong> caem na
          <strong>Prospecção</strong> na hora, para qualquer vendedor assumir.
        </div>
@@ -711,11 +711,11 @@ async function abrirToggleVendedor(idErp) {
       nome_vendedor: u.nome_vendedor,
       detalhe: { clientes_na_carteira: n, era_cadastrado: !!u.cadastrado, departamento: u.departamento }
     });
-    toast(ativar ? `✅ ${sN(u.nome_vendedor)} reativado` : `⛔ ${sN(u.nome_vendedor)} inativado — ${n} cliente(s) no balcão`);
+    toast(ativar ? `<i class="ic ic-sm" data-ic="check-circle"></i> ${sN(u.nome_vendedor)} reativado` : `<i class="ic ic-sm" data-ic="ban"></i> ${sN(u.nome_vendedor)} inativado — ${n} cliente(s) no balcão`);
     await renderVendedoresConfig();
     Promise.all([loadCarteira(), loadProspeccao()]).then(()=>renderLista()).catch(()=>{});
   } catch(e) {
-    toast('❌ Falha: ' + (e?.message || e), 'err');
+    toast('<i class="ic ic-sm" data-ic="alert-circle"></i> Falha: ' + (e?.message || e), 'err');
   }
 }
 
@@ -736,9 +736,9 @@ async function addVendedorConfig() {
       atualizado_em: new Date().toISOString()
     }, 'email');
     await logAcao('ADICIONAR_VENDEDOR', { id_vendedor: idVend, nome_vendedor: nome, detalhe: { email } });
-    toast(`✅ Login de ${sN(nome)} cadastrado`);
+    toast(`<i class="ic ic-sm" data-ic="check-circle"></i> Login de ${sN(nome)} cadastrado`);
     await renderVendedoresConfig();
   } catch(e) {
-    toast('❌ Falha ao adicionar: ' + (e?.message || e), 'err');
+    toast('<i class="ic ic-sm" data-ic="alert-circle"></i> Falha ao adicionar: ' + (e?.message || e), 'err');
   }
 }

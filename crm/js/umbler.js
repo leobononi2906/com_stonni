@@ -2,13 +2,13 @@
 async function naoComercial(tel){
   const motivo = await new Promise(res => {
     const d = document.createElement('div');
-    d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
-    d.innerHTML = `<div style='background:#fff;border-radius:12px;padding:24px;max-width:320px;width:90%'>
-      <p style='margin-bottom:12px;font-size:14px;font-weight:600'>Marcar como não comercial</p>
-      <input id='_nc_m' placeholder='Motivo obrigatório' style='width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:12px'>
-      <div style='display:flex;gap:8px;justify-content:flex-end'>
-        <button id='_nc_n' style='padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;cursor:pointer'>Cancelar</button>
-        <button id='_nc_s' style='padding:8px 16px;border-radius:8px;border:none;background:#0077CC;color:#fff;cursor:pointer'>Confirmar</button>
+    d.style.cssText = 'position:fixed;inset:0;background:var(--surface-overlay);z-index:9999;display:flex;align-items:center;justify-content:center';
+    d.innerHTML = `<div style='background:var(--neutral-0);border-radius:var(--radius-xl);padding:var(--space-6);max-width:320px;width:90%'>
+      <p style='margin-bottom:var(--space-3);font-size:var(--fs-300);font-weight:600'>Marcar como não comercial</p>
+      <input id='_nc_m' placeholder='Motivo obrigatório' style='width:100%;padding:var(--space-2);border:1px solid var(--border-default);border-radius:var(--radius-lg);font-size:var(--fs-200);box-sizing:border-box;margin-bottom:var(--space-3)'>
+      <div style='display:flex;gap:var(--space-2);justify-content:flex-end'>
+        <button id='_nc_n' style='padding:var(--space-2) var(--space-4);border-radius:var(--radius-lg);border:1px solid var(--border-default);background:var(--surface-subtle);cursor:pointer'>Cancelar</button>
+        <button id='_nc_s' style='padding:var(--space-2) var(--space-4);border-radius:var(--radius-lg);border:none;background:var(--blue-500);color:var(--neutral-0);cursor:pointer'>Confirmar</button>
       </div></div>`;
     document.body.appendChild(d);
     d.querySelector('#_nc_s').onclick = () => { const v=d.querySelector('#_nc_m').value.trim(); if(!v){toast('Motivo obrigatório','err');return;} d.remove(); res(v); };
@@ -22,13 +22,13 @@ async function naoComercial(tel){
 async function naoComercialConfig(tel){
   const motivo = await new Promise(res => {
     const d = document.createElement('div');
-    d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
-    d.innerHTML = `<div style='background:#fff;border-radius:12px;padding:24px;max-width:320px;width:90%'>
-      <p style='margin-bottom:12px;font-size:14px;font-weight:600'>Marcar como não comercial</p>
-      <input id='_ncC_m' placeholder='Motivo obrigatório' style='width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:12px'>
-      <div style='display:flex;gap:8px;justify-content:flex-end'>
-        <button id='_ncC_n' style='padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;cursor:pointer'>Cancelar</button>
-        <button id='_ncC_s' style='padding:8px 16px;border-radius:8px;border:none;background:#0077CC;color:#fff;cursor:pointer'>Confirmar</button>
+    d.style.cssText = 'position:fixed;inset:0;background:var(--surface-overlay);z-index:9999;display:flex;align-items:center;justify-content:center';
+    d.innerHTML = `<div style='background:var(--neutral-0);border-radius:var(--radius-xl);padding:var(--space-6);max-width:320px;width:90%'>
+      <p style='margin-bottom:var(--space-3);font-size:var(--fs-300);font-weight:600'>Marcar como não comercial</p>
+      <input id='_ncC_m' placeholder='Motivo obrigatório' style='width:100%;padding:var(--space-2);border:1px solid var(--border-default);border-radius:var(--radius-lg);font-size:var(--fs-200);box-sizing:border-box;margin-bottom:var(--space-3)'>
+      <div style='display:flex;gap:var(--space-2);justify-content:flex-end'>
+        <button id='_ncC_n' style='padding:var(--space-2) var(--space-4);border-radius:var(--radius-lg);border:1px solid var(--border-default);background:var(--surface-subtle);cursor:pointer'>Cancelar</button>
+        <button id='_ncC_s' style='padding:var(--space-2) var(--space-4);border-radius:var(--radius-lg);border:none;background:var(--blue-500);color:var(--neutral-0);cursor:pointer'>Confirmar</button>
       </div></div>`;
     document.body.appendChild(d);
     d.querySelector('#_ncC_s').onclick = () => { const v=d.querySelector('#_ncC_m').value.trim(); if(!v){toast('Motivo obrigatório','err');return;} d.remove(); res(v); };
@@ -69,15 +69,15 @@ async function abrirVincComSugestao(tel, nome, atend, erpId, erpNome) {
   const el = document.getElementById('vinc-results');
   if (el) {
     el.innerHTML = `
-      <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:11px;color:var(--blue-mid)">
-        🔗 Sugestão baseada no telefone — confirme se é o cliente correto
+      <div style="background:var(--blue-veil);border:1px solid var(--blue-veil-strong);border-radius:var(--radius-md);padding:var(--space-2) var(--space-2-5);margin-bottom:var(--space-1-5);font-size:var(--fs-090);color:var(--blue-mid)">
+        <i class="ic ic-sm" data-ic="external-link"></i> Sugestão baseada no telefone — confirme se é o cliente correto
       </div>
-      <button class="mres-btn" onclick="confirmarVinc(${erpId},'${esc(erpNome)}')" style="border-color:rgba(59,130,246,.3)">
+      <button class="mres-btn" onclick="confirmarVinc(${erpId},'${esc(erpNome)}')" style="border-color:var(--blue-veil-strong)">
         <div class="mres-nome">${erpNome}</div>
         <div class="mres-meta">Cód. ERP #${erpId}</div>
       </button>
       <button onclick="document.getElementById('vinc-search').value='';document.getElementById('vinc-results').innerHTML='<p class=\"empty-msg\">Digite para buscar outro cliente...</p>'"
-        style="width:100%;margin-top:6px;padding:6px;font-size:11px;color:var(--text-muted);background:transparent;border:1px dashed var(--border);border-radius:6px;cursor:pointer">
+        style="width:100%;margin-top:var(--space-1-5);padding:var(--space-1-5);font-size:var(--fs-090);color:var(--text-muted);background:transparent;border:1px dashed var(--border);border-radius:var(--radius-md);cursor:pointer">
         Não é esse — buscar outro
       </button>`;
   }
@@ -148,14 +148,14 @@ async function confirmarVinc(cId,cNome){
       id_cliente: cId, nome_cliente: cNome,
       detalhe: { telefone: tel, atendente: m.dataset.atend || '' }
     });
-    toast(`✅ ${cNome} vinculado`);
+    toast(`<i class="ic ic-sm" data-ic="check-circle"></i> ${cNome} vinculado`);
     closeVinc();
     await Promise.all([loadUmbler(),loadCarteira(),loadProspeccao()]);
     renderUmbler();renderLista();
   } else {
     // Modo extra: apenas atualiza o drawer
     m.dataset.extra = '';
-    toast(`🔗 ${cNome} vinculado a este número`);
+    toast(`<i class="ic ic-sm" data-ic="external-link"></i> ${cNome} vinculado a este número`);
     closeVinc();
     if (S.selId) { await loadDetalhe(S.selId); renderDrawer(); }
   }
@@ -203,7 +203,7 @@ async function salvarNovoContato() {
   // Impedir duplicata: checar se telefone já tem vínculo
   const telExisteCheck = await sbQ('atac_cliente_telefones', `select=id_cliente,nome_cliente&telefone=eq.${tel}&limit=1`);
   if (Array.isArray(telExisteCheck) && telExisteCheck.length > 0) {
-    toast(`⚠️ Este contato já foi vinculado a ${telExisteCheck[0].nome_cliente || 'um cliente'}`, 'err');
+    toast(`<i class="ic ic-sm" data-ic="alert-triangle"></i> Este contato já foi vinculado a ${telExisteCheck[0].nome_cliente || 'um cliente'}`, 'err');
     fecharNovoContato();
     await Promise.all([loadUmbler(), loadProspeccao()]);
     renderUmbler(); renderLista();
@@ -236,7 +236,7 @@ async function salvarNovoContato() {
           nao_comercial: false, criado_em: new Date().toISOString()
         });
       }
-      toast(`🔗 CNPJ encontrado no ERP — vinculando ao cliente ${erpMatch.nome_cliente}`);
+      toast(`<i class="ic ic-sm" data-ic="external-link"></i> CNPJ encontrado no ERP — vinculando ao cliente ${erpMatch.nome_cliente}`);
     } else {
       // Novo cliente — gerar ID sequencial a partir de 500000 (faixa CRM, longe do ERP que está em ~85000)
       const maxRes = await sbQ('atac_clientes', 'select=id_cliente&id_cliente=gte.500000&order=id_cliente.desc&limit=1');
@@ -298,17 +298,17 @@ async function salvarNovoContato() {
       gotoTab('crm');
       setMainTab('carteira');
       setSub('sem_compra');   // cliente novo nasce sem compra — abre onde ele esta
-      toast(`✅ ${nome} entrou na carteira de ${sN(donoNome)} — em "Sem compra"`);
+      toast(`<i class="ic ic-sm" data-ic="check-circle"></i> ${nome} entrou na carteira de ${sN(donoNome)} — em "Sem compra"`);
     } else {
       // so cai aqui se o login nao estiver cadastrado em atac_config_usuario
       gotoTab('prospeccao');
-      toast(`✅ ${nome} foi para a Prospecção — seu login não está vinculado a um vendedor`, 'ok');
+      toast(`<i class="ic ic-sm" data-ic="check-circle"></i> ${nome} foi para a Prospecção — seu login não está vinculado a um vendedor`, 'ok');
     }
     renderUmbler(); renderLista();
   } catch(e) {
     console.error('salvarNovoContato erro:', e);
     await logAcao('ERRO_CRIAR_CLIENTE', { nivel:'ERROR', detalhe: { telefone: document.getElementById('nc-tel')?.value }, erro: e?.message||String(e) });
-    toast('❌ Erro ao criar cliente: ' + (e?.message || e), 'err');
+    toast('<i class="ic ic-sm" data-ic="alert-circle"></i> Erro ao criar cliente: ' + (e?.message || e), 'err');
   } finally {
     if (btn) { btn.textContent = 'Criar Cliente'; btn.disabled = false; }
   }
@@ -319,29 +319,29 @@ async function toggleVincsTel(phId, telefone) {
   const listEl = document.getElementById(`vinc-tel-list-${phId}`);
   if (!listEl) return;
   if (listEl.style.display !== 'none') { listEl.style.display = 'none'; return; }
-  listEl.innerHTML = '<div style="font-size:11px;color:var(--text-muted);padding:4px 0">Carregando...</div>';
+  listEl.innerHTML = '<div style="font-size:var(--fs-090);color:var(--text-muted);padding:var(--space-1) 0">Carregando...</div>';
   listEl.style.display = 'block';
   const vincs = await loadVinculosTelefone(telefone);
-  if (!vincs.length) { listEl.innerHTML = '<div style="font-size:11px;color:var(--text-muted);padding:4px 0">Nenhum outro cliente vinculado</div>'; return; }
+  if (!vincs.length) { listEl.innerHTML = '<div style="font-size:var(--fs-090);color:var(--text-muted);padding:var(--space-1) 0">Nenhum outro cliente vinculado</div>'; return; }
   listEl.innerHTML = `
-    <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">
+    <div style="font-size:var(--fs-075);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:var(--space-1-5)">
       Clientes com este número (${vincs.length})
     </div>
     ${vincs.map(v=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;margin-bottom:4px;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-1-5) var(--space-2-5);margin-bottom:var(--space-1);gap:var(--space-2)">
         <div style="min-width:0;flex:1">
-          <span style="font-size:12px;font-weight:600;color:var(--text-primary)">${v.nome_cliente}</span>
-          <span style="font-size:10px;color:var(--text-muted);margin-left:6px">#${v.id_cliente}</span>
-          ${v.principal?'<span style="font-size:9px;background:var(--blue-pale);color:var(--blue-dark);border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">Principal</span>':''}
-          ${v.descricao?`<span style="font-size:10px;color:var(--text-muted);margin-left:4px">(${v.descricao})</span>`:''}
+          <span style="font-size:var(--fs-100);font-weight:600;color:var(--text-primary)">${v.nome_cliente}</span>
+          <span style="font-size:var(--fs-075);color:var(--text-muted);margin-left:var(--space-1-5)">#${v.id_cliente}</span>
+          ${v.principal?'<span style="font-size:9px;background:var(--blue-pale);color:var(--blue-dark);border-radius:var(--radius-sm);padding:1px 5px;margin-left:var(--space-1);font-weight:700">Principal</span>':''}
+          ${v.descricao?`<span style="font-size:var(--fs-075);color:var(--text-muted);margin-left:var(--space-1)">(${v.descricao})</span>`:''}
         </div>
-        <div style="display:flex;gap:4px;flex-shrink:0">
-          <button onclick="selCliente(${v.id_cliente})" style="font-size:10px;padding:3px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);background:var(--surface);cursor:pointer;font-weight:500">Ver</button>
-          <button onclick="removerVincTel('${v.id}')" style="font-size:10px;padding:3px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--red);background:var(--red-bg);cursor:pointer;font-weight:500">✕</button>
+        <div style="display:flex;gap:var(--space-1);flex-shrink:0">
+          <button onclick="selCliente(${v.id_cliente})" style="font-size:var(--fs-075);padding:3px var(--space-2);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--text-secondary);background:var(--surface);cursor:pointer;font-weight:500">Ver</button>
+          <button onclick="removerVincTel('${v.id}')" style="font-size:var(--fs-075);padding:3px var(--space-2);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--red);background:var(--red-bg);cursor:pointer;font-weight:500"><i class="ic ic-sm" data-ic="x"></i></button>
         </div>
       </div>`).join('')}
     <button onclick="abrirVincTelExtra('${esc(telefone)}')"
-      style="font-size:11px;color:var(--blue-mid);background:none;border:none;cursor:pointer;padding:4px 0;font-weight:600;display:block">
+      style="font-size:var(--fs-090);color:var(--blue-mid);background:none;border:none;cursor:pointer;padding:var(--space-1) 0;font-weight:600;display:block">
       + Vincular outro cliente a este número
     </button>`;
 }
@@ -361,12 +361,12 @@ function abrirVincTelExtra(telefone) {
 async function removerVincTel(phId) {
   const okRem = await new Promise(res => {
     const d = document.createElement('div');
-    d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
-    d.innerHTML = `<div style='background:#fff;border-radius:12px;padding:24px;max-width:300px;width:90%;text-align:center'>
-      <p style='margin-bottom:16px;font-size:14px'>Remover vínculo com este número?<br><span style='font-size:12px;color:#64748b'>O cliente não é excluído, apenas a ligação com este telefone.</span></p>
-      <div style='display:flex;gap:8px;justify-content:center'>
-        <button id='_rv_n' style='padding:8px 20px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;cursor:pointer'>Cancelar</button>
-        <button id='_rv_s' style='padding:8px 20px;border-radius:8px;border:none;background:#dc2626;color:#fff;cursor:pointer'>Remover</button>
+    d.style.cssText = 'position:fixed;inset:0;background:var(--surface-overlay);z-index:9999;display:flex;align-items:center;justify-content:center';
+    d.innerHTML = `<div style='background:var(--neutral-0);border-radius:var(--radius-xl);padding:var(--space-6);max-width:300px;width:90%;text-align:center'>
+      <p style='margin-bottom:var(--space-4);font-size:var(--fs-300)'>Remover vínculo com este número?<br><span style='font-size:var(--fs-100);color:var(--text-subtle)'>O cliente não é excluído, apenas a ligação com este telefone.</span></p>
+      <div style='display:flex;gap:var(--space-2);justify-content:center'>
+        <button id='_rv_n' style='padding:var(--space-2) var(--space-5);border-radius:var(--radius-lg);border:1px solid var(--border-default);background:var(--surface-subtle);cursor:pointer'>Cancelar</button>
+        <button id='_rv_s' style='padding:var(--space-2) var(--space-5);border-radius:var(--radius-lg);border:none;background:var(--danger-600);color:var(--neutral-0);cursor:pointer'>Remover</button>
       </div></div>`;
     document.body.appendChild(d);
     d.querySelector('#_rv_s').onclick = () => { d.remove(); res(true); };

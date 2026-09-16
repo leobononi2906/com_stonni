@@ -210,7 +210,7 @@ async function renderVendedorTeam(el) {
   const ritmoMax = Math.max(1, ...[...ritmo.values()].flatMap(a => a));
   const _sparkline = vid => {
     const arr = ritmo.get(vid) || new Array(nWeeks).fill(0);
-    return `<div style="display:inline-flex;align-items:flex-end;gap:2px;height:26px" title="Atividades por semana (nota + Umbler)">${arr.map((v, k) => {
+    return `<div style="display:inline-flex;align-items:flex-end;gap:var(--space-0-5);height:26px" title="Atividades por semana (nota + Umbler)">${arr.map((v, k) => {
       const h = v ? Math.max(3, Math.round(v / ritmoMax * 24)) : 1;
       return `<div style="width:6px;height:${h}px;background:${v ? 'var(--blue-mid)' : 'var(--border)'};border-radius:1px" title="Sem ${k + 1}: ${v}"></div>`;
     }).join('')}</div>`;
@@ -218,7 +218,7 @@ async function renderVendedorTeam(el) {
   // Mini-barra horizontal (cobertura / venda ativa): percentual + cor relativa a media
   const _miniBar = (pct, color) => {
     const w = Math.max(0, Math.min(100, Math.round(pct || 0)));
-    return `<div style="height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;width:80px;flex-shrink:0"><div style="height:100%;width:${w}%;background:${color}"></div></div>`;
+    return `<div style="height:6px;border-radius:var(--radius-xs);background:var(--surface2);overflow:hidden;width:80px;flex-shrink:0"><div style="height:100%;width:${w}%;background:${color}"></div></div>`;
   };
 
   el.innerHTML = `
@@ -237,7 +237,7 @@ async function renderVendedorTeam(el) {
         ${kc('\u{1F534}', 'Carteira parada (time)', fmtK(totParadaFat), 'kc-y')}
         ${kc('\u{1F9FE}', 'Ticket médio', fmtK(avg.ticket), 'kc-p')}
       </div>
-      <div style="font-size:11.5px;color:var(--text-muted);margin-top:10px">
+      <div style="font-size:11.5px;color:var(--text-muted);margin-top:var(--space-2-5)">
         \u{1F7E2} acima da média do time · \u{1F534} abaixo · ${totParadaCli} clientes parados que já faturaram · <b>clique num vendedor</b> pra abrir o detalhe.
       </div>
     </div>` : ''}
@@ -256,11 +256,11 @@ async function renderVendedorTeam(el) {
         <tbody>
           <tr style="background:var(--surface2)">
             <td style="font-weight:700;color:var(--text-secondary);white-space:nowrap">\u{1F4CF} M\u00e9dia da equipe</td>
-            <td class="r"><div class="mono" style="font-weight:700;color:var(--text-secondary)">${fmtK(avg.fat)}</div><div style="font-size:11px;color:var(--text-muted)">tkt ${fmtK(avg.ticket)}</div></td>
-            <td><div class="mono" style="font-weight:700;color:var(--text-secondary)">${avg.cob}%</div><div style="font-size:11px;color:var(--text-muted)">${Math.round(avg.falados)} clientes</div></td>
+            <td class="r"><div class="mono" style="font-weight:700;color:var(--text-secondary)">${fmtK(avg.fat)}</div><div style="font-size:var(--fs-090);color:var(--text-muted)">tkt ${fmtK(avg.ticket)}</div></td>
+            <td><div class="mono" style="font-weight:700;color:var(--text-secondary)">${avg.cob}%</div><div style="font-size:var(--fs-090);color:var(--text-muted)">${Math.round(avg.falados)} clientes</div></td>
             <td class="r mono" style="font-weight:700;color:var(--text-secondary)">${Math.round(avg.atend)}</td>
-            <td><div class="mono" style="font-weight:700;color:var(--text-secondary)">${avg.ativa}%</div><div style="font-size:11px;color:var(--text-muted)">${fmtK(avg.parada)} parada</div></td>
-            <td class="r" style="font-size:10px;color:var(--text-muted);text-align:right">${nWeeks} sem</td>
+            <td><div class="mono" style="font-weight:700;color:var(--text-secondary)">${avg.ativa}%</div><div style="font-size:var(--fs-090);color:var(--text-muted)">${fmtK(avg.parada)} parada</div></td>
+            <td class="r" style="font-size:var(--fs-075);color:var(--text-muted);text-align:right">${nWeeks} sem</td>
           </tr>
           ${vlInt.map((v, i) => {
             const medal = i === 0 ? '\u{1F947}' : i === 1 ? '\u{1F948}' : i === 2 ? '\u{1F949}' : '';
@@ -274,23 +274,23 @@ async function renderVendedorTeam(el) {
             const ativaColor = compV ? _relColor(pAtiva, avg.ativa, true) : 'var(--text-muted)';
             return `<tr class="cl" onclick="openVend(${v.id})" title="Ver detalhe">
               <td style="font-weight:600;color:var(--text-primary);white-space:nowrap">${i + 1}. ${sN(v.nome)} ${medal} <span style="color:var(--text-muted);font-weight:400">\u203A</span></td>
-              <td class="r"><div class="mono" style="font-weight:700;color:var(--text-primary)">${fmtK(v.fat)}</div><div style="font-size:11px;color:var(--text-muted)">tkt ${fmtK(v.ticket)}</div></td>
+              <td class="r"><div class="mono" style="font-weight:700;color:var(--text-primary)">${fmtK(v.fat)}</div><div style="font-size:var(--fs-090);color:var(--text-muted)">tkt ${fmtK(v.ticket)}</div></td>
               <td>
-                <div style="display:flex;align-items:center;gap:8px">${_miniBar(cob, cobColor)}<span class="mono" style="font-weight:700;color:${cobColor}">${cob}%</span></div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${falados} clientes</div>
+                <div style="display:flex;align-items:center;gap:var(--space-2)">${_miniBar(cob, cobColor)}<span class="mono" style="font-weight:700;color:${cobColor}">${cob}%</span></div>
+                <div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-0-5)">${falados} clientes</div>
               </td>
-              <td class="r mono" style="color:${_relColor(atend, avg.atend, true)};font-weight:600">${atend}<div style="font-size:11px;color:var(--text-muted);font-weight:400">a\u00e7\u00f5es</div></td>
+              <td class="r mono" style="color:${_relColor(atend, avg.atend, true)};font-weight:600">${atend}<div style="font-size:var(--fs-090);color:var(--text-muted);font-weight:400">a\u00e7\u00f5es</div></td>
               <td>
-                <div style="display:flex;align-items:center;gap:8px">${_miniBar(compV?pAtiva:0, ativaColor)}<span class="mono" style="font-weight:700;color:${ativaColor}">${compV?pAtiva+'%':'\u2014'}</span></div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${e.fatParada>0?fmtK(e.fatParada)+' parada':'sem parada'}</div>
+                <div style="display:flex;align-items:center;gap:var(--space-2)">${_miniBar(compV?pAtiva:0, ativaColor)}<span class="mono" style="font-weight:700;color:${ativaColor}">${compV?pAtiva+'%':'\u2014'}</span></div>
+                <div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-0-5)">${e.fatParada>0?fmtK(e.fatParada)+' parada':'sem parada'}</div>
               </td>
               <td class="r">${_sparkline(v.id)}</td>
             </tr>`;
           }).join('')}
-          ${vlRep.length ? `<tr style="background:var(--surface2)"><td colspan="6" style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;padding-top:12px">Representantes \u2014 vendem, sem carteira no CRM</td></tr>
+          ${vlRep.length ? `<tr style="background:var(--surface2)"><td colspan="6" style="font-size:var(--fs-075);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;padding-top:var(--space-3)">Representantes \u2014 vendem, sem carteira no CRM</td></tr>
           ${vlRep.map(v => `<tr class="cl" onclick="openVend(${v.id})" title="Ver detalhe">
               <td style="font-weight:600;color:var(--text-primary);white-space:nowrap">${sN(v.nome)} <span style="color:var(--text-muted);font-weight:400">\u203a</span></td>
-              <td class="r"><div class="mono" style="font-weight:700;color:var(--text-primary)">${fmtK(v.fat)}</div><div style="font-size:11px;color:var(--text-muted)">tkt ${fmtK(v.ticket)}</div></td>
+              <td class="r"><div class="mono" style="font-weight:700;color:var(--text-primary)">${fmtK(v.fat)}</div><div style="font-size:var(--fs-090);color:var(--text-muted)">tkt ${fmtK(v.ticket)}</div></td>
               <td style="text-align:center;color:var(--text-muted)">\u2014</td>
               <td class="r mono" style="color:var(--text-muted)">\u2014</td>
               <td style="text-align:center;color:var(--text-muted)">\u2014</td>
@@ -299,7 +299,7 @@ async function renderVendedorTeam(el) {
           ${fatOutros > 1 ? `<tr style="color:var(--text-muted)" title="Faturamento de vendedores inativos ou fora do time de distribui\u00e7\u00e3o \u2014 entra no total da Home, mas n\u00e3o \u00e9 ranqueado aqui">
             <td style="white-space:nowrap">Inativos / outros</td>
             <td class="r mono" style="font-weight:600">${fmtK(fatOutros)}</td>
-            <td colspan="4" style="font-size:11px;color:var(--text-muted)">n\u00e3o ranqueado</td>
+            <td colspan="4" style="font-size:var(--fs-090);color:var(--text-muted)">n\u00e3o ranqueado</td>
           </tr>` : ''}
         </tbody>
       </table></div>` : '<div class="empty-msg">Sem faturamento no per\u00edodo selecionado</div>'}
@@ -308,10 +308,10 @@ async function renderVendedorTeam(el) {
 
 // quadrante da matriz Trabalhou × Comprou
 function _vquad(cor, bg, titulo, n, sub) {
-  return `<div style="background:${bg};border:1px solid var(--border);border-radius:10px;padding:12px 14px">
-    <div style="font-size:11px;font-weight:700;color:${cor};margin-bottom:4px">${titulo}</div>
-    <div style="font-size:26px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text-primary);line-height:1">${n}</div>
-    <div style="font-size:11px;color:var(--text-secondary);margin-top:3px">${sub}</div>
+  return `<div style="background:${bg};border:1px solid var(--border);border-radius:var(--radius-10);padding:var(--space-3) var(--space-3-5)">
+    <div style="font-size:var(--fs-090);font-weight:700;color:${cor};margin-bottom:var(--space-1)">${titulo}</div>
+    <div style="font-size:26px;font-weight:700;font-family:var(--font-mono);color:var(--text-primary);line-height:1">${n}</div>
+    <div style="font-size:var(--fs-090);color:var(--text-secondary);margin-top:3px">${sub}</div>
   </div>`;
 }
 
@@ -436,10 +436,10 @@ function renderVendedorIndividual(el, vidOverride) {
 
   el.innerHTML = `
     <!-- Header -->
-    <div style="margin-bottom:20px">
-      ${isDrill ? `<button onclick="voltarTime()" style="display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--text-secondary);cursor:pointer;margin-bottom:10px">\u2039 Voltar pro ranking</button>` : ''}
-      <h2 style="margin:0;font-size:22px;font-weight:700;color:var(--text-primary)">${sN(nomeVend) !== '\u2014' ? nomeVend : 'Vendedor'}</h2>
-      ${vInfo && vInfo.departamento ? `<span style="font-size:13px;color:var(--text-muted)">${vInfo.departamento}</span>` : ''}
+    <div style="margin-bottom:var(--space-5)">
+      ${isDrill ? `<button onclick="voltarTime()" style="display:inline-flex;align-items:center;gap:var(--space-1-5);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-1-5) var(--space-3);font-size:12.5px;font-weight:600;color:var(--text-secondary);cursor:pointer;margin-bottom:var(--space-2-5)">\u2039 Voltar pro ranking</button>` : ''}
+      <h2 style="margin:0;font-size:var(--fs-650);font-weight:700;color:var(--text-primary)">${sN(nomeVend) !== '\u2014' ? nomeVend : 'Vendedor'}</h2>
+      ${vInfo && vInfo.departamento ? `<span style="font-size:var(--fs-200);color:var(--text-muted)">${vInfo.departamento}</span>` : ''}
     </div>
 
     <!-- KPIs 2x3 -->
@@ -454,29 +454,29 @@ function renderVendedorIndividual(el, vidOverride) {
 
     <!-- Matriz Trabalhou x Comprou -->
     <div class="scard">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-2-5);flex-wrap:wrap;margin-bottom:var(--space-3)">
         <div class="scard-title" style="margin-bottom:0">\u{1F3AF} Registro × Comprou — no período</div>
-        <div style="font-size:12px;color:var(--text-secondary)">
+        <div style="font-size:var(--fs-100);color:var(--text-secondary)">
           Cobertura <b style="color:var(--blue-mid)">${mCobertura}%</b> (${mFalados}/${myCarteira.length}) ·
           Venda ativa <b style="color:${mPctAtiva>=50?'var(--green)':'var(--orange)'}">${mPctAtiva}%</b>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:78px 1fr 1fr;gap:10px;align-items:stretch">
+      <div style="display:grid;grid-template-columns:78px 1fr 1fr;gap:var(--space-2-5);align-items:stretch">
         <div></div>
-        <div style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted)">\u{1F6D2} Comprou</div>
-        <div style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted)">\u{1F6AB} Não comprou</div>
-        <div style="display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-secondary);text-align:center">\u{1F4AC} Tem registro</div>
+        <div style="text-align:center;font-size:var(--fs-075);font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted)">\u{1F6D2} Comprou</div>
+        <div style="text-align:center;font-size:var(--fs-075);font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted)">\u{1F6AB} Não comprou</div>
+        <div style="display:flex;align-items:center;justify-content:center;font-size:var(--fs-090);font-weight:700;color:var(--text-secondary);text-align:center">\u{1F4AC} Tem registro</div>
         ${_vquad('var(--green)','var(--green-bg)','\u{1F7E2} Venda ativa',mAtiva,'ele acompanhou a venda')}
         ${_vquad('var(--blue-mid)','var(--blue-pale)','\u{1F535} Em aberto',mProspec,'trabalhando, sem venda')}
-        <div style="display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-secondary);text-align:center">\u{1F515} Sem registro</div>
+        <div style="display:flex;align-items:center;justify-content:center;font-size:var(--fs-090);font-weight:700;color:var(--text-secondary);text-align:center">\u{1F515} Sem registro</div>
         ${_vquad('var(--orange)','var(--orange-bg)','\u{1F7E1} Venda sem registro',mPassiva,'recompra ou registro faltando · '+fmtK(mFatPassiva))}
         ${_vquad('var(--red)','var(--red-bg)','\u{1F534} Carteira parada',mParada,'sem toque · '+fmtK(mFatParada))}
       </div>
-      ${mParada>0 && paradaList.some(c=>(Number(c.faturamento_total)||0)>0) ? `<div style="margin-top:14px">
-        <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:6px">⚠ Carteira parada que já faturou — sem contato nem compra no período</div>
-        ${paradaList.filter(c=>(Number(c.faturamento_total)||0)>0).slice(0,5).map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:6px 0;border-bottom:1px solid var(--border)">
+      ${mParada>0 && paradaList.some(c=>(Number(c.faturamento_total)||0)>0) ? `<div style="margin-top:var(--space-3-5)">
+        <div style="font-size:var(--fs-090);font-weight:700;color:var(--red);margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="alert-triangle"></i> Carteira parada que já faturou — sem contato nem compra no período</div>
+        ${paradaList.filter(c=>(Number(c.faturamento_total)||0)>0).slice(0,5).map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:var(--space-1-5) 0;border-bottom:1px solid var(--border)">
           <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary)">${sN(c.nome_cliente)}</span>
-          <span class="mono" style="color:var(--text-secondary);flex-shrink:0;margin-left:8px;font-weight:600">${fmtK(Number(c.faturamento_total)||0)}${c.dias_sem_compra!=null?` · ${c.dias_sem_compra}d`:''}</span>
+          <span class="mono" style="color:var(--text-secondary);flex-shrink:0;margin-left:var(--space-2);font-weight:600">${fmtK(Number(c.faturamento_total)||0)}${c.dias_sem_compra!=null?` · ${c.dias_sem_compra}d`:''}</span>
         </div>`).join('')}
       </div>`:''}
     </div>
@@ -489,7 +489,7 @@ function renderVendedorIndividual(el, vidOverride) {
         <div class="hbox ht"><div class="n">${hAtencao}</div><div class="l">Aten\u00e7\u00e3o</div></div>
         <div class="hbox hr"><div class="n">${hRisco}</div><div class="l">Em Risco</div></div>
       </div>
-      ${semContato30 > 0 ? `<div style="margin-top:12px;padding:8px 12px;background:var(--yellow-pale,#FFF8E1);border-radius:8px;font-size:12.5px;color:var(--text-secondary)">
+      ${semContato30 > 0 ? `<div style="margin-top:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--warning-50);border-radius:var(--radius-lg);font-size:12.5px;color:var(--text-secondary)">
         \u26A0 <strong>${semContato30}</strong> clientes sem contato h\u00e1 mais de 30 dias
       </div>` : ''}
     </div>
@@ -516,7 +516,7 @@ function renderVendedorIndividual(el, vidOverride) {
         const barW = Math.round(g.val / grupoMax * 100);
         return `<div class="bar-row">
           <span style="flex:1;font-size:12.5px;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.nome}</span>
-          <span class="mono bar-val" style="flex-shrink:0;margin:0 8px;font-size:12px">${fmtK(g.val)} (${pct}%)</span>
+          <span class="mono bar-val" style="flex-shrink:0;margin:0 var(--space-2);font-size:var(--fs-100)">${fmtK(g.val)} (${pct}%)</span>
           <div class="bar-track" style="width:120px;flex-shrink:0"><div class="bar-fill" style="width:${barW}%"></div></div>
         </div>`;
       }).join('') : '<div class="empty-msg">Sem dados no per\u00edodo</div>'}
@@ -529,14 +529,14 @@ function renderVendedorIndividual(el, vidOverride) {
         const prevFat = cliPrevMap.get(c.id) || 0;
         const delta = prevFat > 0 ? Math.round((c.fat / prevFat - 1) * 100) : null;
         const deltaHtml = delta !== null
-          ? `<span class="${delta >= 0 ? 'delta-pos' : 'delta-neg'}" style="flex-shrink:0;margin-left:6px">${delta > 0 ? '+' : ''}${delta}%</span>`
+          ? `<span class="${delta >= 0 ? 'delta-pos' : 'delta-neg'}" style="flex-shrink:0;margin-left:var(--space-1-5)">${delta > 0 ? '+' : ''}${delta}%</span>`
           : '';
         const barW = Math.round(c.fat / topCliMax * 100);
-        return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-          <span style="width:20px;height:20px;border-radius:6px;background:var(--surface2);color:var(--text-secondary);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i + 1}</span>
+        return `<div style="display:flex;align-items:center;gap:var(--space-2-5);padding:7px 0;border-bottom:1px solid var(--border)">
+          <span style="width:20px;height:20px;border-radius:var(--radius-md);background:var(--surface2);color:var(--text-secondary);font-size:var(--fs-075);font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i + 1}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:12.5px;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sN(c.nome)}</div>
-            <div class="bar-track" style="height:4px;margin-top:4px"><div class="bar-fill" style="width:${barW}%"></div></div>
+            <div class="bar-track" style="height:4px;margin-top:var(--space-1)"><div class="bar-fill" style="width:${barW}%"></div></div>
           </div>
           <span class="mono" style="font-size:12.5px;font-weight:700;color:var(--text-primary);flex-shrink:0">${fmtK(c.fat)}</span>
           ${deltaHtml}
@@ -552,12 +552,12 @@ function renderVendedorIndividual(el, vidOverride) {
           const st = getStatus(c);
           const bdgCls = st === 'ATIVO' ? 'bdg-a' : st === 'ATENCAO' ? 'bdg-t' : 'bdg-r';
           const stLabel = st === 'ATIVO' ? 'Ativo' : st === 'ATENCAO' ? 'Aten\u00e7\u00e3o' : st === 'PERDIDO' ? 'Perdido' : st;
-          return `<div class="cl" onclick="selCliente(${c.id_cliente});gotoTab('crm')" style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border);cursor:pointer">
+          return `<div class="cl" onclick="selCliente(${c.id_cliente});gotoTab('crm')" style="display:flex;align-items:center;gap:var(--space-2-5);padding:var(--space-2) var(--space-1);border-bottom:1px solid var(--border);cursor:pointer">
             <div style="flex:1;min-width:0">
               <div style="font-size:12.5px;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sN(c.nome_cliente)}</div>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">\u00dalt. compra: ${c.faturamento_total ? fmtK(c.faturamento_total) : '\u2014'}</div>
+              <div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-0-5)">\u00dalt. compra: ${c.faturamento_total ? fmtK(c.faturamento_total) : '\u2014'}</div>
             </div>
-            <span style="font-size:11px;font-weight:600;color:var(--red-mid,#E53935);flex-shrink:0">${c.dias_sem_interacao} dias</span>
+            <span style="font-size:var(--fs-090);font-weight:600;color:var(--danger-600);flex-shrink:0">${c.dias_sem_interacao} dias</span>
             <span class="bdg ${bdgCls}" style="flex-shrink:0">${stLabel}</span>
           </div>`;
         }).join('')}
@@ -629,10 +629,10 @@ function _renderAtividadeDiaria(atividades, contatosUmbler, umblerPred) {
     const total = dd.notas + umb;
     const barW = Math.round((total / maxNotas) * 100);
     const dtLabel = new Date(dia + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
-    return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:11px;color:var(--text-muted);width:80px;flex-shrink:0">${dtLabel}</span>
+    return `<div style="display:flex;align-items:center;gap:var(--space-1-5);padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:var(--fs-090);color:var(--text-muted);width:80px;flex-shrink:0">${dtLabel}</span>
       <div class="bar-track" style="flex:1;height:10px"><div class="bar-fill" style="width:${barW}%;background:var(--blue-mid)"></div></div>
-      <span style="font-size:10px;color:var(--text-secondary);width:25px;text-align:right;font-weight:700">${total}</span>
+      <span style="font-size:var(--fs-075);color:var(--text-secondary);width:25px;text-align:right;font-weight:700">${total}</span>
       <span style="font-size:9px;color:var(--text-muted);width:80px;flex-shrink:0;text-align:right">${dd.tarefas?dd.tarefas+'T ':''}${dd.followups?dd.followups+'F ':''}${dd.ligacoes?dd.ligacoes+'L ':''}${umb?umb+'U':''}</span>
       <span style="font-size:9px;color:var(--green);width:35px;flex-shrink:0;text-align:right">${dd.clientes.size?dd.clientes.size+' cli':''}</span>
     </div>`;
@@ -641,20 +641,20 @@ function _renderAtividadeDiaria(atividades, contatosUmbler, umblerPred) {
   // Resumo semanal
   const tabelaSem = semanasArr.slice(0, 8).map(([sem, s]) => {
     const mediaDia = s.dias ? (s.notas / s.dias).toFixed(1) : '0';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:11px;font-weight:600;color:var(--text-primary);width:60px;flex-shrink:0">${sem}</span>
-      <span style="font-size:10px;color:var(--text-muted);width:35px;text-align:right">${s.notas} reg</span>
-      <span style="font-size:10px;color:var(--green);width:35px;text-align:right">${s.resolvidas} \u2713</span>
-      <span style="font-size:10px;color:var(--purple);width:35px;text-align:right">${s.umbler} umb</span>
-      <span style="font-size:10px;color:var(--text-secondary);width:35px;text-align:right">${s.clientes.size} cli</span>
-      <span style="font-size:10px;color:var(--text-muted);width:50px;text-align:right">${mediaDia}/dia</span>
+    return `<div style="display:flex;align-items:center;gap:var(--space-2);padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:var(--fs-090);font-weight:600;color:var(--text-primary);width:60px;flex-shrink:0">${sem}</span>
+      <span style="font-size:var(--fs-075);color:var(--text-muted);width:35px;text-align:right">${s.notas} reg</span>
+      <span style="font-size:var(--fs-075);color:var(--green);width:35px;text-align:right">${s.resolvidas} \u2713</span>
+      <span style="font-size:var(--fs-075);color:var(--purple);width:35px;text-align:right">${s.umbler} umb</span>
+      <span style="font-size:var(--fs-075);color:var(--text-secondary);width:35px;text-align:right">${s.clientes.size} cli</span>
+      <span style="font-size:var(--fs-075);color:var(--text-muted);width:50px;text-align:right">${mediaDia}/dia</span>
     </div>`;
   }).join('');
 
-  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-4)">
     <div class="scard" style="margin-bottom:0">
       <div class="scard-title">\u{1F4C5} Atividade Di\u00e1ria (\u00falt. 14 dias)</div>
-      <div style="font-size:9px;color:var(--text-muted);margin-bottom:6px">T=Tarefa F=Follow-up L=Liga\u00e7\u00e3o U=Umbler</div>
+      <div style="font-size:9px;color:var(--text-muted);margin-bottom:var(--space-1-5)">T=Tarefa F=Follow-up L=Liga\u00e7\u00e3o U=Umbler</div>
       ${tabelaDia || '<div class="empty-msg">Sem atividade no per\u00edodo</div>'}
     </div>
     <div class="scard" style="margin-bottom:0">

@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  const AZUL = [26, 58, 143];      // #1A3A8F
+  const AZUL = [26, 58, 143];      // #145EA8
   const CINZA = [90, 106, 133];    // texto secundário
   const ESCURO = [26, 26, 46];
   const VERDE = [34, 160, 107];
@@ -62,7 +62,10 @@
     const empCNPJ = cfg.pdf_empresa_cnpj || '';
     const empEndereco = cfg.pdf_empresa_endereco || '';
     const empTel = cfg.pdf_empresa_telefone || '';
-    const logoUrl = cfg.pdf_logo_url || 'logo.png';
+    // Ver o comentario em pdf-pedido.js: 'logo.png' era o padrao antigo e nao
+    // existe mais. Aqui a falha tambem e muda (carregarImagem devolve null).
+    const logoUrl = (cfg.pdf_logo_url && cfg.pdf_logo_url !== 'logo.png')
+                      ? cfg.pdf_logo_url : 'logo-stonni-ink.png';
     const rodape = cfg.pdf_rodape || 'Este documento é uma proposta comercial e não tem valor fiscal.';
 
     const c = window.pedCalcularTotais(ped, itens);

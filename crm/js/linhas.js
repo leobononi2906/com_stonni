@@ -18,7 +18,7 @@ function _linPill(delta){
 // Δ R$: diferença absoluta entre Últ.30D e média mensal (o que soma/tira do faturamento)
 function _linImp(cur,media){
   const d=cur-media, pos=d>=0, cls=pos?'delta-pos':'delta-neg';
-  return `<span class="${cls}" style="font-family:'DM Mono',monospace;font-weight:700;font-size:11px">${pos?'+':'-'}${fmtK(Math.abs(d))}</span>`;
+  return `<span class="${cls}" style="font-family:var(--font-mono);font-weight:700;font-size:var(--fs-090)">${pos?'+':'-'}${fmtK(Math.abs(d))}</span>`;
 }
 
 // Janelas 30d (atual) e 90d/3 (média mensal), ancoradas na última data dos dados
@@ -49,7 +49,7 @@ function _linSerieSVG(serie, mesCorrente){
     const mLbl=(_monthLabel(s.ym)||'').split('/')[0];
     return `<g><title>${_monthLabel(s.ym)}: ${fmtK(s.val)}${parcial?' (parcial)':''}</title>`+
       (h>0?`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${fill}" fill-opacity="${parcial?'0.5':'1'}"/>`:'')+
-      (lbl?`<text x="${(x+bw/2).toFixed(1)}" y="${(y-5).toFixed(1)}" text-anchor="middle" font-size="9" font-family="'DM Mono',monospace" fill="var(--text-secondary)">${lbl}</text>`:'')+
+      (lbl?`<text x="${(x+bw/2).toFixed(1)}" y="${(y-5).toFixed(1)}" text-anchor="middle" font-size="9" font-family="var(--font-mono)" fill="var(--text-secondary)">${lbl}</text>`:'')+
       `<text x="${(x+bw/2).toFixed(1)}" y="${H-9}" text-anchor="middle" font-size="9" fill="var(--text-muted)">${mLbl}</text></g>`;
   }).join('');
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Faturamento mensal" style="display:block;overflow:visible">${bars}</svg>`;
@@ -60,7 +60,7 @@ function renderLinhas(){
   if(!el) return;
   try{
     const all=S.linhas||[];
-    if(!all.length){ el.innerHTML=`<div class="empty-msg" style="padding:48px;text-align:center;color:var(--text-muted)">Sem dados de itens nos últimos 12 meses.</div>`; return; }
+    if(!all.length){ el.innerHTML=`<div class="empty-msg" style="padding:var(--space-12);text-align:center;color:var(--text-muted)">Sem dados de itens nos últimos 12 meses.</div>`; return; }
 
     const _q=s=>(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const W=_linWindows(all);
@@ -113,10 +113,10 @@ function renderLinhas(){
         const c=cur.get(k)||0,m=(base.get(k)||0)/3;
         return {k,cur:c,media:m,delta:m>0?((c-m)/m)*100:(c>0?999:0),share:c/totCur*100};
       }).sort((a,b)=>b.cur-a.cur);
-      subBreakHTML=`<div class="scard"><div class="scard-title">📦 Por Subgrupo · Últimos 30 dias</div>`+
-        `<div style="display:grid;grid-template-columns:1fr 62px 62px 62px 56px;gap:8px;padding:4px 0 6px;border-bottom:2px solid var(--border);margin-bottom:2px;font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em"><span>Subgrupo</span><span class="r">Média 3M</span><span class="r">Últ.30D</span><span class="r">Δ R$</span><span class="r">Var.</span></div>`+
-        arr.map(x=>`<div style="display:grid;grid-template-columns:1fr 62px 62px 62px 56px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
-          <div style="min-width:0"><div class="nm" style="margin-bottom:4px">${escH(_truncate(x.k,34))}</div>
+      subBreakHTML=`<div class="scard"><div class="scard-title"><i class="ic ic-sm" data-ic="package"></i> Por Subgrupo · Últimos 30 dias</div>`+
+        `<div style="display:grid;grid-template-columns:1fr 62px 62px 62px 56px;gap:var(--space-2);padding:var(--space-1) 0 var(--space-1-5);border-bottom:2px solid var(--border);margin-bottom:var(--space-0-5);font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em"><span>Subgrupo</span><span class="r">Média 3M</span><span class="r">Últ.30D</span><span class="r">Δ R$</span><span class="r">Var.</span></div>`+
+        arr.map(x=>`<div style="display:grid;grid-template-columns:1fr 62px 62px 62px 56px;gap:var(--space-2);align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+          <div style="min-width:0"><div class="nm" style="margin-bottom:var(--space-1)">${escH(_truncate(x.k,34))}</div>
             <div class="bar-track" style="height:5px"><div class="bar-fill" style="width:${Math.round(x.share)}%"></div></div></div>
           <span class="r mut mono">${x.media?fmtK(x.media):'—'}</span>
           <span class="r cur">${x.cur?fmtK(x.cur):'R$0'}</span>
@@ -159,39 +159,39 @@ function renderLinhas(){
       <span class="r cur">${p.cur?fmtK(p.cur):'R$0'}</span>
       <span class="r">${_linImp(p.cur,p.media)}</span>
       <span class="r">${_linPill(p.delta)}</span></div>`).join('')
-      || `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:12px">Nenhum produto na seleção.</div>`;
+      || `<div style="padding:var(--space-6);text-align:center;color:var(--text-muted);font-size:var(--fs-100)">Nenhum produto na seleção.</div>`;
 
     el.innerHTML=`
       <div class="lin-filters">
         ${grpChips}${subSel}
-        <span style="margin-left:auto;font-size:11px;color:var(--text-muted)">Série:</span>${janBtns}
+        <span style="margin-left:auto;font-size:var(--fs-090);color:var(--text-muted)">Série:</span>${janBtns}
       </div>
 
-      <div class="kgrid" style="margin-bottom:16px">
-        <div class="kcard kc-b"><div class="lbl">💰 Faturamento · Últ. 30D</div><div class="val">${fmtK(fat30)}</div></div>
-        <div class="kcard"><div class="lbl">📊 Média Mensal · 3M</div><div class="val">${fmtK(media3)}</div></div>
-        <div class="kcard"><div class="lbl">📈 Variação</div><div class="val" style="font-size:18px">${_linPill(deltaKpi)}</div></div>
-        <div class="kcard kc-g"><div class="lbl">📦 Qtd Vendida · 30D</div><div class="val">${Math.round(qtd30)}</div></div>
+      <div class="kgrid" style="margin-bottom:var(--space-4)">
+        <div class="kcard kc-b"><div class="lbl"><i class="ic ic-sm" data-ic="dollar-sign"></i> Faturamento · Últ. 30D</div><div class="val">${fmtK(fat30)}</div></div>
+        <div class="kcard"><div class="lbl"><i class="ic ic-sm" data-ic="bar-chart"></i> Média Mensal · 3M</div><div class="val">${fmtK(media3)}</div></div>
+        <div class="kcard"><div class="lbl"><i class="ic ic-sm" data-ic="trending-up"></i> Variação</div><div class="val" style="font-size:var(--fs-550)">${_linPill(deltaKpi)}</div></div>
+        <div class="kcard kc-g"><div class="lbl"><i class="ic ic-sm" data-ic="package"></i> Qtd Vendida · 30D</div><div class="val">${Math.round(qtd30)}</div></div>
       </div>
 
       <div class="scard">
-        <div class="panel-head"><div class="scard-title" style="margin-bottom:0">📈 Evolução Mensal · ${escH(titulo)}</div>
-          <span style="font-size:11px;color:var(--text-muted)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--blue-light);opacity:.6;vertical-align:middle;margin-right:3px"></span>mês parcial</span></div>
+        <div class="panel-head"><div class="scard-title" style="margin-bottom:0"><i class="ic ic-sm" data-ic="trending-up"></i> Evolução Mensal · ${escH(titulo)}</div>
+          <span style="font-size:var(--fs-090);color:var(--text-muted)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--blue-light);opacity:.6;vertical-align:middle;margin-right:3px"></span>mês parcial</span></div>
         ${_linSerieSVG(serie,mesCorrente)}
       </div>
 
       ${subBreakHTML}
 
       <div class="scard">
-        <div class="panel-head"><div class="scard-title" style="margin-bottom:0">🧾 Produtos · ${escH(titulo)} <span style="color:var(--text-muted);font-weight:600">(${prods.length})</span></div>
-          <div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:var(--text-muted)">Ordenar</span>${sortSel}</div></div>
+        <div class="panel-head"><div class="scard-title" style="margin-bottom:0"><i class="ic ic-sm" data-ic="receipt"></i> Produtos · ${escH(titulo)} <span style="color:var(--text-muted);font-weight:600">(${prods.length})</span></div>
+          <div style="display:flex;align-items:center;gap:var(--space-1-5)"><span style="font-size:var(--fs-090);color:var(--text-muted)">Ordenar</span>${sortSel}</div></div>
         <div class="lin-cap">Últimos 30 dias vs média mensal dos 3 meses anteriores · base até ${fmtD(W.anchor)}</div>
         ${tHead}${tRows}
       </div>`;
   }catch(err){
     console.error('renderLinhas',err);
     if(window.logAcao) try{ logAcao('ERRO_LINHAS',{nivel:'ERROR',erro:err?.message}); }catch(e){}
-    el.innerHTML=`<div style="background:var(--red-bg);border:1px solid rgba(217,48,37,.3);border-radius:var(--radius);padding:16px;color:var(--red);font-size:13px">Não foi possível carregar a análise de linhas.<br><span style="color:var(--text-muted);font-size:11px">${escH(err?.message||'')}</span></div>`;
+    el.innerHTML=`<div style="background:var(--red-bg);border:1px solid var(--danger-veil-strong);border-radius:var(--radius);padding:var(--space-4);color:var(--red);font-size:var(--fs-200)">Não foi possível carregar a análise de linhas.<br><span style="color:var(--text-muted);font-size:var(--fs-090)">${escH(err?.message||'')}</span></div>`;
   }
 }
 

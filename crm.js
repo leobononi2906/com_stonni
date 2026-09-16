@@ -50,7 +50,7 @@
       if (!podeVerCRM()) {
         el.innerHTML =
           '<div class="empty-state">' +
-          '<div class="empty-state-icon">🔒</div>' +
+          '<div class="empty-state-icon"><i class="ic ic-sm" data-ic="lock"></i></div>' +
           '<h3>Sem acesso</h3>' +
           '<p>Esta área é interna. Fale com o administrador se precisar de acesso.</p>' +
           '</div>';
@@ -76,7 +76,7 @@
       if (window.appLog) window.appLog('ERRO', 'LOAD_CRM', { categoria: 'crm', detalhe: { erro: err && err.message } });
       el.innerHTML =
         '<div class="alert alert-danger">' +
-        '<span class="alert-icon">⚠️</span>' +
+        '<span class="alert-icon"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>' +
         '<div>Não foi possível carregar a área de CRM. ' +
         (err && err.message ? '<br><small>' + err.message + '</small>' : '') +
         '</div></div>';
