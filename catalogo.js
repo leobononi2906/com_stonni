@@ -159,7 +159,7 @@ window.catFiltrar = function() {
   }
 
   grid.innerHTML = lista.map(p => {
-    const foto = p.foto_exibir_miniatura || (p.fotos_exibir || p.fotos)?.[0] || null;
+    const foto = catFotoUrl(p, 900);
     const { preco, precoOriginal, acaoAtiva } = catPrecoFinal(p);
 
     return `

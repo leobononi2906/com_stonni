@@ -6,6 +6,8 @@
 //
 //  ⚠️ Ao subir um deploy, BUMPAR CACHE_VERSION para invalidar o cache antigo.
 // ============================================================
+// v6 engloba o v5 que veio do 0de5264: a versao mais nova vence, e o
+// APP_SHELL abaixo ja e o dos dois lados somados.
 const CACHE_VERSION = 'stonni-v6-20260916';
 const APP_SHELL = [
   './',
