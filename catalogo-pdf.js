@@ -1,7 +1,31 @@
 // ============================================================
 //  catalogo-pdf.js — Gerador de Catálogo PDF Stonni
 //  Chamada: catGerarPDF({ titulo, exibirPreco, tagsFiltro, subgruposFiltro })
+//
+//  ATENCAO: a janela aberta aqui e um documento AUTONOMO
+//  (window.open('', '_blank') + document.write). Ela NAO carrega o
+//  ds/stonni-ds.css nem o ds/stonni-icones.css, e caminho relativo nao
+//  resolve porque a origem e about:blank. Por isso, aqui dentro:
+//    - cor e medida vao em literal, nunca em var(--token);
+//    - imagem entra embutida em data URI, nunca como src relativo;
+//    - icone e texto, porque o CSS de mascara nao esta disponivel.
 // ============================================================
+
+// Le um arquivo do app e devolve data URI. Se falhar (offline, 404), devolve
+// null — quem chama tem de ter um caminho alternativo, senao a capa quebra.
+async function catArquivoEmDataUri(arquivo) {
+  try {
+    const r = await fetch(new URL(arquivo, location.href).href);
+    if (!r.ok) return null;
+    const blob = await r.blob();
+    return await new Promise(resolve => {
+      const fr = new FileReader();
+      fr.onload  = () => resolve(fr.result);
+      fr.onerror = () => resolve(null);
+      fr.readAsDataURL(blob);
+    });
+  } catch (e) { return null; }
+}
 
 window.catGerarPDF = async function(opcoes = {}) {
   const {
@@ -85,12 +109,17 @@ window.catGerarPDF = async function(opcoes = {}) {
     </div>
   `).join('');
 
-  // Capa
+  // Capa — a logo e o lockup da marca, embutido. A capa e escura, entao vai a
+  // versao branca. Se o arquivo nao vier (offline), cai no nome em texto: capa
+  // sem logo e ruim, capa com <img> quebrada e pior.
+  const logoCapa = await catArquivoEmDataUri('logo-stonni-white.png');
   const capaHtml = capaUrl
     ? `<div class="capa-img"><img src="${capaUrl}" alt="Capa"></div>`
     : `
       <div class="capa-gerada">
-        <div class="capa-logo">✳ stonni</div>
+        ${logoCapa
+          ? `<img class="capa-logo-img" src="${logoCapa}" alt="Stonni">`
+          : `<div class="capa-logo">stonni</div>`}
         <div class="capa-nome">STONNI</div>
         <div class="capa-titulo-txt">${titulo}</div>
         <div class="capa-sub">${subtitulo}</div>
@@ -111,10 +140,15 @@ window.catGerarPDF = async function(opcoes = {}) {
   .capa-img img { width:100%; height:100%; object-fit:cover; }
   .capa-gerada {
     width:210mm; height:297mm; page-break-after:always;
-    background: linear-gradient(180deg, #c8d0d8 0%, #6b8fb5 50%, #145EA8 100%);
+    /* Indigo escuro, e nao o gradiente da marca: o simbolo do lockup branco
+       e AZUL (#196DBB), so a palavra e branca. Medido, o simbolo no centro da
+       capa rende 1,74 no degrade antigo, 1,03 no gradiente da marca (o azul
+       some no azul) e 2,98 aqui — e a palavra sai de 3,04 para 15,7. */
+    background: linear-gradient(180deg, #16103D 0%, #2A1F74 100%);
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px;
   }
-  .capa-logo { color:#fff; font-size:28px; font-weight:800; letter-spacing:2px; }
+  .capa-logo-img { width:300px; max-width:60%; height:auto; display:block; }
+  .capa-logo { color:#fff; font-size:28px; font-weight:800; letter-spacing:2px; } /* fallback sem rede */
   .capa-nome { color:rgba(255,255,255,0.15); font-size:96px; font-weight:900; letter-spacing:-2px; line-height:1; }
   .capa-titulo-txt { color:#fff; font-size:36px; font-weight:900; text-align:center; text-transform:uppercase; }
   .capa-sub { color:#fff; font-size:14px; letter-spacing:3px; border:1px solid rgba(255,255,255,0.5); padding:6px 20px; border-radius:20px; }
@@ -173,8 +207,8 @@ window.catGerarPDF = async function(opcoes = {}) {
 
 <div class="barra-acoes no-print">
   <strong>${titulo} — ${produtos.length} produto(s)</strong>
-  <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
-  <button class="btn-fechar" onclick="window.close()">✕ Fechar</button>
+  <button class="btn-imprimir" onclick="window.print()">Imprimir / Salvar PDF</button>
+  <button class="btn-fechar" onclick="window.close()">Fechar</button>
 </div>
 
 ${capaHtml}

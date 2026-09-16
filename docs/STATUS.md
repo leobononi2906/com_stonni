@@ -66,6 +66,11 @@ HTML/JS vanilla, sem build. `index.html` (shell/login/nav dirigido por `construi
 - `configuracoes.js` grande — refatoração gradual.
 
 ## Dev-log
+- 2026-09-16 — **A capa do catálogo passou a usar o lockup da marca, e o fundo teve de mudar junto.** Antes era um logo tipográfico com emoji (`✳ stonni`).
+  - **A logo entra embutida em data URI**, não como `<img src>` relativo: aquela janela é documento autônomo (`window.open('','_blank')` + `document.write`), a origem é `about:blank` e caminho relativo não resolve. Se o `fetch` falhar, cai no nome em texto — capa com `<img>` quebrada é pior que capa sem logo.
+  - **Não dava para arrumar a logo sem arrumar o fundo.** O símbolo do `logo-stonni-white.png` **não é branco: é azul `#196DBB`** (só a palavra é branca), e o degradê claro da capa deixava ele em **1,58** de contraste. Medidos os candidatos no centro da capa, onde a logo fica: degradê antigo **1,74**; **gradiente da marca 1,03** — o pior de todos, o azul some no azul; índigo escuro (`#16103D` → `#2A1F74`) **2,98**, com a palavra saindo de 3,04 para **15,7**. Ficou o índigo.
+  - Os dois emoji da barra de ação (🖨/✕) viraram texto: aquele documento não carrega o `ds/stonni-icones.css`, então ícone de máscara não existe ali.
+  - O cabeçalho do arquivo agora diz por extenso que ali dentro é literal e data URI, nunca `var()` nem caminho relativo.
 - 2026-09-16 — **Publicado** (`387a740`, merge de `232f7c0` com `9567b14`). Conferido **no ar**, não só no push: `index.html` 49.814 → 57.619 bytes; `ds/stonni-ds.css?v=20260915` e `ds/stonni-icones.css?v=20260915` servindo 200; as duas logos 200; `logo.png` respondendo **404**, o que prova que a remoção chegou; `manifest.json` com os três ícones novos e `theme_color` `#145EA8`; `sw.js` publicado em `stonni-v6-20260916` com o `APP_SHELL` completo. `npx oxlint` antes do push: **zero variável indefinida** (o resto são avisos de função chamada por `onclick`, que o linter não enxerga).
   - **No celular, deploy no ar ainda não é app atualizado.** É PWA: quem está com o app aberto só vê a mudança quando o service worker `v6` ativar. "Continua igual" nesse caso não é bug de código — é fechar todas as abas e reabrir.
 - 2026-09-16 — **Revisão tela a tela do redesign, com o login do banco de teste.** Um bug achado e corrigido; o resto passou.
