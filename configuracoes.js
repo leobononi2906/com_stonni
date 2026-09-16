@@ -25,6 +25,7 @@ async function renderConfiguracoes(el) {
           <button class="cfg-tab" onclick="cfgAba('acoes',this)"><i class="ic ic-sm" data-ic="target"></i> Ações & Promoções</button>
           <button class="cfg-tab" onclick="cfgAba('pdf',this)"><i class="ic ic-sm" data-ic="file-text"></i> PDF do Pedido</button>
           <button class="cfg-tab" onclick="cfgAba('logs',this)"><i class="ic ic-sm" data-ic="clipboard-list"></i> Logs</button>
+          <button class="cfg-tab" onclick="cfgAba('acessos',this)"><i class="ic ic-sm" data-ic="shield-check"></i> Acessos</button>
         </div>
       </div>
       <div id="cfg-body"></div>
@@ -46,7 +47,25 @@ function cfgAba(aba, btn) {
     case 'pdf':             cfgCarregarPDF(body); break;
     case 'status':           cfgCarregarStatus(body); break;
     case 'logs':             cfgCarregarLogs(body); break;
+    case 'acessos':          cfgCarregarAcessos(body); break;
   }
+}
+
+// ============================================================
+//  ABA — ACESSOS: quem tem acesso a este app
+// ============================================================
+// Só leitura, pelo módulo compartilhado `ds/geral-acesso.js`. Quem MUDA
+// acesso muda no Hub — é lá que o CRUD de permissão mora, num lugar só.
+// Quem PODE ver é a RPC que decide, pelo JWT: admin global ou admin do
+// módulo `atacado`. Se ela recusar, ou se a migration 0003 não estiver
+// neste banco, o painel não desenha e fica só a explicação.
+async function cfgCarregarAcessos(body) {
+  body.innerHTML = '<div id="cfg-acessos"></div>';
+  const ok = typeof GeralAcesso !== 'undefined' && await GeralAcesso.montar({
+    alvo: 'cfg-acessos', modulo: 'atacado',
+    url: SUPA_URL, key: SUPA_KEY, sb,
+  });
+  if (!ok) body.innerHTML = '<div class="empty-state"><p>Só o administrador global e o administrador do Comercial veem quem tem acesso aqui.</p></div>';
 }
 
 // ============================================================
