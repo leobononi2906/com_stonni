@@ -1,9 +1,14 @@
-/* ==========================================================
-   STONNI — DESIGN SYSTEM (ferramentas internas)
-   Tokens canonicos copiados da skill stonni-design-interno.
-   NAO editar aqui: este arquivo e gerado por concatenacao.
-   Fontes NAO vem por @import (vira <link> no <head>).
-   ========================================================== */
+/* =============================================================================
+   Stonni Design System — tokens, arquivo unico.
+
+   GERADO a partir do pacote "Stonni Design System - Interno" (15/09/2026).
+   NAO EDITAR A MAO: regenere concatenando tokens/ na ordem do styles.css do
+   pacote. O styles.css original e so @import e encadearia 9 requisicoes antes
+   da primeira pintura -- por isso aqui vem tudo junto.
+
+   O @import das fontes saiu deste arquivo e virou <link> no <head>, para nao
+   bloquear o CSS esperando o Google Fonts.
+   ========================================================================== */
 
 /* ---------- tokens/colors.css ---------- */
 /* Cores base — extraídas do símbolo Stonni (assets/logo-mark.png).
@@ -38,30 +43,6 @@
   /* Gradiente da marca — uso restrito: marca, splash, headers de destaque. */
   --gradient-brand:linear-gradient(135deg,#01A9DF 0%,#1A74C4 52%,#4131AE 100%); /* @kind color */
   --gradient-brand-soft:linear-gradient(135deg,#E6F7FD 0%,#EAF2FC 55%,#EEEDFA 100%); /* @kind color */
-}
-
-/* ---------- tokens/radius.css ---------- */
-:root{
-  --radius-xs:3px;--radius-sm:4px;--radius-md:6px;--radius-lg:8px;
-  --radius-xl:12px;--radius-2xl:16px;--radius-pill:999px;
-  --border-w:1px;--border-w-strong:1.5px;--focus-ring-w:3px; /* @kind radius */
-}
-
-/* ---------- tokens/spacing.css ---------- */
-:root{
-  /* Grade de 4px */
-  --space-0:0;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;
-  --space-5:20px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;
-  --space-16:64px;--space-20:80px;--space-24:96px;
-
-  /* Alturas de controle — densidade média (padrão dos sistemas internos) */
-  --control-h-sm:32px;--control-h-md:40px;--control-h-lg:48px;
-  --control-px-sm:10px;--control-px-md:14px;--control-px-lg:18px;
-
-  /* Cromo de aplicação */
-  --sidebar-w:248px;--sidebar-w-collapsed:64px;--topbar-h:60px;
-  --page-px:28px;--page-py:24px;--page-max:1440px;
-  --row-h:48px;--row-h-compact:40px; /* @kind spacing */
 }
 
 /* ---------- tokens/typography.css ---------- */
@@ -99,6 +80,30 @@
   --type-caption:var(--fw-regular) var(--fs-100)/var(--lh-normal) var(--font-sans);
   --type-mono:var(--fw-medium) var(--fs-200)/1.4 var(--font-mono);
   --type-overline:var(--fw-bold) var(--fs-100)/1.2 var(--font-sans);
+}
+
+/* ---------- tokens/spacing.css ---------- */
+:root{
+  /* Grade de 4px */
+  --space-0:0;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;
+  --space-5:20px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;
+  --space-16:64px;--space-20:80px;--space-24:96px;
+
+  /* Alturas de controle — densidade média (padrão dos sistemas internos) */
+  --control-h-sm:32px;--control-h-md:40px;--control-h-lg:48px;
+  --control-px-sm:10px;--control-px-md:14px;--control-px-lg:18px;
+
+  /* Cromo de aplicação */
+  --sidebar-w:248px;--sidebar-w-collapsed:64px;--topbar-h:60px;
+  --page-px:28px;--page-py:24px;--page-max:1440px;
+  --row-h:48px;--row-h-compact:40px; /* @kind spacing */
+}
+
+/* ---------- tokens/radius.css ---------- */
+:root{
+  --radius-xs:3px;--radius-sm:4px;--radius-md:6px;--radius-lg:8px;
+  --radius-xl:12px;--radius-2xl:16px;--radius-pill:999px;
+  --border-w:1px;--border-w-strong:1.5px;--focus-ring-w:3px; /* @kind radius */
 }
 
 /* ---------- tokens/elevation.css ---------- */
@@ -204,7 +209,28 @@
   --feedback-danger-bg:var(--danger-50);--feedback-danger-border:var(--danger-100);--feedback-danger-fg:var(--danger-700);
 }
 
-/* ---------- tokens/fonts.css (sem o @import) ---------- */
+/* ---------- tokens/base.css ---------- */
+/* Reset mínimo e padrões de documento. */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+h1,h2,h3,h4,h5,h6{margin:0;color:var(--text-heading);text-wrap:balance}
+h1{font:var(--type-h1);letter-spacing:var(--ls-display)}
+h2{font:var(--type-h2);letter-spacing:var(--ls-heading)}
+h3{font:var(--type-h3);letter-spacing:var(--ls-heading)}
+h4{font:var(--type-h4)}
+p{margin:0 0 var(--space-4);text-wrap:pretty}
+a{color:var(--text-link);text-decoration:none;border-bottom:1px solid transparent;transition:color var(--dur-fast) var(--ease-standard),border-color var(--dur-fast) var(--ease-standard)}
+a:hover{color:var(--text-link-hover);border-bottom-color:currentColor}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+code,kbd,samp,pre{font-family:var(--font-mono);font-size:.92em}
+hr{border:0;border-top:var(--border-w) solid var(--border-default);margin:var(--space-6) 0}
+::selection{background:var(--blue-100);color:var(--blue-900)}
+small{font:var(--type-caption);color:var(--text-muted)}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- tokens/fonts.css (sem o @import; ver <link> no head) ---------- */
 /* Fontes — SUBSTITUIÇÃO SINALIZADA.
    Os binários oficiais da Stonni não foram fornecidos. Usamos os equivalentes
    mais próximos no Google Fonts: Archivo (display/títulos, grotesca industrial),

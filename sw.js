@@ -11,7 +11,9 @@
 // v7: a porta do app passou a conferir modulo (temAcessoStonni). O index.html
 // esta no APP_SHELL, entao sem bumpar aqui quem ja instalou o PWA continuaria
 // arrancando pela casca velha quando estiver offline.
-const CACHE_VERSION = 'stonni-v7-20260916';
+// v8: stonni-ds.css sincronizado com o canonico do stonni-assistencia
+// (17/09/2026) — entrou o bloco tokens/base.css (reset + <a>/<h1..h6>).
+const CACHE_VERSION = 'stonni-v8-20260917';
 const APP_SHELL = [
   './',
   './index.html',
@@ -21,7 +23,7 @@ const APP_SHELL = [
   // O ?v= tem de ser IDENTICO ao do <link>/<img> no index.html: caches.match
   // casa a URL inteira, query string incluida. Se divergir, o arranque offline
   // pinta o app sem estilo nenhum — e nao da erro, so fica feio.
-  './ds/stonni-ds.css?v=20260915',
+  './ds/stonni-ds.css?v=20260917',
   './ds/stonni-icones.css?v=20260915',
   './logo-stonni-ink.png?v=20260916',
   './logo-stonni-white.png?v=20260916',
