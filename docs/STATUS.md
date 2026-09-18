@@ -1,6 +1,30 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-09-17
+> Atualizado: 2026-09-18
+
+## Dev-log 18/09/2026 — visual convergido com o stonni-assistencia
+Os dois apps já usavam o mesmo pacote `stonni-design-interno` (`ds/stonni-ds.css` idêntico
+byte a byte), mas a **ponte** de cada `index.html` traduzia dois tokens de forma diferente —
+por isso pareciam sistemas distintos lado a lado. Convergido para o padrão do stonni-assistencia
+(que já batia com o pacote — Card.prompt.md pede raio 8px, Sidebar.prompt.md pede símbolo, não
+wordmark completo):
+- `.card`/`.table-card`: `--radius: var(--radius-xl)` (12px) → `var(--radius-lg)` (8px).
+- Item de menu ativo: `--blue-light` era `var(--cyan-500)` (mesmo tom no texto e no traço) →
+  virou `var(--cyan-300)` no texto (contraste sobre o índigo da lateral) com `var(--cyan-500)`
+  direto no traço lateral de 3px — mesmo critério do assistencia.
+- Sidebar, topbar mobile e tela de login: trocado o wordmark completo (`logo-stonni-white.png`
+  / `logo-stonni-ink.png`, 130–180px) pelo símbolo `logo-mark-64.png` (cópia idêntica do
+  `stonni-mark-64.png` do assistencia) + nome por extenso ao lado/abaixo — as classes
+  `.sidebar-logo-inner/-mark/-text` já existiam no CSS sem uso, só não estavam no markup.
+- Cartão de login: raio `--radius-2xl` (16px) → `--radius-xl` (12px), `max-width` 400px → 360px.
+- `logo-stonni-white.png`/`logo-stonni-ink.png` **continuam em uso** nos PDFs gerados
+  (`catalogo-pdf.js`, `pdf-pedido.js`, `pdf-orcamento-file.js`, `configuracoes.js`) — não mexi
+  ali, é wordmark de documento impresso, não tela.
+- `sw.js`: `CACHE_VERSION` de `stonni-v8-20260917` para `stonni-v9-20260918`, `APP_SHELL`
+  trocou as duas entradas de wordmark por `logo-mark-64.png?v=20260918`.
+- Auditoria (`auditar-tokens.py --marca stonni-interno`): sem ponte auto-referente, sem
+  `hsl(var())` remanescente, sem hotlink de logo/favicon.
+- **Não mexi no stonni-assistencia** — ele já era a referência correta.
 
 ## O que é
 **PWA único** do Grupo Bononi que junta, num só app e uma só sidebar:

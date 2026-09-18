@@ -13,7 +13,10 @@
 // arrancando pela casca velha quando estiver offline.
 // v8: stonni-ds.css sincronizado com o canonico do stonni-assistencia
 // (17/09/2026) — entrou o bloco tokens/base.css (reset + <a>/<h1..h6>).
-const CACHE_VERSION = 'stonni-v8-20260917';
+// v9: sidebar/login/topbar mobile trocaram o wordmark pelo simbolo
+// (logo-mark-64.png), raio e ciano do menu ativo convergidos com o
+// stonni-assistencia (18/09/2026) — unificacao visual dos dois apps.
+const CACHE_VERSION = 'stonni-v9-20260918';
 const APP_SHELL = [
   './',
   './index.html',
@@ -25,8 +28,7 @@ const APP_SHELL = [
   // pinta o app sem estilo nenhum — e nao da erro, so fica feio.
   './ds/stonni-ds.css?v=20260917',
   './ds/stonni-icones.css?v=20260915',
-  './logo-stonni-ink.png?v=20260916',
-  './logo-stonni-white.png?v=20260916',
+  './logo-mark-64.png?v=20260918',
 ];
 
 // Instala: pré-cacheia a casca (para abrir offline). Não falha o SW se algum item faltar.

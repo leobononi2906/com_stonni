@@ -58,7 +58,7 @@
      sidebar e a topbar mobile passaram a usar --surface-nav. */
   --blue-dark:      var(--action-primary-bg);
   --blue-mid:       var(--blue-500);
-  --blue-light:     var(--cyan-500);
+  --blue-light:     var(--cyan-300);
   --blue-pale:      var(--blue-50);
 
   --text-primary:   var(--text-body);
@@ -70,7 +70,7 @@
   --orange: var(--warning-600);   --orange-bg: var(--warning-50);
   --yellow: var(--warning-700);   --yellow-bg: var(--warning-50);
 
-  --radius: var(--radius-xl);
+  --radius: var(--radius-lg);
 
   /* Tokens que so este app tem. O DS nao define versao translucida das
      semanticas, e vidro colorido e usado aqui em aviso, selecao e toast.
@@ -119,10 +119,10 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
 
 .login-box {
   background: var(--surface);
-  border-radius:var(--radius-2xl);
+  border-radius:var(--radius-xl);
   padding:var(--space-10);
   width: 100%;
-  max-width: 400px;
+  max-width: 360px;
   box-shadow: var(--shadow-lg);
 }
 .login-logo {
@@ -178,10 +178,7 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
   display: flex; align-items: center; gap:var(--space-2-5);
 }
 .sidebar-logo-mark {
-  width: 36px; height:36px; border-radius:var(--radius-10);
-  background: var(--blue-light);
-  display: flex; align-items: center; justify-content: center;
-  font-size:var(--fs-300); font-weight: 800; color: var(--neutral-0); flex-shrink: 0;
+  width: 30px; height:auto; flex-shrink: 0;
 }
 .sidebar-logo-text { flex: 1; overflow: hidden; }
 .sidebar-logo-text h2 { font-size:var(--fs-400); font-weight: 700; color: var(--neutral-0); letter-spacing: -0.3px; }
@@ -204,7 +201,7 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
 .nav-item.active { color: var(--blue-light); background: var(--surface-nav-active); }
 .nav-item.active::before {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-  width: 3px; background: var(--blue-light); border-radius:0 2px 2px 0;
+  width: 3px; background: var(--cyan-500); border-radius:0 2px 2px 0;
 }
 .nav-item .nav-icon { font-size:var(--fs-450); width: 20px; text-align: center; flex-shrink: 0; }
 .nav-badge {
@@ -542,9 +539,8 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">
-      <!-- Card branco -> lockup em tinta. Nao ha border-radius: o PNG e
-           transparente, nao um retangulo com fundo. -->
-      <img src="logo-stonni-ink.png?v=20260916" alt="Stonni" style="width:180px; margin-bottom:var(--space-4);">
+      <img src="logo-mark-64.png?v=20260918" alt="" aria-hidden="true" style="width:52px;height:auto;margin-bottom:var(--space-3);">
+      <h1>Stonni</h1>
       <p>Portal do Representante</p>
     </div>
     <div class="form-group">
@@ -571,7 +567,13 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <img src="logo-stonni-white.png?v=20260916" alt="Stonni" style="width:130px;display:block;margin-bottom:var(--space-1-5);"><div style="font-size:var(--fs-075);color:var(--text-on-nav-muted);text-transform:uppercase;letter-spacing:1px;">Portal do Representante</div>
+      <div class="sidebar-logo-inner">
+        <img class="sidebar-logo-mark" src="logo-mark-64.png?v=20260918" alt="" aria-hidden="true">
+        <div class="sidebar-logo-text">
+          <h2>Stonni</h2>
+          <span>Portal do Representante</span>
+        </div>
+      </div>
     </div>
 
     <nav class="sidebar-nav" id="sidebar-nav">
@@ -596,7 +598,7 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
     <!-- Mobile topbar -->
     <div class="mobile-topbar">
       <button class="mobile-menu-btn" onclick="abrirSidebar()"><i class="ic ic-sm" data-ic="menu"></i></button>
-      <img src="logo-stonni-white.png?v=20260916" alt="Stonni" style="height:28px;">
+      <img src="logo-mark-64.png?v=20260918" alt="Stonni" style="height:28px;width:auto;">
       <span style="width:30px"></span>
     </div>
 
