@@ -1,6 +1,30 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-09-18
+> Atualizado: 2026-09-23
+
+## Dev-log 23/09/2026 — autoria em produto do catálogo (quem cadastrou / quem alterou)
+Pedido: conferir se com-stonni.vercel.app mostra quem subiu um produto ou quem alterou a data.
+Não mostrava — e a causa era mais funda que a tela: `ped_catalogo_produtos` não gravava nenhuma
+informação de autor, só existia isso no CRM (`atac_crm_notas.criado_por`).
+- **Migration em produção** (`vishxwdxqiygbxmtpfoy`, aplicada e conferida 23/09/2026):
+  `docs/sql/2026-09-23_autoria_catalogo.sql` — adiciona `criado_por text` e `alterado_por text`
+  em `ped_catalogo_produtos`. Reaproveita `criado_em`/`atualizado_em`, que **já existiam** (o
+  pré-voo pegou isso antes de eu duplicar coluna). Pré-voo/ensaio/revisão em `docs/sql/` do mesmo
+  dia. Sem backfill: os 94 produtos já cadastrados ficam com autoria `NULL` — não há como saber
+  quem os criou, e inventar autor seria pior que deixar em branco.
+- **`configuracoes.js`**: `cfgSalvarProduto` grava `criado_por: USUARIO?.email` no insert. Todo
+  `supaPatch` de edição de produto (`cfgAtualizarProduto`, tags, fotos automáticas/manuais,
+  definir capa, remover foto, sincronizar Bling, toggle esgotado) passou a gravar
+  `alterado_por`/`alterado_em` — 9 pontos de patch no arquivo, todos cobertos (o único patch que
+  **não** ganhou `alterado_por` foi o auto-sync com Bling logo após o cadastro, dentro do próprio
+  `cfgSalvarProduto`: é parte do cadastro, não uma edição posterior).
+- **Exibição**: `cfgEditarProduto` (drawer de edição) agora mostra "Cadastrado por X em DD/MM"
+  e/ou "Última alteração por Y em DD/MM" no topo do formulário; produto sem histórico mostra
+  "Sem registro de autoria (produto cadastrado antes deste controle existir)".
+- **Não verificado no navegador**: a tela exige login (sessão `USUARIO` vinda do Hub) e o dev
+  server local desta sessão não tem como logar sem credencial real — validei só sintaxe
+  (`node --check`) e a leitura do fluxo de código. Pedir para alguém abrir um produto em
+  Configurações → Catálogo e conferir a linha de autoria antes de considerar fechado.
 
 ## Dev-log 18/09/2026 — visual convergido com o stonni-assistencia
 Os dois apps já usavam o mesmo pacote `stonni-design-interno` (`ds/stonni-ds.css` idêntico
@@ -77,6 +101,9 @@ HTML/JS vanilla, sem build. `index.html` (shell/login/nav dirigido por `construi
 | `crm/docs/` | Doc do CRM (cópia do stonnidist-v2). | mexer no `crm/` |
 
 ## Pendências / próximos passos
+- [ ] **Validar autoria de produto no device real** (login de verdade): abrir um produto em
+  Configurações → Catálogo, editar algo e conferir se aparece "Cadastrado por"/"Última alteração
+  por" no drawer — feito em código dia 23/09/2026, não testado no navegador (sem sessão).
 - [ ] **Gerar um PDF de catálogo e um de pedido** antes de publicar o DS — as cores de marca dos 3 geradores mudaram, e geração de PDF quebra calada.
 - [ ] **Altura de controle** (132 pontos, 28/34/36/38/42/44/52/56/72px) ainda literal: a escala do DS é 32/40/48 e nenhuma casa. Encaixar mexe no tamanho de todo botão e campo — decisão de design.
 - [ ] Devolver ao pacote da skill os **22 ícones Lucide** transcritos na seção EXTRAS do `ds/stonni-icones.css`, se valerem para os outros apps.

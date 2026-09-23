@@ -951,7 +951,7 @@ window.cfgSincronizarTodos = async function() {
       const patch = {};
       if ((r?.fotos||[]).length > 0) patch.fotos = r.fotos;
       if (r?.foto_miniatura) patch.foto_miniatura = r.foto_miniatura;
-      if (Object.keys(patch).length > 0) await supaPatch('ped_catalogo_produtos', `id=eq.${p.id}`, patch);
+      if (Object.keys(patch).length > 0) { patch.alterado_por = USUARIO?.email || null; patch.alterado_em = new Date().toISOString(); await supaPatch('ped_catalogo_produtos', `id=eq.${p.id}`, patch); }
       ok++;
     } catch(_) { erro++; }
     // Pequena pausa para não sobrecarregar a edge function
@@ -1098,7 +1098,7 @@ window.cfgSalvarProduto = async function() {
   btn.textContent = 'Salvando...'; btn.disabled = true;
   const referencia = document.getElementById('np-ref').value.trim() || sku;
   const npTags = [...document.querySelectorAll('.np-tag-check:checked')].map(el=>el.value);
-  const body = { id_produto_erp: parseInt(sku), referencia, nome, descricao: document.getElementById('np-desc').value.trim(), aplicacao: document.getElementById('np-aplicacao').value.trim(), id_grupo: parseInt(document.getElementById('np-id-grupo').value) || null, grupo: document.getElementById('np-grupo').value.trim(), id_subgrupo: parseInt(document.getElementById('np-id-subgrupo').value) || null, subgrupo: document.getElementById('np-subgrupo').value.trim(), preco_base: parseFloat(document.getElementById('np-preco').value) || 0, ativo: document.getElementById('np-ativo').checked, esgotado: document.getElementById('np-esgotado').checked, fotos: [], especificacoes: {}, tags: npTags };
+  const body = { id_produto_erp: parseInt(sku), referencia, nome, descricao: document.getElementById('np-desc').value.trim(), aplicacao: document.getElementById('np-aplicacao').value.trim(), id_grupo: parseInt(document.getElementById('np-id-grupo').value) || null, grupo: document.getElementById('np-grupo').value.trim(), id_subgrupo: parseInt(document.getElementById('np-id-subgrupo').value) || null, subgrupo: document.getElementById('np-subgrupo').value.trim(), preco_base: parseFloat(document.getElementById('np-preco').value) || 0, ativo: document.getElementById('np-ativo').checked, esgotado: document.getElementById('np-esgotado').checked, fotos: [], especificacoes: {}, tags: npTags, criado_por: USUARIO?.email || null };
   const inserted = await supaInsert('ped_catalogo_produtos', body);
   const idNovo = inserted?.[0]?.id;
   btn.textContent = 'Sincronizando com Bling...';
@@ -1133,7 +1133,7 @@ window.cfgDefinirCapa = async function(id, indice) {
   if (!fotos[indice]) return;
   // Move foto escolhida para o índice 0
   const novas = [fotos[indice], ...fotos.filter((_,i) => i !== indice)];
-  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos: novas });
+  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos: novas, alterado_por: USUARIO?.email || null, alterado_em: new Date().toISOString() });
   // Recarrega o drawer
   cfgEditarProduto(id);
 };
@@ -1159,7 +1159,7 @@ window.cfgUploadFotoManual = async function(id, input) {
     const r = await supa('ped_catalogo_produtos', `id=eq.${id}&select=fotos_manual`);
     const fotos_manual = Array.isArray(r?.[0]?.fotos_manual) ? r[0].fotos_manual : [];
     fotos_manual.push(url);
-    await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos_manual, foto_manual_miniatura: fotos_manual[0] });
+    await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos_manual, foto_manual_miniatura: fotos_manual[0], alterado_por: USUARIO?.email || null, alterado_em: new Date().toISOString() });
     cfgEditarProduto(id);   // recarrega o drawer com a foto nova
   } catch (e) {
     if (msg) { msg.textContent = 'Falha ao enviar: ' + (e.message || e); msg.style.color = 'var(--red)'; }
@@ -1174,7 +1174,7 @@ window.cfgRemoverFotoManual = async function(id, indice) {
   const alvo = fotos[indice];
   if (alvo === undefined) return;
   const novas = fotos.filter((_, i) => i !== indice);
-  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos_manual: novas, foto_manual_miniatura: novas[0] || null });
+  await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos_manual: novas, foto_manual_miniatura: novas[0] || null, alterado_por: USUARIO?.email || null, alterado_em: new Date().toISOString() });
   if (typeof alvo === 'string' && alvo.includes('/catalogo-fotos/')) {
     const rel = alvo.split('/catalogo-fotos/')[1];
     if (rel) fetch(`${SUPA_URL}/storage/v1/object/catalogo-fotos/${rel}`, { method: 'DELETE', headers: { apikey: SUPA_KEY, Authorization: HEADERS['Authorization'] || ('Bearer ' + SUPA_KEY) } }).catch(()=>{});
@@ -1192,6 +1192,7 @@ window.cfgRemoverFoto = async function(id, indice) {
   const novas = fotos.filter((_, i) => i !== indice);
   const patch = { fotos: novas };
   if (r?.[0]?.foto_miniatura && r[0].foto_miniatura === alvo) patch.foto_miniatura = novas[0] || null;
+  patch.alterado_por = USUARIO?.email || null; patch.alterado_em = new Date().toISOString();
   await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, patch);
   // Se era foto manual (nossa no storage), remove o arquivo também
   if (typeof alvo === 'string' && alvo.includes('/catalogo-fotos/')) {
@@ -1208,7 +1209,14 @@ window.cfgEditarProduto = async function(id) {
   const fotosErp = p.fotos_erp || [];
   const fotosManual = p.fotos_manual || [];
   const origemLabel = ({ bling:'<i class="ic ic-sm" data-ic="circle"></i> Bling', erp:'<i class="ic ic-sm" data-ic="circle"></i> ERP', manual:'<i class="ic ic-sm" data-ic="pencil"></i> Manual' })[p.origem_foto] || '— sem foto';
+  const autoriaPartes = [];
+  if (p.criado_por) autoriaPartes.push(`Cadastrado por <b>${p.criado_por}</b>${p.criado_em ? ' em ' + new Date(p.criado_em).toLocaleString('pt-BR') : ''}`);
+  if (p.alterado_por) autoriaPartes.push(`Última alteração por <b>${p.alterado_por}</b>${p.alterado_em ? ' em ' + new Date(p.alterado_em).toLocaleString('pt-BR') : ''}`);
+  const autoriaHtml = autoriaPartes.length
+    ? `<div style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-2-5)">${autoriaPartes.join(' · ')}</div>`
+    : `<div style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-2-5)">Sem registro de autoria (produto cadastrado antes deste controle existir).</div>`;
   abrirDrawer('Editar Produto', p.nome, `
+    ${autoriaHtml}
     <div style="margin-bottom:var(--space-1)">
       <div style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:var(--space-1-5)">
         Fotos automáticas (Bling ▸ ERP) — <span style="font-weight:400">no catálogo aparece: <b>${origemLabel}</b></span>
@@ -1337,7 +1345,7 @@ window.cfgSincronizarBling = async function(id, sku) {
     if (rDim?.altura_cm)      { patch.altura_cm = rDim.altura_cm; document.getElementById('ep-altura').value = rDim.altura_cm; }
     if (rDim?.largura_cm)     { patch.largura_cm = rDim.largura_cm; document.getElementById('ep-largura').value = rDim.largura_cm; }
     if (rDim?.comprimento_cm) { patch.comprimento_cm = rDim.comprimento_cm; document.getElementById('ep-comprimento').value = rDim.comprimento_cm; }
-    if (Object.keys(patch).length > 0) await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, patch);
+    if (Object.keys(patch).length > 0) { patch.alterado_por = USUARIO?.email || null; patch.alterado_em = new Date().toISOString(); await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, patch); }
     if (rDim?.peso_kg) {
       const prodRes = await supa('ped_catalogo_produtos', `id=eq.${id}&select=id_produto_erp,nome,referencia`);
       const prod = prodRes?.[0];
@@ -1354,7 +1362,7 @@ window.cfgSincronizarBling = async function(id, sku) {
 
 window.cfgToggleEsgotado = async function(id, esgotado) {
   // Salva só esgotado_manual — sync nunca toca aqui
-  const status = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { esgotado_manual: esgotado });
+  const status = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { esgotado_manual: esgotado, alterado_por: USUARIO?.email || null, alterado_em: new Date().toISOString() });
   if (status !== 204 && status !== 200) {
     alert('Erro ao salvar. Tente novamente.');
     return;
@@ -1379,7 +1387,7 @@ window.cfgAtualizarProduto = async function(id) {
   console.log('cfgAtualizarProduto id:', id);
   const esgotadoCheck = document.getElementById('ep-esgotado-check');
   console.log('esgotado-check element:', esgotadoCheck, 'checked:', esgotadoCheck?.checked);
-  const patch = { sync_fotos: document.getElementById('ep-sync-fotos')?.checked !== false, sync_medidas: document.getElementById('ep-sync-medidas')?.checked !== false, nome: document.getElementById('ep-nome').value.trim(), referencia: document.getElementById('ep-ref').value.trim(), aplicacao: document.getElementById('ep-aplicacao').value.trim(), grupo: document.getElementById('ep-grupo').value.trim(), subgrupo: document.getElementById('ep-subgrupo').value.trim(), preco_base: parseFloat(document.getElementById('ep-preco').value) || 0, ipi_perc: parseFloat(document.getElementById('ep-ipi')?.value) || 0, st_sp: parseFloat(document.getElementById('ep-st-sp')?.value) || 0, st_pr: parseFloat(document.getElementById('ep-st-pr')?.value) || 0, descricao: document.getElementById('ep-desc').value.trim(), ativo: document.getElementById('ep-ativo').checked, esgotado_manual: document.getElementById('ep-esgotado-check')?.checked || false, atualizado_em: new Date().toISOString() };
+  const patch = { sync_fotos: document.getElementById('ep-sync-fotos')?.checked !== false, sync_medidas: document.getElementById('ep-sync-medidas')?.checked !== false, nome: document.getElementById('ep-nome').value.trim(), referencia: document.getElementById('ep-ref').value.trim(), aplicacao: document.getElementById('ep-aplicacao').value.trim(), grupo: document.getElementById('ep-grupo').value.trim(), subgrupo: document.getElementById('ep-subgrupo').value.trim(), preco_base: parseFloat(document.getElementById('ep-preco').value) || 0, ipi_perc: parseFloat(document.getElementById('ep-ipi')?.value) || 0, st_sp: parseFloat(document.getElementById('ep-st-sp')?.value) || 0, st_pr: parseFloat(document.getElementById('ep-st-pr')?.value) || 0, descricao: document.getElementById('ep-desc').value.trim(), ativo: document.getElementById('ep-ativo').checked, esgotado_manual: document.getElementById('ep-esgotado-check')?.checked || false, atualizado_em: new Date().toISOString(), alterado_por: USUARIO?.email || null, alterado_em: new Date().toISOString() };
   const estoqueManualVal = document.getElementById('ep-estoque-manual')?.value;
   patch.estoque_manual = estoqueManualVal !== '' && estoqueManualVal != null ? parseInt(estoqueManualVal) : null;
   const peso = parseFloat(document.getElementById('ep-peso')?.value);
@@ -1396,7 +1404,7 @@ window.cfgAtualizarProduto = async function(id) {
 
   // Patch de tags separado (array — pode ter comportamento diferente)
   const epTags = [...document.querySelectorAll('.ep-tag-check:checked')].map(el => el.value);
-  const r2 = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { tags: epTags });
+  const r2 = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { tags: epTags, alterado_por: USUARIO?.email || null, alterado_em: new Date().toISOString() });
   console.log('patch tags:', r2, epTags);
 
   fecharDrawer(); cfgAba('catalogo', null);
