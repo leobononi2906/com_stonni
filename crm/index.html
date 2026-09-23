@@ -11,7 +11,7 @@
      que faz a ponte (--bg: var(--surface-page), ...) e precisa dos tokens. -->
 <link rel="stylesheet" href="../ds/stonni-ds.css?v=20260917">
 <link rel="stylesheet" href="../ds/stonni-icones.css?v=20260915">
-<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/styles.css?v=20260923a">
 <!-- Embutido no app unificado: esconde a barra interna (a navegação vem da sidebar do Portal) -->
 <script>if(window.top!==window.self){document.documentElement.classList.add('is-embedded');}</script>
 <style>html.is-embedded .sidebar{display:none!important}html.is-embedded .menu-toggle{display:none!important}</style>
@@ -145,10 +145,13 @@
         </select>
       </div>
       <div class="topbar-right">
+        <button class="btn-filtros-mobile" id="btn-filtros-mobile" onclick="toggleFiltrosMobile()"><i class="ic ic-sm" data-ic="filter"></i> Filtros</button>
         <span class="last-update" id="last-update"></span>
         <button class="btn-refresh" onclick="onRefresh()"><i class="ic ic-sm" data-ic="refresh-cw"></i> Atualizar</button>
       </div>
     </header>
+    <!-- Backdrop do painel de filtros mobile (abaixo de 600px, ver crm/css/styles.css) -->
+    <div class="filtros-backdrop" id="filtros-backdrop" onclick="toggleFiltrosMobile(false)"></div>
 
     <div class="loading-bar" id="loading-bar"></div>
 

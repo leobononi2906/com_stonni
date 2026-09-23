@@ -69,8 +69,8 @@ function drawAgenda(el) {
           ${deHoje?`<span style="background:var(--blue-pale);color:var(--blue-dark);padding:var(--space-0-5) var(--space-2);border-radius:var(--radius-pill);font-size:var(--fs-075);font-weight:700"><i class="ic ic-sm" data-ic="circle"></i> ${deHoje} hoje</span>`:''}
         </div>
       </div>
-      <div style="display:flex;flex:1;overflow:hidden">
-        <div style="width:240px;flex-shrink:0;display:flex;flex-direction:column;padding:var(--space-2-5) var(--space-2);border-right:1px solid var(--border)">
+      <div class="agenda-row" style="display:flex;flex:1;overflow:hidden">
+        <div class="agenda-calendario" style="width:240px;flex-shrink:0;display:flex;flex-direction:column;padding:var(--space-2-5) var(--space-2);border-right:1px solid var(--border)">
           <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:var(--space-0-5)">
             ${DS.map(d=>`<div style="text-align:center;font-size:9px;font-weight:700;color:var(--text-muted);padding:var(--space-0-5)">${d}</div>`).join('')}
           </div>

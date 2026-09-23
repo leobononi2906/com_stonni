@@ -431,11 +431,73 @@ details.card-membros[open] .det-arrow { transform:rotate(90deg); }
   .sidebar-overlay { display:none; position:fixed; inset:0; background:var(--surface-overlay); z-index:199; }
   .sidebar-overlay.open { display:block; }
   .menu-toggle { display:flex; }
+
+  /* AGENDA — coluna do calendário empilha sobre o painel do dia em vez de
+     ficar lado a lado (era width:240px fixo; em telas estreitas sobrava
+     pouco mais de 100px pro painel do dia, inutilizável). */
+  .agenda-row { flex-direction:column !important; overflow-y:auto !important; }
+  .agenda-calendario { width:100% !important; flex-shrink:0 !important; max-height:44vh; overflow-y:auto; border-right:none !important; border-bottom:1px solid var(--border); }
 }
+
+/* PRODUTOS (Linhas) — grid de colunas fixas vira scroll horizontal em vez
+   de espremer os números até ficar ilegível. */
+.lin-tablewrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+/* Base do botão de filtros mobile — TEM que vir ANTES do @media(max-width:600px)
+   abaixo: regra fora de media query com a mesma especificidade que vem DEPOIS
+   no arquivo vence mesmo dentro do media query ativo, e o botão nunca apareceria. */
+.btn-filtros-mobile { display:none; }
+
 @media(max-width:600px){
   .pg { padding:var(--space-3-5); }
-  .topbar { padding:0 var(--space-3); }
-  .topbar-filters { display:none; }
+  .topbar { padding:0 var(--space-3); gap:var(--space-1-5); }
+  /* Topbar mais enxuta: breadcrumb e "última atualização" só ocupam espaço
+     que falta pro botão de Filtros e o de Atualizar caberem sem cortar. */
+  .page-breadcrumb { display:none; }
+  .last-update { display:none; }
+  .btn-refresh, .btn-filtros-mobile { font-size:var(--fs-075); padding:0 var(--space-2); gap:5px; }
+
+  /* Filtros globais — no desktop ficam na topbar; abaixo de 600px não cabem
+     (topbar-title + filtros + botão atualizar não cabem juntos numa linha
+     de ~360px). Em vez de simplesmente sumir (era display:none sem
+     alternativa), o MESMO elemento vira um painel fixo no rodapé, aberto
+     pelo botão .btn-filtros-mobile — sem duplicar os campos/estado. */
+  .topbar-filters { display:none !important; }
+  .topbar-filters.mobile-open {
+    display:flex !important;
+    position:fixed; left:0; right:0; bottom:0; top:auto;
+    flex-direction:column; align-items:stretch; gap:var(--space-2-5);
+    background:var(--surface); overflow-x:visible; overflow-y:auto; max-height:70vh;
+    padding:var(--space-4) var(--space-4) max(var(--space-4), calc(var(--space-4) + env(safe-area-inset-bottom)));
+    box-shadow:var(--shadow-lg); border-top:1px solid var(--border);
+    z-index:300;
+  }
+  .topbar-filters.mobile-open .filter-select,
+  .topbar-filters.mobile-open .filter-input { width:100%; min-height:44px; font-size:var(--fs-450) !important; }
+  .filtros-backdrop { display:none; position:fixed; inset:0; background:var(--surface-overlay); z-index:299; }
+  .filtros-backdrop.open { display:block; }
+
+  .btn-filtros-mobile { display:inline-flex; align-items:center; gap:var(--space-1-5); height:var(--control-h-sm); padding:0 var(--space-3); background:var(--surface2); border:1.5px solid var(--border); border-radius:var(--radius-lg); color:var(--text-secondary); font-size:var(--fs-100); font-weight:600; cursor:pointer; flex-shrink:0; }
+
+  /* PRODUTOS (Linhas) — colunas legíveis em vez de espremidas; a tabela
+     rola de lado dentro de .lin-tablewrap. */
+  .lin-trow, .lin-thead { min-width:440px; }
+}
+
+/* Reforços de toque/iOS que o Portal (index.html) já tem e o CRM não tinha:
+   campo com fonte <16px dispara zoom automático no Safari iOS ao focar, e
+   botão abaixo de ~40px é pequeno demais pro dedo. */
+@media(max-width:768px){
+  .topbar-filters:not(.mobile-open) input, .topbar-filters:not(.mobile-open) select,
+  .modal-body input, .modal-body select,
+  .cfg-input, .note-box input, .note-box select, .note-box textarea,
+  .sbox input, .ph-form input {
+    font-size:var(--fs-450) !important;
+    min-height:44px;
+  }
+  .btn-refresh, .tb-btn, .fb, .btn-vinc, .btn-sm, .btn-assumir, .lin-chip {
+    min-height:40px;
+  }
 }
 
 /* utils */

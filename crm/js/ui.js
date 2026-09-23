@@ -37,9 +37,12 @@ function gotoTab(tab) {
   else if(tab==='crm' && S.mainTab==='prospeccao') setMainTab('carteira');
   // Filtros: no CRM só vendedor; config oculta tudo; resto mostra tudo
   const tf = document.getElementById('topbar-filters');
+  const btnF = document.getElementById('btn-filtros-mobile');
   if (tab === 'config' || tab === 'linhas' || tab === 'materiais') {
     // Produtos/Materiais têm conteúdo próprio — não usam o filtro master do topo
     if(tf) tf.style.display = 'none';
+    if(btnF) btnF.style.display = 'none';
+    toggleFiltrosMobile(false);
   } else if (tab === 'crm' || tab === 'prospeccao') {
     if(tf) tf.style.display = 'flex';
     // ocultar tudo exceto vendedor
@@ -52,8 +55,10 @@ function gotoTab(tab) {
     });
     const fv = document.getElementById('f-vend');
     if(fv) fv.style.display = '';
+    if(btnF) btnF.style.display = '';
   } else {
     if(tf) tf.style.display = 'flex';
+    if(btnF) btnF.style.display = '';
     ['f-period','f-start','f-end','f-emp','f-vend'].forEach(id => {
       const el = document.getElementById(id); if(el) el.style.display = '';
     });
@@ -83,6 +88,17 @@ function gotoTab(tab) {
   if(tab==='config')renderConfig();
   if(tab==='materiais' && window.renderMateriais)renderMateriais();
 
+}
+
+// Painel de filtros no mobile (<=600px): o MESMO #topbar-filters vira um
+// painel fixo no rodapé em vez de duplicar os campos — ver crm/css/styles.css.
+function toggleFiltrosMobile(force) {
+  const tf = document.getElementById('topbar-filters');
+  const bd = document.getElementById('filtros-backdrop');
+  if (!tf) return;
+  const open = typeof force === 'boolean' ? force : !tf.classList.contains('mobile-open');
+  tf.classList.toggle('mobile-open', open);
+  bd?.classList.toggle('open', open);
 }
 
 function setMainTab(tab){

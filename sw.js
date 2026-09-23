@@ -16,7 +16,11 @@
 // v9: sidebar/login/topbar mobile trocaram o wordmark pelo simbolo
 // (logo-mark-64.png), raio e ciano do menu ativo convergidos com o
 // stonni-assistencia (18/09/2026) — unificacao visual dos dois apps.
-const CACHE_VERSION = 'stonni-v9-20260918';
+// v10: responsividade mobile do CRM Atacado (crm/) — painel de filtros,
+// Agenda empilhada, tabela de Produtos com scroll, campos com largura fixa
+// (23/09/2026). CSS/JS do CRM nao entra no APP_SHELL (so a casca do Portal
+// e pre-cacheada), mas o bump evita servir o index.html/shell antigo.
+const CACHE_VERSION = 'stonni-v10-20260923';
 const APP_SHELL = [
   './',
   './index.html',

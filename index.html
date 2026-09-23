@@ -489,6 +489,13 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
 
   /* Scroll horizontal em tabelas largas */
   .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Campos de busca/filtro com largura fixa em px (Configurações e Gestão de
+     Pedidos) — no mobile ocupam a linha inteira em vez de sobrar/faltar
+     espaço pro que vem do lado. */
+  #cat-busca, #cat-filtro-status, #logs-busca, #gped-busca {
+    width: 100% !important; max-width: none !important; margin-left: 0 !important;
+  }
 }
 
 /* Extra small — celulares menores */

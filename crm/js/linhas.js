@@ -186,7 +186,7 @@ function renderLinhas(){
         <div class="panel-head"><div class="scard-title" style="margin-bottom:0"><i class="ic ic-sm" data-ic="receipt"></i> Produtos · ${escH(titulo)} <span style="color:var(--text-muted);font-weight:600">(${prods.length})</span></div>
           <div style="display:flex;align-items:center;gap:var(--space-1-5)"><span style="font-size:var(--fs-090);color:var(--text-muted)">Ordenar</span>${sortSel}</div></div>
         <div class="lin-cap">Últimos 30 dias vs média mensal dos 3 meses anteriores · base até ${fmtD(W.anchor)}</div>
-        ${tHead}${tRows}
+        <div class="lin-tablewrap">${tHead}${tRows}</div>
       </div>`;
   }catch(err){
     console.error('renderLinhas',err);
