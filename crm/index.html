@@ -496,6 +496,7 @@
 
 <!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="../ds/geral-central.js?v=1"></script>
 <script>
 'use strict';
 
@@ -580,6 +581,9 @@ async function iniciarApp() {
   const nome = meta.nome || session.user.email || '';
   document.getElementById('user-name').textContent = nome;
   document.getElementById('user-avatar').textContent = nome.charAt(0).toUpperCase();
+  if (window.GeralCentral) {
+    GeralCentral.iniciar({ appId: 'atacado', url: SUPA_URL, key: SUPA_KEY, sb, usuario: { email: session.user.email, nome } });
+  }
   // Iniciar CRM
   function tryInit() {
     if (window.APP && window.APP.init) window.APP.init();

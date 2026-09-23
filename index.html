@@ -1099,6 +1099,11 @@ function iniciarApp() {
   document.getElementById('user-role').textContent = USUARIO.perfil;
   document.getElementById('user-avatar').textContent = USUARIO.nome[0].toUpperCase();
 
+  if (window.GeralCentral) {
+    var sbCentral = (typeof supabase !== 'undefined') ? supabase.createClient(SUPA_URL, SUPA_KEY) : null;
+    GeralCentral.iniciar({ appId: 'stonni', url: SUPA_URL, key: SUPA_KEY, sb: sbCentral, usuario: { email: USUARIO.email, nome: USUARIO.nome } });
+  }
+
   renderNav();
 
   // Página inicial = primeira área liberada pelo Hub
@@ -1211,7 +1216,9 @@ function renderRepresentantes(el, params) {
 <script src="vendor/jspdf.plugin.autotable.min.js"></script>
 <!-- "Quem tem acesso aqui" (Configurações → Acessos). Cópia verbatim de
      bononi-hub/ds/geral-acesso.js — subir o ?v= junto ao trocar o arquivo. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ds/geral-acesso.js?v=2"></script>
+<script src="ds/geral-central.js?v=1"></script>
 <script src="configuracoes.js"></script>
 <script src="catalogo-pdf.js"></script>
 <script src="catalogo.js"></script>

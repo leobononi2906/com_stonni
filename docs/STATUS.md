@@ -2,6 +2,38 @@
 
 > Atualizado: 2026-09-23
 
+## Dev-log 23/09/2026 — Botão "Sugerir melhoria" nas duas telas (Portal e CRM)
+Rollout do Painel de Desenvolvimento (botão flutuante + avisos/campanha cadastral/expiração de
+senha) neste app, na sequência do piloto em `bononi-compras`. com_stonni é o caso especial do
+grupo: duas telas HTML independentes, cada uma com seu próprio login — as duas tinham que receber
+o hook, senão fica a mesma armadilha das "telas gêmeas" de sempre.
+- Copiado `ds/geral-central.js` (cópia verbatim de `bononi-hub/ds/geral-central.js`, sem editar
+  conteúdo) para dentro do repo. As duas telas apontam pro MESMO arquivo, cada uma com o caminho
+  relativo certo: `index.html` (raiz) referencia `ds/geral-central.js`; `crm/index.html`
+  referencia `../ds/geral-central.js`.
+- `index.html` (Portal do Representante, `appId: 'stonni'`) não carregava `supabase-js` — o app
+  inteiro é feito com `fetch` cru contra a API REST/Auth do Supabase, sem cliente JS. Como
+  `GeralCentral.iniciar` espera um `sb` (supabase-js) pra ler sessão e gravar atualização
+  cadastral, adicionei a tag `<script src=".../supabase-js@2">` e crio um cliente só pra esse uso
+  (`supabase.createClient(SUPA_URL, SUPA_KEY)`), sem tocar no fluxo de login existente — o
+  cliente novo lê a MESMA sessão do `localStorage` (`sb-vishxwdxqiygbxmtpfoy-auth-token`) que o
+  login manual já grava. Chamada colocada dentro de `iniciarApp()`, logo depois que `USUARIO` é
+  preenchido na sidebar.
+- `crm/index.html` (CRM Atacado, `appId: 'atacado'`) já tinha `sb`/`SUPA_URL`/`SUPA_KEY` prontos
+  (usa supabase-js). Chamada colocada em `iniciarApp()`, logo depois do nome do usuário ser
+  escrito na sidebar.
+- **Testado local** nas duas telas (`com-stonni`, porta 5292, staging): confirmei
+  `window.GeralCentral` definido e o botão "Sugerir melhoria" renderizando e abrindo o modal em
+  ambas. Achado que não era do meu código: um service worker (`sw.js`) ativo na sessão do
+  navegador estava servindo `ds/geral-central.js` a partir do cache antigo (fallback de SPA,
+  devolvendo o `index.html` no lugar do script — `SyntaxError: Unexpected token '<'`); confirmado
+  com `curl` direto no servidor (arquivo correto, 16127 bytes) e resolvido no teste
+  desregistrando o SW e limpando o cache do navegador — não é um bug do app, é reforço do que já
+  está anotado em `pwa-nao-atualiza-no-celular`. Os 404 (`atac_umbler_contatos`,
+  `atac_cliente_telefones`, `atac_log_acoes`, `PGRST205`) são pré-existentes: staging não tem as
+  tabelas do CRM (ver `staging-sem-tabelas-crm-com-stonni`), nada a ver com este rollout.
+- Original em `bononi-hub/ds/geral-central.js`.
+
 ## Dev-log 23/09/2026 — responsividade mobile do CRM Atacado (99f871c)
 Pedido: auditar se o app (PWA) é 100% responsivo no mobile. O Portal (`index.html`) já tinha
 tratamento extenso (`@media max-width:768px/390px`, drawer em tela cheia, `min-height:44px` em
