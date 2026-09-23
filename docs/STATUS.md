@@ -2,6 +2,59 @@
 
 > Atualizado: 2026-09-23
 
+## Dev-log 23/09/2026 — responsividade mobile do CRM Atacado (99f871c)
+Pedido: auditar se o app (PWA) é 100% responsivo no mobile. O Portal (`index.html`) já tinha
+tratamento extenso (`@media max-width:768px/390px`, drawer em tela cheia, `min-height:44px` em
+campo/botão, `env(safe-area-inset)`); o CRM Atacado (`crm/`) ficou para trás — nasceu como app
+separado (`stonnidist-v2`) e foi embutido depois, com só 2 breakpoints. Achados concretos lendo o
+código (não achismo) e corrigidos:
+- **Filtros globais do CRM somem no mobile.** `.topbar-filters{display:none}` abaixo de 600px,
+  sem alternativa — e pior, na prática o `display:none` nem sempre funcionava, porque
+  `gotoTab()` seta `style.display='flex'` inline, e inline vence CSS externo mesmo dentro de
+  media query (só perde para `!important`). Corrigido nas duas pontas: `!important` na regra
+  mobile, e o MESMO elemento agora vira um painel fixo no rodapé (`.topbar-filters.mobile-open`),
+  aberto por um botão "Filtros" novo na topbar — sem duplicar campo/estado.
+  - Ao testar ao vivo, achei um bug introduzido por mim mesmo nesse processo: a regra base
+    `.btn-filtros-mobile{display:none}` estava DEPOIS do `@media(max-width:600px)` no arquivo —
+    regra fora de media query que vem depois no CSS vence a de dentro, mesmo com a media query
+    ativa. O botão nunca aparecia. Corrigido reordenando (regra base antes do media query).
+  - E descobri testando que o botão novo estourava a largura da topbar em 375px (cortava
+    "Atualizar"). Escondi breadcrumb/"última atualização" e apertei padding/fonte da topbar
+    abaixo de 600px.
+- **Agenda do CRM** (`crm/js/agenda.js`): coluna do calendário `width:240px` fixo ao lado do
+  painel do dia, sem nenhum `@media` no arquivo — em 375px sobrava ~135px pro painel do dia.
+  Agora empilha (calendário em cima, painel do dia embaixo) abaixo de 900px.
+- **Aba Produtos** (`.lin-trow`, `crm/css/styles.css`): grid de 6 colunas com pixels fixos
+  (`1fr 44px 60px 60px 64px 56px`) sem versão mobile. Ganhou wrapper `.lin-tablewrap` com scroll
+  horizontal em vez de espremer os números.
+- **Campos de busca/filtro com largura fixa em px** (Configurações → Catálogo/Logs, Gestão de
+  Pedidos): 100% da linha abaixo de 768px, via seletor por id no `index.html`.
+- Reforço de toque/iOS no CRM (`min-height:44px`, `font-size:16px` em campo pra não disparar
+  zoom do Safari), espelhando o padrão que o Portal já tinha.
+- Bump `CACHE_VERSION` do `sw.js` (v9→v10) e `?v=20260923a` no `crm/css/styles.css` (não tinha
+  cache-buster nenhum antes).
+- **Conferido**: local (staging) com login real (`gustavo12cristina@...`) — painel de filtros e
+  Agenda empilhada funcionando em 375px. Produtos/campos fixos só confirmados por leitura de
+  código: o banco de teste não tem as tabelas `atac_crm_*`/`atac_umbler_contatos`/
+  `atac_cliente_telefones` (404 PGRST205), então essas telas não renderizam dado nenhum lá.
+  Publicado (99f871c) e conferido no ar: `agenda-calendario`, `mobile-open` e `sw.js` v10
+  encontrados no bundle servido por `com-stonni.vercel.app`.
+
+## Dev-log 23/09/2026 — hotfix: coluna errada quebrava salvar produto (101e403)
+Ao conferir a autoria no navegador com login real (Gustavo Pelissari Oenning, admin), editando
+**INVERSOR VOLTAGEM 12V. P/ 110W**: o drawer mostrou certo "Sem registro de autoria" (produto
+cadastrado antes da migration), mas ao clicar **Salvar**, o console acusou
+`PGRST204 — Could not find the 'alterado_em' column`. O commit anterior (eb2dfb7) gravava
+`alterado_em` no PATCH, só que a coluna reaproveitada da migration se chama `atualizado_em` — eu
+mesmo escrevi a revisão dizendo "reaproveita atualizado_em" e depois usei outro nome no código.
+PostgREST recusa o PATCH **inteiro** quando uma coluna não existe (não só o campo errado), então
+**toda edição de produto em Configurações → Catálogo vinha falhando com 400 silenciosamente desde
+a publicação** — editar dados, fotos (auto/manual), definir capa, tags, esgotado e sincronizar
+Bling, todos os 9 pontos que toquei. Corrigido: `alterado_em` → `atualizado_em` nos 9 pontos +
+na exibição do drawer. Reconferido no navegador com o mesmo produto: Salvar funcionou (sem erro
+no console), e reabrindo o drawer passou a mostrar "Última alteração por gustavo12cristina@..."
+com data/hora.
+
 ## Dev-log 23/09/2026 — autoria em produto do catálogo (quem cadastrou / quem alterou)
 Pedido: conferir se com-stonni.vercel.app mostra quem subiu um produto ou quem alterou a data.
 Não mostrava — e a causa era mais funda que a tela: `ped_catalogo_produtos` não gravava nenhuma
