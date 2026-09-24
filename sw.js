@@ -23,7 +23,9 @@
 // v11: FAB "Sugerir melhoria" nao cobre mais o rodape do drawer (z-index
 // abaixo do drawer/overlay), e titulo do drawer com icone renderiza como
 // icone (innerHTML), nao mais como tag crua na tela (24/09/2026).
-const CACHE_VERSION = 'stonni-v11-20260924';
+// v12: catalogo serve a foto original (sem /render/image — cota de Image
+// Transformations estourou) e foto manual e reduzida no upload (24/09/2026).
+const CACHE_VERSION = 'stonni-v12-20260924';
 const APP_SHELL = [
   './',
   './index.html',
