@@ -2,6 +2,21 @@
 
 > Atualizado: 2026-09-24
 
+## Dev-log 24/09/2026 — Service worker registra atualização e recarrega sozinho; tela restaurada no F5
+Reclamação geral do grupo: o app só pegava versão nova apertando F5, e o F5 sempre voltava pra
+primeira área liberada (Catálogo/Home), mesmo no meio de um pedido ou tela do CRM.
+- **Como era:** `sw.js` já existia e era bem feito (network-first), mas `index.html` só
+  registrava (`navigator.serviceWorker.register`) sem nunca chamar `reg.update()` nem escutar
+  `controllerchange` — o SW instalado nunca avisava nem aplicava versão nova sozinho. A tela
+  atual (`paginaAtual`, função `irPara`) vivia só em variável JS, sem persistência nenhuma.
+- **Como fica:** registro agora chama `reg.update()` no load, a cada 30 min e ao voltar pra
+  aba, e recarrega a página sozinho quando o SW novo assume (`controllerchange`, com guarda
+  contra loop). `irPara()` grava `{id, params}` da tela atual em
+  `localStorage['com_stonni:ultima-pagina']`; `iniciarApp()` restaura essa tela no lugar da
+  primeira área liberada, só se ela ainda estiver liberada pelo Hub para o usuário logado.
+- **O que não muda:** nenhuma lógica de negócio, nenhuma tabela — só o registro do SW e a
+  persistência de navegação. `sw.js` em si não foi alterado (já estava correto).
+
 ## Dev-log 24/09/2026 — `geral-central.js` v8: FAB não cobre mais botão do drawer + título com ícone
 Reportado pelo usuário: no drawer "Gerar Catálogo PDF" (Catálogo, Portal), o botão flutuante
 "Sugerir melhoria" ficava por cima do botão "Gerar PDF" do rodapé, e o título do drawer aparecia

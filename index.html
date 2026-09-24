@@ -934,6 +934,9 @@ function irPara(paginaId, params = {}) {
   paginaAtual = paginaId;
   fecharSidebar();
   renderPagina(paginaId, params);
+  // F5 (ou um deploy novo) tirava do lugar quem estava no meio de um pedido/CRM.
+  // Guarda a tela pra restaurar no próximo load (ver iniciarApp).
+  try { localStorage.setItem('com_stonni:ultima-pagina', JSON.stringify({ id: paginaId, params })); } catch(e) {}
 }
 
 // ============================================================
@@ -1106,10 +1109,21 @@ function iniciarApp() {
 
   renderNav();
 
-  // Página inicial = primeira área liberada pelo Hub
+  // Página inicial = a última em que o usuário estava (se ainda liberada pelo
+  // Hub), senão a primeira área liberada. Sem isto, F5/deploy novo sempre
+  // arrancava do zero, mesmo no meio de um pedido ou CRM.
   const nav = construirNav();
-  const paginaInicial = nav.length ? nav[0].itens[0].id : null;
-  if (paginaInicial) irPara(paginaInicial);
+  const idsLiberados = nav.flatMap(g => g.itens.map(i => i.id));
+  let paginaInicial = nav.length ? nav[0].itens[0].id : null;
+  let paramsIniciais = {};
+  try {
+    const salvo = JSON.parse(localStorage.getItem('com_stonni:ultima-pagina') || 'null');
+    if (salvo && idsLiberados.includes(salvo.id)) {
+      paginaInicial = salvo.id;
+      paramsIniciais = salvo.params || {};
+    }
+  } catch(e) {}
+  if (paginaInicial) irPara(paginaInicial, paramsIniciais);
 }
 
 // ============================================================
@@ -1230,11 +1244,26 @@ function renderRepresentantes(el, params) {
 <script src="materiais.js"></script>
 <script src="crm.js"></script>
 
-<!-- PWA: registra o service worker (network-first; ver sw.js) -->
+<!-- PWA: registra o service worker (network-first; ver sw.js).
+     Sem isto, o SW instalado nunca avisava nem aplicava versão nova sozinho —
+     quem estava com o app aberto só via o deploy novo apertando F5 na mão. -->
 <script>
 if ('serviceWorker' in navigator) {
+  let jaRecarregou = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (jaRecarregou) return;   // guarda contra laço de recarga
+    jaRecarregou = true;
+    location.reload();
+  });
+
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').then((reg) => {
+      reg.update().catch(() => {});   // procura versão nova toda abertura
+      setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) reg.update().catch(() => {});
+      });
+    }).catch(() => {});
   });
 }
 </script>
