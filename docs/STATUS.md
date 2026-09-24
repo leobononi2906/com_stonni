@@ -2,6 +2,27 @@
 
 > Atualizado: 2026-09-24
 
+## Dev-log 24/09/2026 — Catálogo parou de gastar a cota de Image Transformations do Supabase (3f541cf, 4348fe0) — **ainda não está no ar**
+- **O buraco:** desde 15/09 (`0de5264`, "fotos em alta") a `catFotoUrl` reescrevia toda foto do
+  storage para `/storage/v1/render/image/public/…?width=…`. O plano Pro inclui **100 imagens de
+  origem distintas por ciclo**; em 24/09 o painel da org mostrava **168/100 (168%)**, tudo no
+  projeto Dashboard, com spend cap ligado (risco de restrição = foto quebrando no catálogo e no
+  PDF até o ciclo virar em 07/10). Era o **único** uso de `render/image` em todos os apps.
+  Diminuir largura/qualidade não resolveria: conta imagem distinta, não tamanho.
+- **O que mudou:** `catFotoUrl` (index.html) devolve a foto original (`object/public`); tela e
+  PDF do catálogo usam a mesma função. Upload de foto manual (`cfgUploadFotoManual`) passa antes
+  por `cfgReduzirFoto`: lado maior ≤ 1600px, JPEG 85%, fundo branco (PNG transparente não vira
+  preto); foto já pequena (≤1600px e ≤600 KB), GIF/SVG/HEIC passam intactos. O limite de 5 MB
+  passou a valer **depois** de reduzir. `sw.js` → `stonni-v12-20260924`.
+- **Medido no preview local:** URL gerada sai `object/public`; imagem 4000×3000 → 1600×1200 JPEG;
+  800×600 volta o mesmo arquivo. Lint sem aviso novo. **Não testado com login** (upload real e
+  catálogo com dado).
+- **Deploy barrado:** a Vercel recusou o build do `4348fe0` — "Deployment rate limited" (teto de
+  100 deploys/dia da conta). `com-stonni.vercel.app` segue servindo a versão com `render/image`.
+- **Ficou de fora:** fotos já no storage e as que vêm do Bling/ERP não são reduzidas (só o
+  upload manual passa pela redução); o contador 168 não zera antes de 07/10; desligar o spend
+  cap foi descartado porque libera excedente de tudo na org.
+
 ## Dev-log 24/09/2026 — Correção do FAB "Sugerir melhoria": z-index:150 não era baixo o suficiente
 A correção anterior (mesmo dia, `z-index:9997` → `150`) partiu do que resolvia aqui no
 `com_stonni` (drawer com `z-index:200/201`), mas testando ao vivo no `bononi-exped` e no
@@ -235,6 +256,9 @@ HTML/JS vanilla, sem build. `index.html` (shell/login/nav dirigido por `construi
 | `crm/docs/` | Doc do CRM (cópia do stonnidist-v2). | mexer no `crm/` |
 
 ## Pendências / próximos passos
+- [ ] **Redeploy do `4348fe0` na Vercel** (barrado pelo teto de 100/dia em 24/09) e conferir no
+  ar que `index.html` não tem `render/image` e `sw.js` é `stonni-v12`. Depois, com login: subir
+  uma foto manual grande e abrir catálogo + PDF. Card no Trello (Esta semana).
 - [ ] **Validar autoria de produto no device real** (login de verdade): abrir um produto em
   Configurações → Catálogo, editar algo e conferir se aparece "Cadastrado por"/"Última alteração
   por" no drawer — feito em código dia 23/09/2026, não testado no navegador (sem sessão).
@@ -260,6 +284,9 @@ HTML/JS vanilla, sem build. `index.html` (shell/login/nav dirigido por `construi
   `req.mode === 'navigate'`. **Mesmo padrão em `bononi-vendas` e `controle-stonni`**; o `bononi-exped`
   não tem. Mexer no `sw.js` exige bumpar `CACHE_VERSION` e só chega em quem já instalou o PWA quando
   o SW novo ativar.
+- **Não usar `/storage/v1/render/image` (Image Transformations).** O Pro inclui só 100 imagens
+  distintas por ciclo e o catálogo sozinho passou disso em 9 dias. Tamanho se controla no upload
+  (`cfgReduzirFoto`).
 - `configuracoes.js` grande — refatoração gradual.
 
 ## Dev-log
