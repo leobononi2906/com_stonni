@@ -20,7 +20,10 @@
 // Agenda empilhada, tabela de Produtos com scroll, campos com largura fixa
 // (23/09/2026). CSS/JS do CRM nao entra no APP_SHELL (so a casca do Portal
 // e pre-cacheada), mas o bump evita servir o index.html/shell antigo.
-const CACHE_VERSION = 'stonni-v10-20260923';
+// v11: FAB "Sugerir melhoria" nao cobre mais o rodape do drawer (z-index
+// abaixo do drawer/overlay), e titulo do drawer com icone renderiza como
+// icone (innerHTML), nao mais como tag crua na tela (24/09/2026).
+const CACHE_VERSION = 'stonni-v11-20260924';
 const APP_SHELL = [
   './',
   './index.html',

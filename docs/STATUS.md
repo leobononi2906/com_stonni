@@ -2,6 +2,25 @@
 
 > Atualizado: 2026-09-24
 
+## Dev-log 24/09/2026 — `geral-central.js` v8: FAB não cobre mais botão do drawer + título com ícone
+Reportado pelo usuário: no drawer "Gerar Catálogo PDF" (Catálogo, Portal), o botão flutuante
+"Sugerir melhoria" ficava por cima do botão "Gerar PDF" do rodapé, e o título do drawer aparecia
+como tag HTML crua (`<i class="ic ic-sm" data-ic="file-text"></i> Gerar Catálogo PDF`) em vez do
+ícone.
+- **Como era:** FAB (`ds/geral-central.js`, `.gc-fab-wrap`) com `z-index:9997`, muito acima do
+  drawer (`z-index:201`) — ficava sempre por cima de qualquer drawer aberto, tampando o botão
+  primário do rodapé (afeta todo drawer do app, não só o de PDF).
+- **Como fica:** FAB com `z-index:150` — abaixo do drawer/overlay (200/201) e dos demais modais
+  do app (9999+), então some atrás de qualquer drawer/modal aberto. `abrirDrawer()`
+  (`index.html`) passou a usar `innerHTML` no título em vez de `textContent`, então títulos com
+  ícone (`catalogo.js`, `configuracoes.js`) renderizam o ícone em vez do texto da tag.
+- **O que não muda:** nenhum dado, nenhuma tabela — é ajuste de CSS/DOM nas duas telas (Portal e
+  CRM apontam pro mesmo `ds/geral-central.js`; `?v=` bumpado de 7 pra 8 nas duas). `sw.js`
+  `CACHE_VERSION` bumpado pra `v11-20260924`.
+- Não testado com dado real local: staging não tem `ped_catalogo_produtos`/`ped_configuracoes`
+  (a tela de Catálogo trava em loading), pendência pré-existente e separada desta correção.
+  Conferir em produção depois de publicar.
+
 ## Dev-log 24/09/2026 — `geral-central.js` v7: aviso aceita HTML simples
 Mensagem do aviso (mostrada nas duas telas, Portal e CRM) passa por `escHtmlSimples` em vez de
 `esc` puro: escapa tudo e libera só `<b>`, `<strong>`, `<i>`, `<em>`, `<u>`, `<br>` e
