@@ -2,6 +2,14 @@
 
 > Atualizado: 2026-09-24
 
+## Dev-log 24/09/2026 — Correção do FAB "Sugerir melhoria": z-index:150 não era baixo o suficiente
+A correção anterior (mesmo dia, `z-index:9997` → `150`) partiu do que resolvia aqui no
+`com_stonni` (drawer com `z-index:200/201`), mas testando ao vivo no `bononi-exped` e no
+`bononi-cobranca` (que usam escala Tailwind `z-20`/`z-30`/`z-50` para nav/drawer/painel) o FAB
+continuava por cima — `150 > 50`. Baixado de novo, agora para `z-index:10`, valor seguro em
+todos os apps que usam este arquivo (abaixo até do menor caso encontrado, `z-20`). `?v=` bumpado
+de 8 pra 9 nas duas telas (Portal e CRM).
+
 ## Dev-log 24/09/2026 — Service worker registra atualização e recarrega sozinho; tela restaurada no F5
 Reclamação geral do grupo: o app só pegava versão nova apertando F5, e o F5 sempre voltava pra
 primeira área liberada (Catálogo/Home), mesmo no meio de um pedido ou tela do CRM.
