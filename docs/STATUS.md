@@ -1,6 +1,13 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-09-23
+> Atualizado: 2026-09-24
+
+## Dev-log 24/09/2026 — `geral-central.js` v7: aviso aceita HTML simples
+Mensagem do aviso (mostrada nas duas telas, Portal e CRM) passa por `escHtmlSimples` em vez de
+`esc` puro: escapa tudo e libera só `<b>`, `<strong>`, `<i>`, `<em>`, `<u>`, `<br>` e
+`<a href="https://...">` — qualquer outra tag some. Mudança feita no original
+`bononi-hub/ds/geral-central.js`, replicada verbatim aqui (as duas telas apontam pro mesmo
+arquivo), `?v=` bumpado de 6 pra 7 nas duas.
 
 ## Dev-log 23/09/2026 — Botão "Sugerir melhoria" nas duas telas (Portal e CRM)
 Rollout do Painel de Desenvolvimento (botão flutuante + avisos/campanha cadastral/expiração de
