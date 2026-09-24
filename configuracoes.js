@@ -1138,13 +1138,36 @@ window.cfgDefinirCapa = async function(id, indice) {
   cfgEditarProduto(id);
 };
 
+// Reduz a foto no navegador antes do upload (lado maior ≤ 1600px, JPEG 85%).
+// O catálogo serve a foto original — sem isso, foto de celular (4000px, 4MB)
+// iria inteira para a tela e para o PDF. Foto que já é pequena passa intacta.
+async function cfgReduzirFoto(file, maxLado = 1600, qualidade = 0.85) {
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return file;   // gif/svg/heic: não mexe
+  let bmp;
+  try { bmp = await createImageBitmap(file); } catch (e) { return file; }
+  const escala = Math.min(1, maxLado / Math.max(bmp.width, bmp.height));
+  if (escala === 1 && file.size <= 600 * 1024) { bmp.close?.(); return file; }
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bmp.width * escala);
+  canvas.height = Math.round(bmp.height * escala);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';                                          // PNG transparente não vira fundo preto no JPEG
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+  bmp.close?.();
+  const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', qualidade));
+  return (blob && blob.size < file.size) ? new File([blob], 'foto.jpg', { type: 'image/jpeg' }) : file;
+}
+
 // Upload de foto manual (enquanto o produto não está no Bling) → bucket catalogo-fotos
 window.cfgUploadFotoManual = async function(id, input) {
-  const file = input?.files?.[0]; if (!file) return;
-  if (!file.type.startsWith('image/')) { alert('Selecione uma imagem.'); input.value=''; return; }
-  if (file.size > 5 * 1024 * 1024) { alert('Imagem muito grande (máx. 5MB).'); input.value=''; return; }
+  const original = input?.files?.[0]; if (!original) return;
+  if (!original.type.startsWith('image/')) { alert('Selecione uma imagem.'); input.value=''; return; }
   const msg = document.getElementById('ep-foto-msg');
-  if (msg) { msg.textContent = 'Enviando foto...'; msg.style.color = 'var(--text-muted)'; }
+  if (msg) { msg.textContent = 'Preparando foto...'; msg.style.color = 'var(--text-muted)'; }
+  const file = await cfgReduzirFoto(original);
+  if (file.size > 5 * 1024 * 1024) { alert('Imagem muito grande (máx. 5MB).'); input.value=''; if (msg) msg.textContent=''; return; }
+  if (msg) { msg.textContent = 'Enviando foto...'; }
   try {
     const ext = ((file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')) || 'jpg';
     const path = `manual/${id}-${Date.now()}.${ext}`;
