@@ -32,6 +32,15 @@
    bolinha vermelha no ícone avisa quando tem novidade (resposta_vista=
    false). Abrir "Meus pedidos" chama a RPC geral_marcar_pedidos_vistos()
    e desliga a notificação. Precisa da migration 0011.
+   v10: aviso de PRAZO DE TREINAMENTO fora do app de Treinamento. Chama
+   a RPC trein_meus_prazos() (bononi-treinamento, migration 0007): grupo
+   enviado à pessoa, com prazo vencendo em até 3 dias ou já vencido, e
+   ainda não concluído. Cartão fixo no canto inferior esquerdo (não
+   bloqueia, não é overlay), com botão que leva ao app de Treinamento.
+   Some sozinho quando a pessoa conclui; "Lembrar amanhã" esconde só até
+   o dia seguinte. No próprio app de Treinamento não aparece (lá já tem
+   os selos). Sem a RPC no banco, desiste em silêncio.
+   (v7–v9 foram mudanças de z-index/HTML no aviso, sem migration.)
    Módulo para colar em qualquer app do grupo, complementar ao
    geral-acesso.js (aquele é "quem tem acesso"; este é "o Painel de
    Desenvolvimento falando com quem usa o app").
@@ -266,6 +275,62 @@
         resolve();
       });
     });
+  }
+
+  // ── 2b. Prazo de treinamento (v10) ───────────────────────────────
+  var TREIN_URL = 'https://bononi-treinamento.vercel.app/';
+
+  function chaveAdiado(o) { return 'gc-trein-prazo-adiado:' + String(o.usuario.email).toLowerCase(); }
+  function hojeLocal() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+
+  function textoPrazo(p) {
+    var dias = parseInt(p.dias_para_prazo, 10);
+    if (dias < 0) return 'atrasado há ' + (-dias) + (dias === -1 ? ' dia' : ' dias');
+    if (dias === 0) return 'vence hoje';
+    if (dias === 1) return 'vence amanhã';
+    return 'vence em ' + dias + ' dias';
+  }
+
+  async function verificarPrazosTreinamento(o) {
+    if (o.appId === 'treinamento') return;
+    try {
+      try { if (localStorage.getItem(chaveAdiado(o)) === hojeLocal()) return; } catch (e) { /* sem storage: mostra */ }
+      var resp = await rest(o, 'rpc/trein_meus_prazos', { method: 'POST', body: '{}' });
+      if (!resp || !resp.ok) return; // RPC ausente neste banco ou sem permissão: silencioso
+      var itens = await resp.json();
+      if (!Array.isArray(itens) || !itens.length) return;
+
+      var algumAtrasado = itens.some(function (p) { return parseInt(p.dias_para_prazo, 10) < 0; });
+      var cor = algumAtrasado ? '#c11f25' : '#b26a00';
+      var velho = document.getElementById('gc-trein-prazo');
+      if (velho) velho.remove();
+      var el = document.createElement('div');
+      el.id = 'gc-trein-prazo';
+      el.setAttribute('role', 'status');
+      el.style.cssText = 'position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:10;' +
+        'max-width:min(340px,calc(100vw - 96px));background:#fff;color:#14161a;border:1px solid #e3e5e8;' +
+        'border-left:4px solid ' + cor + ';border-radius:8px;padding:12px 14px;box-shadow:0 6px 24px rgba(20,22,26,.18);' +
+        'font-family:inherit;font-size:13px;line-height:1.4';
+      el.innerHTML =
+        '<div style="font-size:11px;font-weight:700;letter-spacing:.03em;color:' + cor + ';margin-bottom:6px">' +
+          (algumAtrasado ? 'TREINAMENTO ATRASADO' : 'PRAZO DE TREINAMENTO') + '</div>' +
+        itens.map(function (p) {
+          return '<div style="margin-bottom:4px"><strong>' + esc(p.grupo_nome) + '</strong>' +
+            (p.obrigatorio ? ' <span style="font-size:10.5px;font-weight:700;color:#b26a00">(obrigatório)</span>' : '') +
+            ' — ' + esc(textoPrazo(p)) + '</div>';
+        }).join('') +
+        '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' +
+          '<a id="gc-trein-abrir" href="' + TREIN_URL + '" target="_blank" rel="noopener" style="background:#14161a;color:#fff;' +
+            'text-decoration:none;border-radius:5px;padding:7px 12px;font-weight:700;font-size:12.5px">Abrir treinamento</a>' +
+          '<button id="gc-trein-adiar" style="background:none;border:1px solid #d5d8dc;border-radius:5px;padding:7px 10px;' +
+            'font-size:12.5px;cursor:pointer;color:#14161a">Lembrar amanhã</button>' +
+        '</div>';
+      document.body.appendChild(el);
+      el.querySelector('#gc-trein-adiar').addEventListener('click', function () {
+        try { localStorage.setItem(chaveAdiado(o), hojeLocal()); } catch (e) { /* só some nesta tela */ }
+        el.remove();
+      });
+    } catch (e) { console.warn('[geral-central] prazo treinamento', e && e.message); }
   }
 
   async function verificarAtualizacaoCadastral(o) {
@@ -592,6 +657,7 @@
       await verificarAvisos(opts);
       await verificarAtualizacaoCadastral(opts);
       montarFabSugestao(opts);
+      verificarPrazosTreinamento(opts); // sem await: cartão não bloqueia nada
     },
   };
 

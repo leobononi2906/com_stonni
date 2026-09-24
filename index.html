@@ -1071,18 +1071,44 @@ async function supaInsert(tabela, body) {
   }
   return res.json().catch(()=>({}));
 }
+// PATCH barrado por RLS ou com filtro que não casa responde 200/204 igual ao
+// sucesso. Por isso pede de volta só o id das linhas alteradas e confere:
+// zero linhas vira aviso na tela e status 0 (quem testa 200/204 trata como erro).
 async function supaPatch(tabela, filtro, body) {
-  const url = `${SUPA_URL}/rest/v1/${tabela}?${filtro}`;
-  const opts = { method: 'PATCH', headers: { ...HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify(body) };
+  const url = `${SUPA_URL}/rest/v1/${tabela}?${filtro}&select=id`;
+  const opts = { method: 'PATCH', headers: { ...HEADERS, 'Prefer': 'return=representation' }, body: JSON.stringify(body) };
   let res = await fetch(url, opts);
   if (res.status === 401 && await renovarToken()) {
-    res = await fetch(url, { ...opts, headers: { ...HEADERS, 'Prefer': 'return=minimal' } });
+    res = await fetch(url, { ...opts, headers: { ...HEADERS, 'Prefer': 'return=representation' } });
   }
   if (!res.ok) {
     const err = await res.text().catch(()=>'');
     console.error(`supaPatch ${tabela} erro ${res.status}:`, err);
+    avisarFalhaGravacao(`Não foi salvo (erro ${res.status}). Tente de novo.`);
+    return res.status;
+  }
+  const linhas = await res.json().catch(() => null);
+  if (!Array.isArray(linhas) || !linhas.length) {
+    console.error(`supaPatch ${tabela}: nenhuma linha alterada (${filtro})`);
+    avisarFalhaGravacao('Não foi salvo: o banco não alterou nenhum registro (sem permissão ou item não encontrado).');
+    return 0;
   }
   return res.status;
+}
+
+function avisarFalhaGravacao(msg) {
+  let el = document.getElementById('aviso-falha-gravacao');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'aviso-falha-gravacao';
+    el.setAttribute('role', 'alert');
+    el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;max-width:min(92vw,520px);padding:12px 16px;border-radius:10px;background:var(--red);color:#fff;font:600 14px/1.4 system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.25)';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display = 'none'; }, 7000);
 }
 
 // ============================================================
@@ -1227,7 +1253,7 @@ function renderRepresentantes(el, params) {
      bononi-hub/ds/geral-acesso.js — subir o ?v= junto ao trocar o arquivo. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ds/geral-acesso.js?v=2"></script>
-<script src="ds/geral-central.js?v=9"></script>
+<script src="ds/geral-central.js?v=10"></script>
 <script src="configuracoes.js"></script>
 <script src="catalogo-pdf.js"></script>
 <script src="catalogo.js"></script>

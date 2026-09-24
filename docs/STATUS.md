@@ -2,6 +2,9 @@
 
 > Atualizado: 2026-09-24
 
+## Dev-log 24/09/2026 — `supaPatch` confere linha alterada (pente fino)
+- PATCH barrado por RLS ou com filtro que não casa responde 200/204 igual ao sucesso; `supaPatch` (21 chamadas, incl. upload de foto e status de pedido) usava `return=minimal` e só logava no console. Agora pede `select=id` com `return=representation`: zero linhas ou HTTP de erro mostra faixa vermelha na tela (`avisarFalhaGravacao`) e devolve status 0 — quem testa 200/204 trata como erro. `CACHE_VERSION` → `stonni-v13-20260924`.
+
 ## Dev-log 24/09/2026 — Catálogo parou de gastar a cota de Image Transformations do Supabase (3f541cf, 4348fe0) — **no ar desde 24/09 (build do f615a32)**
 - **O buraco:** desde 15/09 (`0de5264`, "fotos em alta") a `catFotoUrl` reescrevia toda foto do
   storage para `/storage/v1/render/image/public/…?width=…`. O plano Pro inclui **100 imagens de
