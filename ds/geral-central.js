@@ -41,6 +41,10 @@
    o dia seguinte. No próprio app de Treinamento não aparece (lá já tem
    os selos). Sem a RPC no banco, desiste em silêncio.
    (v7–v9 foram mudanças de z-index/HTML no aviso, sem migration.)
+   v11: o aviso de prazo leva ATÉ O GRUPO, não só ao app: "Abrir
+   treinamento" abre o grupo mais urgente (o primeiro, por prazo) e cada
+   nome de grupo no cartão é link para o próprio grupo
+   (?grupo=<id>; o app de Treinamento filtra "Minhas trilhas" nele).
    Módulo para colar em qualquer app do grupo, complementar ao
    geral-acesso.js (aquele é "quem tem acesso"; este é "o Painel de
    Desenvolvimento falando com quem usa o app").
@@ -283,6 +287,12 @@
   function chaveAdiado(o) { return 'gc-trein-prazo-adiado:' + String(o.usuario.email).toLowerCase(); }
   function hojeLocal() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
 
+  // itens já vêm ordenados por prazo (RPC): o primeiro é o mais urgente
+  function linkGrupo(p) {
+    var id = String((p && p.grupo_id) || '');
+    return /^[0-9a-f-]{36}$/i.test(id) ? TREIN_URL + '?grupo=' + id : TREIN_URL;
+  }
+
   function textoPrazo(p) {
     var dias = parseInt(p.dias_para_prazo, 10);
     if (dias < 0) return 'atrasado há ' + (-dias) + (dias === -1 ? ' dia' : ' dias');
@@ -315,12 +325,13 @@
         '<div style="font-size:11px;font-weight:700;letter-spacing:.03em;color:' + cor + ';margin-bottom:6px">' +
           (algumAtrasado ? 'TREINAMENTO ATRASADO' : 'PRAZO DE TREINAMENTO') + '</div>' +
         itens.map(function (p) {
-          return '<div style="margin-bottom:4px"><strong>' + esc(p.grupo_nome) + '</strong>' +
+          return '<div style="margin-bottom:4px"><a href="' + linkGrupo(p) + '" target="_blank" rel="noopener" ' +
+            'style="color:inherit;font-weight:700;text-decoration:underline">' + esc(p.grupo_nome) + '</a>' +
             (p.obrigatorio ? ' <span style="font-size:10.5px;font-weight:700;color:#b26a00">(obrigatório)</span>' : '') +
             ' — ' + esc(textoPrazo(p)) + '</div>';
         }).join('') +
         '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' +
-          '<a id="gc-trein-abrir" href="' + TREIN_URL + '" target="_blank" rel="noopener" style="background:#14161a;color:#fff;' +
+          '<a id="gc-trein-abrir" href="' + linkGrupo(itens[0]) + '" target="_blank" rel="noopener" style="background:#14161a;color:#fff;' +
             'text-decoration:none;border-radius:5px;padding:7px 12px;font-weight:700;font-size:12.5px">Abrir treinamento</a>' +
           '<button id="gc-trein-adiar" style="background:none;border:1px solid #d5d8dc;border-radius:5px;padding:7px 10px;' +
             'font-size:12.5px;cursor:pointer;color:#14161a">Lembrar amanhã</button>' +
