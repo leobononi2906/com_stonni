@@ -1338,6 +1338,15 @@ window.cfgEditarProduto = async function(id) {
           <span style="font-size:var(--fs-075);color:var(--text-muted)">O sync não remove essa marcação</span>
         </div>
       </div>
+      <div class="form-field" style="margin:0 0 var(--space-2-5)">
+        <label>Selo no catálogo</label>
+        <select id="ep-selo" class="cfg-input">
+          <option value="" ${!p.selo?'selected':''}>Nenhum</option>
+          <option value="promocao" ${p.selo==='promocao'?'selected':''}>Promoção</option>
+          <option value="queima_estoque" ${p.selo==='queima_estoque'?'selected':''}>Queima de estoque</option>
+        </select>
+        <span style="font-size:var(--fs-075);color:var(--text-muted)">Aparece no card do produto para o representante</span>
+      </div>
     </div>
   `, `
     <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red);margin-right:auto" onclick="cfgExcluirProduto(${id})" ><i class="ic ic-sm" data-ic="trash"></i> Excluir</button>
@@ -1429,6 +1438,13 @@ window.cfgAtualizarProduto = async function(id) {
   const epTags = [...document.querySelectorAll('.ep-tag-check:checked')].map(el => el.value);
   const r2 = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { tags: epTags, alterado_por: USUARIO?.email || null, atualizado_em: new Date().toISOString() });
   console.log('patch tags:', r2, epTags);
+
+  // Selo separado: se a coluna ainda não existir no banco, só ele falha
+  const epSelo = document.getElementById('ep-selo');
+  const p0 = (window._cfgProdutos || []).find(x => x.id === id);
+  if (epSelo && (epSelo.value || null) !== (p0?.selo || null)) {
+    await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { selo: epSelo.value || null, alterado_por: USUARIO?.email || null, atualizado_em: new Date().toISOString() });
+  }
 
   fecharDrawer(); cfgAba('catalogo', null);
 };

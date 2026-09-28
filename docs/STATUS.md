@@ -2,6 +2,14 @@
 
 > Atualizado: 2026-09-28
 
+## Dev-log 28/09/2026 — Selo no Catálogo (Promoção / Queima de estoque)
+Chamado de melhoria do Leo. Coluna nova `ped_catalogo_produtos.selo` (`promocao` | `queima_estoque` |
+null, com CHECK), aplicada em produção em 28/09 (`docs/sql/2026-09-28_selo_catalogo.sql`, pré-voo ao
+lado). O banco de teste não tem as tabelas `ped_*`, então a tela foi conferida com produtos falsos.
+Configurações → Editar produto ganhou o campo "Selo no catálogo", gravado num PATCH separado. O
+Catálogo mostra o selo no canto de baixo da foto e no detalhe do produto, e ganhou o filtro "Todos
+os selos". `sw.js` foi para v14.
+
 ## Dev-log 28/09/2026 — Auto-login em ambiente de TESTE (Portal e CRM)
 Portal do Representante (`index.html`, fetch cru + `localStorage`) e CRM Atacado (`crm/index.html`,
 supabase-js) ganharam `bononiAutoLoginTeste()`: tenta a Edge Function `auto-login-teste` (do

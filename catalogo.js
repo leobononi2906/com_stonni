@@ -55,6 +55,11 @@ async function renderCatalogo(el) {
           <option value="disp">Só disponíveis</option>
           <option value="esg">Só esgotados</option>
         </select>
+        <select id="cat-selo" class="cat-select" onchange="catFiltrar()">
+          <option value="">Todos os selos</option>
+          <option value="promocao">Promoção</option>
+          <option value="queima_estoque">Queima de estoque</option>
+        </select>
       </div>
 
       <!-- linha 2 — ações + info -->
@@ -123,6 +128,12 @@ function catPrecoFinal(produto) {
   return { preco: precoTabela, descontoPerc, acaoAtiva };
 }
 
+const CAT_SELOS = { promocao: 'PROMOÇÃO', queima_estoque: 'QUEIMA DE ESTOQUE' };
+function catSeloHtml(p, extra = '') {
+  const label = CAT_SELOS[p.selo];
+  return label ? `<div class="cat-card-badge-selo cat-selo-${p.selo} ${extra}">${label}</div>` : '';
+}
+
 window.catFiltrar = function() {
   const busca  = document.getElementById('cat-search')?.value.toLowerCase() || '';
   const grupo  = document.getElementById('cat-grupo')?.value || '';
@@ -138,6 +149,8 @@ window.catFiltrar = function() {
   if (grupo)        lista = lista.filter(p => p.id_grupo == grupo);
   const tagFiltro = document.getElementById('cat-tag')?.value||'';
   if (tagFiltro) lista = lista.filter(p => Array.isArray(p.tags) && p.tags.includes(tagFiltro));
+  const seloFiltro = document.getElementById('cat-selo')?.value||'';
+  if (seloFiltro) lista = lista.filter(p => p.selo === seloFiltro);
   if (disp==='disp') lista = lista.filter(p => !p.esgotado && !p.esgotado_manual);
   if (disp==='esg')  lista = lista.filter(p => p.esgotado || p.esgotado_manual);
   // Esgotados/fora de linha sempre no final
@@ -170,6 +183,7 @@ window.catFiltrar = function() {
             : `<div class="cat-card-sem-foto"><i class="ic ic-sm" data-ic="package"></i></div>`}
           ${p.esgotado_manual ? `<div class="cat-card-badge-esg">FORA DE LINHA</div>` : p.esgotado ? `<div class="cat-card-badge-esg">ESGOTADO</div>` : ''}
           ${acaoAtiva ? `<div class="cat-card-badge-promo"><i class="ic ic-sm" data-ic="target"></i> OFERTA</div>` : ''}
+          ${catSeloHtml(p)}
         </div>
         <div class="cat-card-body">
           <div class="cat-card-grupo">${p.grupo || '—'}</div>
@@ -228,6 +242,7 @@ window.catAbrirProduto = function(id) {
 
   abrirDrawer(p.nome, `Ref: ${p.referencia||'—'} · ${p.grupo||''}`, `
     ${fotosHtml}
+    ${catSeloHtml(p, 'cat-selo-inline')}
     ${acaoAtiva ? `<div class="alert alert-success" style="margin-bottom:var(--space-3)"><span class="alert-icon"><i class="ic ic-sm" data-ic="target"></i></span><strong>${acaoAtiva.nome}</strong> — ${acaoAtiva.tipo==='desconto'?`${acaoAtiva.valor}% de desconto`:`Preço especial`}</div>` : ''}
     <div style="display:flex;align-items:baseline;gap:var(--space-3);margin-bottom:var(--space-4)">
       ${precoOriginal ? `<span style="font-size:var(--fs-300);color:var(--text-muted);text-decoration:line-through">R$ ${precoOriginal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>` : ''}
@@ -421,6 +436,10 @@ window.catExcluirCatalogo = async function(id) {
     .cat-card-sem-foto { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--text-muted); }
     .cat-card-badge-esg { position:absolute; top:8px; left:8px; background:var(--red); color:var(--neutral-0); font-size:var(--fs-075); font-weight:700; padding:var(--space-0-5) var(--space-2); border-radius:var(--radius-sm); letter-spacing:.5px; }
     .cat-card-badge-promo { position:absolute; top:8px; right:8px; background:var(--green); color:var(--neutral-0); font-size:var(--fs-075); font-weight:700; padding:var(--space-0-5) var(--space-2); border-radius:var(--radius-sm); }
+    .cat-card-badge-selo { position:absolute; bottom:8px; left:8px; color:var(--neutral-0); font-size:var(--fs-075); font-weight:700; padding:var(--space-0-5) var(--space-2); border-radius:var(--radius-sm); letter-spacing:.5px; }
+    .cat-card-badge-selo.cat-selo-inline { position:static; display:inline-block; margin-bottom:var(--space-2); }
+    .cat-selo-promocao { background:var(--indigo-600); }
+    .cat-selo-queima_estoque { background:var(--orange); }
     .cat-card-body { padding:var(--space-3) var(--space-3-5); flex:1; display:flex; flex-direction:column; gap:var(--space-1); }
     .cat-card-grupo { font-size:var(--fs-075); font-weight:700; text-transform:uppercase; color:var(--text-muted); letter-spacing:.5px; }
     .cat-card-nome { font-size:var(--fs-200); font-weight:600; color:var(--text-primary); line-height:1.3; }
