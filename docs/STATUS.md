@@ -2,12 +2,19 @@
 
 > Atualizado: 2026-09-28
 
+## Dev-log 28/09/2026 — Auto-login em ambiente de TESTE (Portal e CRM)
+Portal do Representante (`index.html`, fetch cru + `localStorage`) e CRM Atacado (`crm/index.html`,
+supabase-js) ganharam `bononiAutoLoginTeste()`: tenta a Edge Function `auto-login-teste` (do
+`bononi-hub`, só existe no projeto de teste) antes de mostrar login, só quando `SUPA_URL` é a de
+teste (via `serve-staging.py`). Em produção não muda nada. Mesmo padrão em mais 6 apps do grupo
+(dev-log do `bononi-hub`, 28/09).
+
 ## Dev-log 28/09/2026 — Versão nova não recarrega mais com drawer ou modal aberto
 Regra do grupo desde hoje (skill `manter-tela-ao-atualizar`): sair versão nova não pode tirar a pessoa da tela.
 - **Antes:** o `controllerchange` dava `location.reload()` na hora, inclusive com o drawer de Novo Pedido/Carrinho aberto.
 - **Agora:** a versão nova fica pronta e só entra com a aba oculta ou a pessoa parada há 10 min. Nunca entra com `#drawer.open`, com os overlays do Catálogo (`#cat-share-modal`, `#ia-modal`), com modal do CRM aberto ou com campo preenchido em foco. O CRM roda no iframe `#crm-frame`, então o bloco olha o `contentDocument` dele. O `controllerchange` da primeira instalação é ignorado. A tela já voltava pelo `com_stonni:ultima-pagina`.
 
-## Dev-log 24/09/2026 — `supaPatch` confere linha alterada (pente fino)
+## Dev-log 24/09/2026 — `supaPatch` confere linha alterada (pente fino) (`828cbfc`)
 - PATCH barrado por RLS ou com filtro que não casa responde 200/204 igual ao sucesso; `supaPatch` (21 chamadas, incl. upload de foto e status de pedido) usava `return=minimal` e só logava no console. Agora pede `select=id` com `return=representation`: zero linhas ou HTTP de erro mostra faixa vermelha na tela (`avisarFalhaGravacao`) e devolve status 0 — quem testa 200/204 trata como erro. `CACHE_VERSION` → `stonni-v13-20260924`.
 
 ## Dev-log 24/09/2026 — Catálogo parou de gastar a cota de Image Transformations do Supabase (3f541cf, 4348fe0) — **no ar desde 24/09 (build do f615a32)**
