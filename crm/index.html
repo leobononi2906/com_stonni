@@ -509,6 +509,32 @@ window.SUPA_URL = SUPA_URL;
 window.SUPA_KEY = SUPA_KEY;
 window.sb = sb;
 
+// Login automático só existe no banco de TESTE (serve-staging.py troca a URL/chave
+// em memória, nunca no disco); em produção BONONI_TEST_MODE é sempre false e o fetch
+// abaixo nem roda, porque essa Edge Function só existe no projeto de teste.
+const BONONI_TEST_MODE = SUPA_URL.includes('gxzhuewczlixksqrmjuk');
+
+async function bononiAutoLoginTeste(sb) {
+  if (!BONONI_TEST_MODE) return null;
+  try {
+    const resp = await fetch(SUPA_URL + '/functions/v1/auto-login-teste', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPA_KEY },
+      body: '{}',
+    });
+    const data = await resp.json();
+    if (!data.ok) return null;
+    const { data: sessionData, error } = await sb.auth.setSession({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+    });
+    if (error) return null;
+    return sessionData.session;
+  } catch (e) {
+    return null;
+  }
+}
+
 const PAGINAS = {
   home:       { title:'Home',          breadcrumb:'Stonni Atacado · Home' },
   vendedores: { title:'Vendedores',    breadcrumb:'Stonni Atacado · Vendedores' },
@@ -595,14 +621,16 @@ async function iniciarApp() {
 }
 
 // Verifica sessão ao carregar
-sb.auth.getSession().then(({ data:{ session } }) => {
+(async () => {
+  let { data:{ session } } = await sb.auth.getSession();
+  if (!session) session = await bononiAutoLoginTeste(sb);
   if (!session) {
     document.getElementById('auth-loading').style.display = 'none';
     document.getElementById('login-wrap').classList.add('show');
     return;
   }
   iniciarApp();
-});
+})();
 
 // Expor para módulos JS
 window.setPageInfo = setPageInfo;
