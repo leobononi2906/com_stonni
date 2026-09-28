@@ -1,7 +1,19 @@
 /* ============================================================
-   geral-central.js — Sugestão, avisos, atualização cadastral e
-   expiração de senha  |  v13 — 25/09/2026
+   geral-central.js — Sugestão, avisos, atualização cadastral,
+   expiração de senha e sino de pendências  |  v14 — 28/09/2026
    ============================================================
+   v14: SINO DE PENDÊNCIAS. Botão flutuante acima do "Sugerir melhoria"
+   com o que está esperando ação: as filas deste app + o que é
+   nominalmente da pessoa em qualquer outro app (no Hub, tudo). Vem da
+   RPC geral_minhas_pendencias() (migration 0024 do bononi-hub), que
+   CALCULA do estado real de cada fila — resolveu na tela, some do sino.
+   Clique leva ao lugar (?abrir=… no link; o app lê e abre a tela, ou
+   passa `aoAbrir` no iniciar para abrir sem recarregar). Novidade que é
+   da pessoa abre o painel sozinha na entrada, uma vez. Relê a cada 3
+   min e quando a aba volta a ficar visível. Emite o evento
+   `gc:pendencias` (o Hub põe o contador nos cartões) e expõe
+   GeralCentral.pendencias() / recarregarPendencias(). Sem a 0024 no
+   banco, o sino não aparece — silencioso como o resto.
    v13: marcarVisto() grava também QUAIS campos a pessoa alterou de
    verdade na campanha de cadastro (geral_avisos_visualizacoes.campos_alterados,
    migration 0015) — é o que alimenta, no Painel Dev, "quem alterou,
@@ -97,7 +109,7 @@
 (function () {
   'use strict';
 
-  var VERSAO = '13';
+  var VERSAO = '14';
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -705,8 +717,284 @@
     });
   }
 
+  // ── 5. Sino de pendências (v14) ──────────────────────────────────
+  // Fonte: RPC geral_minhas_pendencias() (migration 0024 do bononi-hub) —
+  // calcula, para quem está logado, o que está esperando ação em cada app.
+  // Não grava evento: resolveu na tela do app, some daqui na próxima
+  // leitura. Sem a RPC no banco, o sino nem aparece (silencioso).
+  //
+  // Onde aparece: botão flutuante acima do "Sugerir melhoria". Dentro de um
+  // app mostra as pendências DAQUELE app + as que são nominalmente da
+  // pessoa em qualquer outro; no Hub (appId 'hub') mostra tudo.
+  // "Novo" = fila nominal que cresceu desde a última vez que a pessoa abriu
+  // o sino (localStorage, só conveniência). Com novidade, o painel abre
+  // sozinho uma vez na entrada — é a regra da casa: quem não sabe que a
+  // coisa existe não vai procurar.
+  //
+  // Leva ao lugar: cada item tem link com ?abrir=<tela> (o app lê e abre a
+  // tela certa). Mesmo app: chama opts.aoAbrir(params) se o app passou,
+  // senão navega na mesma aba. Outro app: abre em aba nova, como o Hub.
+  var NOME_APP = {
+    assistencia: 'Assistência Stonni', compras: 'Compras', cobranca: 'Cobrança',
+    stonni: 'Comercial Stonni', atacado: 'CRM Atacado', varejo: 'Consulta Vendas',
+    frete: 'Frete', loja: 'Loja Física', expedicao: 'Expedição', financeiro: 'Financeiro',
+    'painel-dev': 'Painel Dev', hub: 'Hub', treinamento: 'Treinamento', rh: 'RH',
+  };
+  // appId do app que carrega este arquivo → apps cujas filas moram nele
+  // (o CRM Atacado roda dentro do Comercial Stonni, com appId próprio).
+  var APPS_DA_CASA = { stonni: ['stonni', 'atacado'], atacado: ['atacado', 'stonni'] };
+
+  var ICONE_SINO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>' +
+    '<path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+
+  var _pend = { itens: [], o: null, timer: null };
+
+  function chavePendVisto(o) { return 'gc-pend-visto:' + String(o.usuario.email).toLowerCase(); }
+  function lerPendVisto(o) {
+    try { return JSON.parse(localStorage.getItem(chavePendVisto(o)) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function gravarPendVisto(o, itens) {
+    var m = {};
+    itens.forEach(function (p) { if (p.para_mim) m[p.app + ':' + p.chave] = p.qtd; });
+    try { localStorage.setItem(chavePendVisto(o), JSON.stringify(m)); } catch (e) { /* sem storage: sem "novo" */ }
+  }
+  function ehNovo(p, visto) { return p.para_mim && p.qtd > (visto[p.app + ':' + p.chave] || 0); }
+
+  function pendDesteApp(o, itens) {
+    if (o.appId === 'hub') return itens;
+    var casa = APPS_DA_CASA[o.appId] || [o.appId];
+    return itens.filter(function (p) { return casa.indexOf(p.app) !== -1 || p.para_mim; });
+  }
+  function doApp(o, p) { return (APPS_DA_CASA[o.appId] || [o.appId]).indexOf(p.app) !== -1; }
+  function numCurto(n) { return n > 99 ? '99+' : String(n); }
+  function dataCurta(s) {
+    if (!s) return '';
+    // "2026-09-01" sozinho o JS lê como meia-noite UTC — no Brasil vira 31/08.
+    var so = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s));
+    var d = so ? new Date(+so[1], so[2] - 1, +so[3]) : new Date(s);
+    if (isNaN(d)) return '';
+    return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2);
+  }
+
+  function garantirEstiloSino() {
+    if (document.getElementById('gc-sino-estilo')) return;
+    var s = document.createElement('style');
+    s.id = 'gc-sino-estilo';
+    s.textContent =
+      '#gc-sino-wrap{position:fixed;right:16px;bottom:calc(68px + env(safe-area-inset-bottom));z-index:10;' +
+        'display:flex;align-items:center;gap:8px}' +
+      '#gc-sino-wrap:hover .gc-fab-tooltip,#gc-sino-wrap:focus-within .gc-fab-tooltip{opacity:1;transform:translateX(0)}' +
+      '#gc-sino{width:44px;height:44px;border-radius:50%;cursor:pointer;position:relative;flex:none;' +
+        'background:#fff;color:#14161a;border:1px solid #e2e5ea;display:flex;align-items:center;justify-content:center;' +
+        'box-shadow:var(--shadow-raised,0 4px 16px rgba(20,22,26,.18))}' +
+      '#gc-sino.tem{color:#c11f25}' +
+      '#gc-sino.novo .gc-fab-badge{animation:gc-pulso 1.6s ease-out 3}' +
+      '@keyframes gc-pulso{0%{box-shadow:0 0 0 0 rgba(193,31,37,.55)}100%{box-shadow:0 0 0 10px rgba(193,31,37,0)}}' +
+      '#gc-sino-painel{position:fixed;right:16px;bottom:calc(120px + env(safe-area-inset-bottom));z-index:12;' +
+        'width:min(380px,calc(100vw - 32px));max-height:min(62vh,520px);overflow-y:auto;background:#fff;color:#14161a;' +
+        'border:1px solid #e2e5ea;border-radius:10px;box-shadow:0 12px 40px rgba(20,22,26,.25);font-family:inherit;font-size:13px}' +
+      '#gc-sino-painel .gc-sp-topo{display:flex;justify-content:space-between;align-items:center;padding:12px 14px 8px;' +
+        'position:sticky;top:0;background:#fff;border-bottom:1px solid #f0f1f3}' +
+      '#gc-sino-painel .gc-sp-sec{font-size:10.5px;font-weight:800;letter-spacing:.04em;color:#6b7382;padding:10px 14px 4px}' +
+      '#gc-sino-painel .gc-sp-item{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:none;' +
+        'border:none;border-bottom:1px solid #f0f1f3;padding:10px 14px;cursor:pointer;font:inherit;color:inherit}' +
+      '#gc-sino-painel .gc-sp-item:hover,#gc-sino-painel .gc-sp-item:focus-visible{background:#f5f6f8}' +
+      '#gc-sino-painel .gc-sp-n{min-width:28px;height:22px;border-radius:999px;background:#f1f2f4;color:#14161a;' +
+        'font-weight:800;font-size:12px;line-height:22px;text-align:center;padding:0 6px;flex:none}' +
+      '#gc-sino-painel .gc-sp-item.mim .gc-sp-n{background:#c11f25;color:#fff}' +
+      '#gc-sino-painel .gc-sp-sub{color:#6b7382;font-size:11.5px;margin-top:2px}' +
+      '#gc-sino-painel .gc-sp-novo{font-size:10px;font-weight:800;color:#c11f25;margin-left:6px}' +
+      '#gc-sino-painel .gc-sp-vazio{padding:22px 14px;text-align:center;color:#6b7382}' +
+      // sinoEm: o sino entra no cabeçalho do app (sem flutuar) e o painel abre embaixo dele
+      '#gc-sino-wrap.gc-no-topo{position:static;display:inline-flex}' +
+      '#gc-sino-wrap.gc-no-topo #gc-sino{width:38px;height:38px;box-shadow:none}' +
+      '#gc-sino-wrap.gc-no-topo .gc-fab-tooltip{display:none}' +
+      '#gc-sino-painel.gc-no-topo{bottom:auto;top:calc(72px + env(safe-area-inset-top));z-index:30}';
+    document.head.appendChild(s);
+  }
+
+  function montarSino(o) {
+    if (document.getElementById('gc-sino')) return;
+    garantirEstiloFab();
+    garantirEstiloSino();
+    var wrap = document.createElement('div');
+    wrap.id = 'gc-sino-wrap';
+    wrap.innerHTML = '<span class="gc-fab-tooltip">Pendências</span>' +
+      '<button id="gc-sino" type="button" aria-label="Pendências" aria-expanded="false">' + ICONE_SINO + '</button>';
+    // App com botão flutuante próprio no canto (ex.: o "+" de upload do
+    // Consulta Vendas) passa `sinoEm: '<seletor>'` e o sino vai para lá.
+    var alvo = o.sinoEm ? document.querySelector(o.sinoEm) : null;
+    if (alvo) { wrap.classList.add('gc-no-topo'); alvo.appendChild(wrap); }
+    else document.body.appendChild(wrap);
+    wrap.querySelector('#gc-sino').addEventListener('click', function () {
+      if (document.getElementById('gc-sino-painel')) fecharPainelSino(); else abrirPainelSino(o);
+    });
+  }
+
+  function atualizarSino(o) {
+    var btn = document.getElementById('gc-sino'); if (!btn) return;
+    var meus = pendDesteApp(o, _pend.itens);
+    var total = meus.reduce(function (s, p) { return s + p.qtd; }, 0);
+    var visto = lerPendVisto(o);
+    var temNovo = meus.some(function (p) { return ehNovo(p, visto); });
+    var badge = btn.querySelector('.gc-fab-badge');
+    if (total > 0) {
+      if (!badge) { badge = document.createElement('span'); badge.className = 'gc-fab-badge'; btn.appendChild(badge); }
+      badge.textContent = numCurto(total);
+    } else if (badge) badge.remove();
+    btn.classList.toggle('tem', total > 0);
+    btn.classList.toggle('novo', temNovo);
+    btn.setAttribute('aria-label', total === 0 ? 'Pendências: nada esperando você'
+      : total === 1 ? 'Pendências: 1 item esperando ação' : 'Pendências: ' + total + ' itens esperando ação');
+    return temNovo;
+  }
+
+  function fecharPainelSino() {
+    var el = document.getElementById('gc-sino-painel'); if (el) el.remove();
+    var btn = document.getElementById('gc-sino'); if (btn) btn.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('keydown', escFechaSino);
+  }
+  function escFechaSino(ev) { if (ev.key === 'Escape') fecharPainelSino(); }
+
+  function itemHtml(o, p, i, visto) {
+    var sub = [];
+    if (!doApp(o, p)) sub.push(NOME_APP[p.app] || p.app);
+    if (p.desde) sub.push('desde ' + dataCurta(p.desde));
+    return '<button type="button" class="gc-sp-item' + (p.para_mim ? ' mim' : '') + '" data-i="' + i + '">' +
+      '<span class="gc-sp-n">' + (p.chave === 'erro' ? '!' : numCurto(p.qtd)) + '</span>' +
+      '<span style="flex:1;min-width:0"><span style="font-weight:600">' + esc(p.titulo) + '</span>' +
+      (ehNovo(p, visto) ? '<span class="gc-sp-novo">NOVO</span>' : '') +
+      (sub.length ? '<div class="gc-sp-sub">' + esc(sub.join(' · ')) + '</div>' : '') +
+      '</span></button>';
+  }
+
+  function abrirPainelSino(o) {
+    fecharPainelSino();
+    var meus = pendDesteApp(o, _pend.itens);
+    var visto = lerPendVisto(o);
+    var mim = [], setor = [];
+    meus.forEach(function (p, i) { (p.para_mim ? mim : setor).push({ p: p, i: i }); });
+    var html = '<div class="gc-sp-topo"><b style="font-size:14px">Pendências</b>' +
+      '<button type="button" id="gc-sp-fechar" aria-label="Fechar" style="background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:#6b7382">×</button></div>';
+    if (!meus.length) {
+      html += '<div class="gc-sp-vazio">Nada esperando você agora.</div>';
+    } else {
+      if (mim.length) html += '<div class="gc-sp-sec">PARA VOCÊ</div>' + mim.map(function (x) { return itemHtml(o, x.p, x.i, visto); }).join('');
+      if (setor.length) html += '<div class="gc-sp-sec">' + (o.appId === 'hub' ? 'FILAS DOS SETORES' : 'FILAS DESTE APP') + '</div>' +
+        setor.map(function (x) { return itemHtml(o, x.p, x.i, visto); }).join('');
+    }
+    var el = document.createElement('div');
+    el.id = 'gc-sino-painel';
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-label', 'Pendências');
+    el.innerHTML = html;
+    if (document.querySelector('#gc-sino-wrap.gc-no-topo')) el.classList.add('gc-no-topo');
+    document.body.appendChild(el);
+    var btn = document.getElementById('gc-sino'); if (btn) btn.setAttribute('aria-expanded', 'true');
+    el.querySelector('#gc-sp-fechar').addEventListener('click', fecharPainelSino);
+    document.addEventListener('keydown', escFechaSino);
+    el.querySelectorAll('.gc-sp-item').forEach(function (b) {
+      b.addEventListener('click', function () { irParaPendencia(o, meus[parseInt(b.dataset.i, 10)]); });
+    });
+    // Abrir o sino é o "vi" do NOVO (a contagem continua até resolver).
+    gravarPendVisto(o, _pend.itens);
+    atualizarSino(o);
+  }
+
+  function irParaPendencia(o, p) {
+    if (!p || !p.link) return;
+    fecharPainelSino();
+    if (p.link === 'gc:meus-pedidos') {
+      abrirModalSugestao(o).then(function () {
+        var aba = document.getElementById('gc-aba-meus'); if (aba) aba.click();
+      });
+      return;
+    }
+    var destino;
+    try { destino = new URL(p.link); } catch (e) { return; }
+    if (destino.origin === location.origin) {
+      var params = {};
+      destino.searchParams.forEach(function (v, k) { params[k] = v; });
+      params._caminho = destino.pathname;
+      if (typeof o.aoAbrir === 'function') {
+        try { if (o.aoAbrir(params) !== false) return; } catch (e) { console.warn('[geral-central] aoAbrir', e && e.message); }
+      }
+      location.href = destino.href;
+      return;
+    }
+    // outro app: o portão dele (ds/geral-portao.js) só deixa entrar sem
+    // sessão quem chega do Hub — mesmo parâmetro que o cartão do Hub usa.
+    destino.searchParams.set('de', 'hub');
+    window.open(destino.href, '_blank', 'noopener');
+  }
+
+  async function carregarPendencias(o) {
+    try {
+      o.token = (await token(o)) || o.token; // o token vence em 1h; o sino fica aberto o dia todo
+      var resp = await rest(o, 'rpc/geral_minhas_pendencias', { method: 'POST', body: '{}' });
+      if (!resp || !resp.ok) return null; // RPC ausente neste banco: sem sino
+      var itens = await resp.json();
+      if (!Array.isArray(itens)) return null;
+      _pend.itens = itens.map(function (p) {
+        return { app: p.app, chave: p.chave, titulo: p.titulo, qtd: parseInt(p.qtd, 10) || 0,
+                 para_mim: p.para_mim === true, desde: p.desde, link: p.link };
+      });
+      try { window.dispatchEvent(new CustomEvent('gc:pendencias', { detail: _pend.itens })); } catch (e) { /* navegador antigo */ }
+      return _pend.itens;
+    } catch (e) { console.warn('[geral-central] pendências', e && e.message); return null; }
+  }
+
+  async function iniciarSino(o) {
+    // Portal do Parceiro é da autorizada (externa): as pendências dela já têm
+    // selo e faixa próprios lá, e a RPC não devolve nada para conta parceira.
+    if (o.appId === 'rede-autorizada') return;
+    // App embutido (o CRM Atacado roda num iframe dentro do Comercial
+    // Stonni): o sino fica só na janela de cima, senão aparecem dois.
+    try { if (window.top !== window.self) return; } catch (e) { return; }
+    // `sino: false` — tela onde o sino não fala com quem lê (a autorizada
+    // dentro da Assistência Stonni usa o mesmo appId da equipe interna).
+    if (o.sino === false) return;
+    // App React chama iniciar() de novo a cada renovação de sessão: a partir
+    // da segunda vez só troca o contexto (token, aoAbrir) e relê — sem
+    // empilhar outro timer e outro ouvinte de visibilidade.
+    var primeira = !_pend.o;
+    _pend.o = o;
+    var itens = await carregarPendencias(o);
+    if (!itens) {
+      // falha na 1ª leitura (rede, token, view fria): tenta de novo em 1 min, uma vez
+      if (primeira && !_pend.retentou) {
+        _pend.retentou = true; _pend.o = null;
+        setTimeout(function () { iniciarSino(o); }, 60000);
+      }
+      return;
+    }
+    montarSino(o);
+    var temNovo = atualizarSino(o);
+    if (temNovo && !_pend.abriuNaEntrada) { _pend.abriuNaEntrada = true; abrirPainelSino(o); } // novidade nominal: mostra na entrada, uma vez
+    if (_pend.timer) return;
+    _pend.timer = setInterval(async function () {
+      if (document.hidden) return;
+      if (await carregarPendencias(_pend.o)) atualizarSino(_pend.o);
+    }, 180000);
+    document.addEventListener('visibilitychange', async function () {
+      if (!document.hidden && await carregarPendencias(_pend.o)) atualizarSino(_pend.o);
+    });
+  }
+
   var GeralCentral = {
     versao: VERSAO,
+
+    /** Última lista do sino (a mesma que o evento `gc:pendencias` entrega). */
+    pendencias: function () { return _pend.itens.slice(); },
+
+    /** Relê as pendências agora — o app chama depois de resolver algo na tela. */
+    recarregarPendencias: async function () {
+      if (!_pend.o) return [];
+      var itens = await carregarPendencias(_pend.o);
+      if (itens) atualizarSino(_pend.o);
+      return _pend.itens.slice();
+    },
 
     /**
      * @param {object} o
@@ -715,6 +1003,13 @@
      * @param {string} o.key      SUPA_KEY (anon)
      * @param {object} o.sb       client supabase-js (sessão já logada)
      * @param {object} o.usuario  { email, nome }
+     * @param {string} [o.sinoEm] v14: seletor de um elemento do cabeçalho onde
+     *   o sino entra (em vez de flutuar no canto) — para app com botão
+     *   flutuante próprio no mesmo lugar.
+     * @param {boolean} [o.sino] v14: false = não mostra o sino nesta tela.
+     * @param {function} [o.aoAbrir] v14: recebe os parâmetros do link de um
+     *   item do sino que é DESTE app ({abrir, id, …, _caminho}) e abre a tela
+     *   sem recarregar. Devolver false = "não sei abrir" → navega pelo link.
      */
     iniciar: async function (opts) {
       if (!opts || !opts.appId || !opts.url || !opts.key || !opts.sb || !opts.usuario) return;
@@ -729,6 +1024,7 @@
       await verificarAtualizacaoCadastral(opts);
       montarFabSugestao(opts);
       verificarPrazosTreinamento(opts); // sem await: cartão não bloqueia nada
+      iniciarSino(opts);                // sem await: sino não bloqueia nada
     },
   };
 

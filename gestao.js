@@ -24,7 +24,7 @@ async function renderMeusPedidos(el) {
 }
 
 // ── GESTÃO DE PEDIDOS (gestor/admin) ──
-async function renderPedidos(el) {
+async function renderPedidos(el, params) {
   el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
   // Carrega status configuráveis
   if (!window._pedidoStatus) {
@@ -36,7 +36,13 @@ async function renderPedidos(el) {
     `${SUPA_URL}/rest/v1/ped_pedidos?order=criado_em.desc&select=*`,
     { headers: HEADERS }
   ).then(r=>r.json()).catch(()=>[]);
+  // Cada abertura da tela começa em "Todos" (os botões nascem assim) — sem
+  // isso o filtro da vez anterior ficava ligado por baixo da busca.
+  window._gPedFiltroAtivo = '';
   _renderListaPedidos(el, Array.isArray(pedidos) ? pedidos : [], true);
+  // Deep-link do sino (?abrir=gestao-pedidos): abre já em "Aguardando
+  // aprovação" (ENVIADO + AGUARDANDO), que tem botão visível.
+  if (params && params.filtroInicial) window.gPedSetFiltro(params.filtroInicial);
 }
 
 function _renderListaPedidos(el, pedidos, isGestor) {
@@ -52,6 +58,7 @@ function _renderListaPedidos(el, pedidos, isGestor) {
     </div>
     <div style="display:flex;gap:var(--space-1-5);flex-wrap:wrap;margin-bottom:var(--space-4)">
       <button id="gped-f-todos"      class="btn btn-sm btn-primary" onclick="gPedSetFiltro('')">Todos <span style="opacity:.7">${_cnt(null)}</span></button>
+      <button id="gped-f-pendentes"  class="btn btn-sm btn-outline" onclick="gPedSetFiltro('PENDENTES')"><i class="ic ic-sm" data-ic="bell"></i> Aguardando aprovação <span style="opacity:.7">${_cnt(['ENVIADO','AGUARDANDO'])}</span></button>
       <button id="gped-f-cotacao"    class="btn btn-sm btn-outline" onclick="gPedSetFiltro('COTACAO')"><i class="ic ic-sm" data-ic="clipboard-list"></i> Cotações <span style="opacity:.7">${_cnt(['COTACAO'])}</span></button>
       <button id="gped-f-enviado"    class="btn btn-sm btn-outline" onclick="gPedSetFiltro('ENVIADO')"><i class="ic ic-sm" data-ic="upload"></i> Enviados <span style="opacity:.7">${_cnt(['ENVIADO'])}</span></button>
       <button id="gped-f-aguardando" class="btn btn-sm btn-outline" onclick="gPedSetFiltro('AGUARDANDO')">⏳ Aguardando <span style="opacity:.7">${_cnt(['AGUARDANDO'])}</span></button>
@@ -119,7 +126,9 @@ window.gPedSetFiltro = function(filtro) {
   const mapa = {
     '':'todos', 'COTACAO':'cotacao', 'ENVIADO':'enviado',
     'AGUARDANDO':'aguardando', 'APROVADO':'aprovado',
-    'FATURADO':'faturado', 'CANCELADOS':'cancelado'
+    'FATURADO':'faturado', 'CANCELADOS':'cancelado',
+    // ENVIADO + AGUARDANDO — é onde o link do sino (?abrir=gestao-pedidos) cai.
+    'PENDENTES':'pendentes'
   };
   Object.entries(mapa).forEach(([f, id]) => {
     const btn = document.getElementById('gped-f-' + id);
@@ -143,6 +152,8 @@ window.gPedFiltrar = function() {
   else if (filtro === 'APROVADO')   lista = lista.filter(p => p.status === 'APROVADO');
   else if (filtro === 'FATURADO')   lista = lista.filter(p => p.status === 'FATURADO');
   else if (filtro === 'CANCELADOS') lista = lista.filter(p => ['REPROVADO','CANCELADO'].includes(p.status));
+  // "Aguardando aprovação" — também é onde cai o link do sino.
+  else if (filtro === 'PENDENTES')  lista = lista.filter(p => ['ENVIADO','AGUARDANDO'].includes(p.status));
 
   // Busca por texto
   if (busca) lista = lista.filter(p =>
@@ -349,6 +360,8 @@ window.gPedAprovar = async function(id) {
   await supaInsert('ped_pedido_log', { id_pedido:id, status_de: statusAnterior, status_para:'APROVADO', usuario: USUARIO.nome });
   fecharDrawer();
   renderPedidos(document.getElementById('page-content'));
+  if (window.GeralCentral && window.GeralCentral.recarregarPendencias) window.GeralCentral.recarregarPendencias();
+  if (window.recalcularSelos) window.recalcularSelos();
 };
 
 window.gPedReprovar = async function(id) {
@@ -358,6 +371,8 @@ window.gPedReprovar = async function(id) {
   await supaInsert('ped_pedido_log', { id_pedido:id, status_de:'ENVIADO', status_para:'REPROVADO', usuario: USUARIO.nome, obs: motivo });
   fecharDrawer();
   renderPedidos(document.getElementById('page-content'));
+  if (window.GeralCentral && window.GeralCentral.recarregarPendencias) window.GeralCentral.recarregarPendencias();
+  if (window.recalcularSelos) window.recalcularSelos();
 };
 
 window.gPedSalvarDocs = async function(id) {

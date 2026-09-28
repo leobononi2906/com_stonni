@@ -872,6 +872,10 @@ function ehAdmin() { return !!(USUARIO && USUARIO.admin); }
 // o módulo dela entrar em MODULOS_DESTE_APP, que é o que a porta confere.
 function ehInterno() { return liberaAlgumaArea(USUARIO && USUARIO.modulos, USUARIO && USUARIO.admin, ['atacado']); }
 function temPortal() { return liberaAlgumaArea(USUARIO && USUARIO.modulos, USUARIO && USUARIO.admin, MODULOS_DESTE_APP); }
+// Mesma regra da RLS de site_leads (SELECT/UPDATE para authenticated com
+// user_metadata.admin=true ou modulos contendo 'comercial'/'atacado') — a
+// tela e o banco nunca podem discordar de quem vê lead.
+function podeVerLeads() { return liberaAlgumaArea(USUARIO && USUARIO.modulos, USUARIO && USUARIO.admin, ['comercial', 'atacado']); }
 
 function construirNav() {
   const grupos = [];
@@ -890,6 +894,14 @@ function construirNav() {
     }
     itens.push({ id: 'materiais', icon: '<i class="ic ic-sm" data-ic="book-open"></i>', label: 'Materiais', breadcrumb: 'Portal · Materiais & IA' });
     grupos.push({ grupo: 'PRINCIPAL', itens });
+  }
+
+  // COMERCIAL — leads do site oficial. Regra própria (podeVerLeads), não
+  // depende de temPortal/ehInterno: mesma trava da RLS de site_leads.
+  if (podeVerLeads()) {
+    grupos.push({ grupo: 'COMERCIAL', itens: [
+      { id: 'leads', icon: '<i class="ic ic-sm" data-ic="mail"></i>', label: 'Leads do site', breadcrumb: 'Comercial · Leads do site' },
+    ]});
   }
 
   // INTERNO — seções do CRM na MESMA sidebar, agrupadas como no CRM original. Rep nunca vê.
@@ -966,7 +978,7 @@ function irPara(paginaId, params = {}) {
   if (navEl) {
     navEl.classList.add('active');
     const breadcrumb = navEl.dataset.breadcrumb || '';
-    const labelEl = navEl.querySelector('span:last-child');
+    const labelEl = navEl.querySelector('span:not(.nav-icon):not(.nav-badge)');
     document.getElementById('topbar-title').textContent = labelEl?.textContent || paginaId;
     document.getElementById('topbar-breadcrumb').textContent = breadcrumb;
   }
@@ -976,6 +988,7 @@ function irPara(paginaId, params = {}) {
   // F5 (ou um deploy novo) tirava do lugar quem estava no meio de um pedido/CRM.
   // Guarda a tela pra restaurar no próximo load (ver iniciarApp).
   try { localStorage.setItem('com_stonni:ultima-pagina', JSON.stringify({ id: paginaId, params })); } catch(e) {}
+  if (typeof recalcularSelos === 'function') recalcularSelos(); // sem await: selo não trava navegação
 }
 
 // ============================================================
@@ -1005,12 +1018,149 @@ function renderPagina(id, params) {
     case 'novo-pedido':    renderNovoPedido(el, params); break;
     case 'meus-pedidos':   renderMeusPedidos(el, params); break;
     case 'pedidos':        renderPedidos(el, params); break;
+    case 'leads':          renderLeads(el, params); break;
     case 'materiais':      renderMateriais(el, params); break;
     case 'crm':            renderCRM(el, params); break;
     case 'configuracoes':  renderConfiguracoes(el, params); break;
     case 'representantes': renderConfiguracoes(el, params); break;
     default: el.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="alert-triangle"></i></div><h3>Em construção</h3><p>Módulo "${id}" em desenvolvimento.</p></div>`;
   }
+}
+
+// ============================================================
+//  DEEP-LINK DO SINO DE PENDÊNCIAS (?abrir=...)
+//  Item do sino (deste app ou de outro) leva direto pra tela certa — no
+//  load (link chegou de fora) e em clique no sino (aoAbrir, sem reload).
+//  Ver GeralCentral.iniciar em iniciarApp().
+// ============================================================
+function lerParamsAbrirDaURL() {
+  try {
+    const sp = new URLSearchParams(location.search);
+    if (!sp.has('abrir')) return null;
+    const obj = {};
+    sp.forEach((v, k) => { obj[k] = v; });
+    return obj;
+  } catch (e) { return null; }
+}
+
+function limparParamsAbrirDaURL() {
+  try {
+    const url = new URL(location.href);
+    url.searchParams.delete('abrir');
+    url.searchParams.delete('de');
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
+  } catch (e) {}
+}
+
+// Abre a aba Agenda DENTRO do CRM (mesmo iframe da sidebar) sem passar pelo
+// mapeamento CRM_TABS (que só conhece 'crm'/'prospeccao'/etc, não 'agenda' —
+// Agenda é sub-aba do próprio CRM, ver crm/js/ui.js setMainTab).
+function abrirAgendaCRM() {
+  if (!ehInterno()) return false;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const navEl = document.getElementById('nav-it-crm');
+  if (navEl) {
+    navEl.classList.add('active');
+    document.getElementById('topbar-title').textContent = navEl.querySelector('span:not(.nav-icon):not(.nav-badge)')?.textContent || 'CRM';
+    document.getElementById('topbar-breadcrumb').textContent = navEl.dataset.breadcrumb || 'Interno · CRM';
+  }
+  paginaAtual = 'it-crm';
+  fecharSidebar();
+  const el = document.getElementById('page-content');
+  const ifr = document.getElementById('crm-frame');
+  if (ifr && el.contains(ifr)) {
+    if (window.crmGoto) window.crmGoto('agenda');
+  } else {
+    el.style.padding = '0';
+    el.innerHTML = '';
+    if (window.renderCRM) window.renderCRM(el, { tab: 'agenda' });
+  }
+  try { localStorage.setItem('com_stonni:ultima-pagina', JSON.stringify({ id: 'it-crm', params: {} })); } catch (e) {}
+  if (typeof recalcularSelos === 'function') recalcularSelos();
+  return true;
+}
+
+// true/false = "sei abrir isto" (contrato do aoAbrir do GeralCentral).
+function aplicarPendenciaAbrir(params) {
+  if (!params || !params.abrir) return false;
+  const abrir = params.abrir;
+  if (abrir === 'gestao-pedidos') {
+    if (!(ehInterno() || (USUARIO && USUARIO.perfil === 'gestor') || (USUARIO && USUARIO.admin))) return false;
+    irPara('pedidos', { filtroInicial: 'PENDENTES' });
+    return true;
+  }
+  if (abrir === 'leads') {
+    if (!podeVerLeads()) return false;
+    irPara('leads');
+    return true;
+  }
+  if (abrir === 'agenda') {
+    return abrirAgendaCRM();
+  }
+  return false;
+}
+
+// ============================================================
+//  SELOS DA SIDEBAR (.nav-badge) — a sidebar do CRM some quando embutido
+//  (crm.js esconde .sidebar do iframe), então o selo da Agenda também
+//  precisa morar aqui. Recalcula no login e a cada troca de tela (irPara);
+//  silencioso em erro — selo é conveniência, nunca trava navegação.
+// ============================================================
+function _setNavBadge(navId, n) {
+  const navEl = document.getElementById('nav-' + navId);
+  if (!navEl) return;
+  let badge = navEl.querySelector('.nav-badge');
+  if (!n) { if (badge) badge.remove(); return; }
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'nav-badge';
+    navEl.appendChild(badge);
+  }
+  badge.textContent = n > 99 ? '99+' : String(n);
+}
+
+// Mesma regra do loadOverdue em crm/js/data.js (~363), com reagendado=false
+// e data_prevista<=hoje (vencida OU hoje) — igual ao item da Agenda no sino.
+async function _contarAgendaPendente() {
+  if (!USUARIO || !USUARIO.email) return 0;
+  const cfg = await supa('atac_config_usuario', `email=eq.${encodeURIComponent(USUARIO.email)}&select=id_vendedor_erp`);
+  const idVend = Array.isArray(cfg) && cfg[0] ? cfg[0].id_vendedor_erp : null;
+  if (!idVend) return 0;
+  const hoje = new Date().toISOString().split('T')[0];
+  const notas = await supa('atac_crm_notas', `id_vendedor_responsavel=eq.${idVend}&resolvido=eq.false&reagendado=eq.false&data_prevista=lte.${hoje}&select=id`);
+  return Array.isArray(notas) ? notas.length : 0;
+}
+
+async function recalcularSelos() {
+  if (!USUARIO) return;
+  try {
+    const tarefas = [];
+
+    // Gestão de pedidos: ENVIADO+AGUARDANDO, só para quem aprova (gestor
+    // pode_aprovar ou admin/interno) — mesma regra do link ?abrir=gestao-pedidos.
+    const podeAprovarPedidos = ehInterno() || USUARIO.admin || (USUARIO.perfil === 'gestor' && USUARIO.pode_aprovar);
+    tarefas.push(
+      podeAprovarPedidos
+        ? supa('ped_pedidos', 'status=in.(ENVIADO,AGUARDANDO)&select=id').then(r => _setNavBadge('pedidos', Array.isArray(r) ? r.length : 0)).catch(() => {})
+        : Promise.resolve(_setNavBadge('pedidos', 0))
+    );
+
+    // Leads do site: status novo, só para quem vê o item do menu.
+    tarefas.push(
+      podeVerLeads()
+        ? supa('site_leads', 'status=eq.novo&select=id').then(r => _setNavBadge('leads', Array.isArray(r) ? r.length : 0)).catch(() => {})
+        : Promise.resolve(_setNavBadge('leads', 0))
+    );
+
+    // CRM: agenda vencida/hoje do vendedor logado.
+    tarefas.push(
+      ehInterno()
+        ? _contarAgendaPendente().then(n => _setNavBadge('it-crm', n)).catch(() => {})
+        : Promise.resolve(_setNavBadge('it-crm', 0))
+    );
+
+    await Promise.all(tarefas);
+  } catch (e) { /* silencioso — selo é conveniência */ }
 }
 
 // ============================================================
@@ -1164,10 +1314,25 @@ function iniciarApp() {
 
   if (window.GeralCentral) {
     var sbCentral = (typeof supabase !== 'undefined') ? supabase.createClient(SUPA_URL, SUPA_KEY) : null;
-    GeralCentral.iniciar({ appId: 'stonni', url: SUPA_URL, key: SUPA_KEY, sb: sbCentral, usuario: { email: USUARIO.email, nome: USUARIO.nome } });
+    GeralCentral.iniciar({
+      appId: 'stonni', url: SUPA_URL, key: SUPA_KEY, sb: sbCentral,
+      usuario: { email: USUARIO.email, nome: USUARIO.nome },
+      // v14: item do sino é deste app → abre a tela sem sair da página.
+      // Devolver false = "não sei abrir" → GeralCentral navega pelo link cru.
+      aoAbrir: function (p) { return aplicarPendenciaAbrir(p); },
+    });
   }
 
   renderNav();
+
+  // Deep-link de pendência (?abrir=...) chegado por link externo (Hub/e-mail/
+  // aba nova) — mesma função do aoAbrir acima, só que lendo a URL em vez do
+  // clique no sino. Tem prioridade sobre a "última página" salva.
+  const paramsAbrir = lerParamsAbrirDaURL();
+  if (paramsAbrir && aplicarPendenciaAbrir(paramsAbrir)) {
+    limparParamsAbrirDaURL();
+    return;
+  }
 
   // Página inicial = a última em que o usuário estava (se ainda liberada pelo
   // Hub), senão a primeira área liberada. Sem isto, F5/deploy novo sempre
@@ -1294,7 +1459,7 @@ function renderRepresentantes(el, params) {
      bononi-hub/ds/geral-acesso.js — subir o ?v= junto ao trocar o arquivo. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ds/geral-acesso.js?v=2"></script>
-<script src="ds/geral-central.js?v=12"></script>
+<script src="ds/geral-central.js?v=14"></script>
 <script src="configuracoes.js"></script>
 <script src="catalogo-pdf.js"></script>
 <script src="catalogo.js"></script>
@@ -1302,6 +1467,7 @@ function renderRepresentantes(el, params) {
 <script src="pdf-pedido.js"></script>
 <script src="pdf-orcamento-file.js"></script>
 <script src="gestao.js"></script>
+<script src="leads.js"></script>
 <script src="wshare.js"></script>
 <script src="materiais.js"></script>
 <script src="crm.js"></script>

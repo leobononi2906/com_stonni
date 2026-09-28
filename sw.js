@@ -25,7 +25,12 @@
 // icone (innerHTML), nao mais como tag crua na tela (24/09/2026).
 // v12: catalogo serve a foto original (sem /render/image — cota de Image
 // Transformations estourou) e foto manual e reduzida no upload (24/09/2026).
-const CACHE_VERSION = 'stonni-v14-20260928';
+// v15: deep-link ?abrir=gestao-pedidos/leads/agenda no Portal (index.html —
+// GeralCentral.iniciar ganhou aoAbrir, e a sidebar ganhou selos .nav-badge
+// recalculados em irPara), tela nova "Leads do site" (leads.js, script novo
+// no index.html) e crm.js/crmGoto agora sabe abrir a sub-aba Agenda dentro
+// do iframe do CRM (28/09/2026).
+const CACHE_VERSION = 'stonni-v15-20260928';
 const APP_SHELL = [
   './',
   './index.html',

@@ -2,6 +2,13 @@
 
 > Atualizado: 2026-09-28
 
+## Dev-log 28/09/2026 — Sino de pendências, Leads do site e selos no menu
+
+- **Leads do site (tela nova, `leads.js`):** `site_leads` agora tem dono — lista com Novos/Atendidos/Todos, telefone vira WhatsApp, e-mail vira mailto, e "Entrei em contato" grava `status='em_contato'` (o CHECK só aceita novo/em_contato/convertido/descartado), com quem e quando. Visível para admin ou `atacado`/`comercial` em modulos — a mesma regra da RLS. `supaPatch` exige linha alterada.
+- **Selos no menu do Portal** (a sidebar do CRM fica escondida no iframe): Pedidos (ENVIADO+AGUARDANDO, para gestor com `pode_aprovar` ou admin), Leads (novos) e CRM (agenda vencida do vendedor). O título do topo lia `span:last-child` e passaria a mostrar o número do selo — agora pega o rótulo.
+- **Sino do grupo** (`ds/geral-central.js` v14): `?abrir=gestao-pedidos|leads|agenda` abre a tela certa (Agenda dentro do iframe, via `crmGoto('agenda')`) e ganha da última página. Pedidos ganhou o botão visível "Aguardando aprovação"; cada abertura da tela volta a "Todos".
+- `geral-central.js?v=14` (Portal e CRM), `sw.js` → `stonni-v15-20260928`. Não testado com login real.
+
 ## Dev-log 28/09/2026 — Selo no Catálogo (Promoção / Queima de estoque)
 Chamado de melhoria do Leo. Coluna nova `ped_catalogo_produtos.selo` (`promocao` | `queima_estoque` |
 null, com CHECK), aplicada em produção em 28/09 (`docs/sql/2026-09-28_selo_catalogo.sql`, pré-voo ao

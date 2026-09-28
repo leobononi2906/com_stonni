@@ -35,12 +35,25 @@
   }
 
   // Troca a tela DENTRO do CRM chamando o gotoTab do iframe (same-origin).
+  // 'agenda' é sub-aba do PRÓPRIO tab 'crm' (ver crm/js/ui.js setMainTab) —
+  // não existe gotoTab('agenda'): tem que entrar no CRM e trocar de sub-aba.
   function crmGoto(tab) {
     const ifr = document.getElementById('crm-frame');
     if (!ifr) { _crmQueuedTab = tab; return; }
     const w = ifr.contentWindow;
-    if (w && typeof w.gotoTab === 'function') { try { w.gotoTab(tab); } catch (e) {} _crmQueuedTab = null; }
-    else { _crmQueuedTab = tab; }
+    if (!w) { _crmQueuedTab = tab; return; }
+    try {
+      if (tab === 'agenda') {
+        if (typeof w.gotoTab === 'function') w.gotoTab('crm');
+        if (typeof w.setMainTab === 'function') w.setMainTab('agenda');
+        else { _crmQueuedTab = tab; return; }
+      } else if (typeof w.gotoTab === 'function') {
+        w.gotoTab(tab);
+      } else {
+        _crmQueuedTab = tab; return;
+      }
+      _crmQueuedTab = null;
+    } catch (e) { _crmQueuedTab = tab; }
   }
   window.crmGoto = crmGoto;
 
