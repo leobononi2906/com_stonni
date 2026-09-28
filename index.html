@@ -1268,16 +1268,64 @@ function renderRepresentantes(el, params) {
 <script src="crm.js"></script>
 
 <!-- PWA: registra o service worker (network-first; ver sw.js).
-     Sem isto, o SW instalado nunca avisava nem aplicava versão nova sozinho —
-     quem estava com o app aberto só via o deploy novo apertando F5 na mão. -->
+     Versão nova fica "pronta" e só entra com a aba oculta ou a pessoa ociosa,
+     nunca com drawer/modal aberto (deste documento OU do iframe do CRM) nem
+     campo em edição. Antes (até 28/09/2026) recarregava na hora do
+     controllerchange, inclusive com o drawer de Novo Pedido/Carrinho aberto. -->
 <script>
 if ('serviceWorker' in navigator) {
-  let jaRecarregou = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (jaRecarregou) return;   // guarda contra laço de recarga
-    jaRecarregou = true;
+  let temControlador = !!navigator.serviceWorker.controller;
+  let versaoNovaPronta = false, recarregando = false, ultimoToque = Date.now();
+  const OCIOSO_MS = 10 * 60 * 1000;
+  ['pointerdown', 'keydown', 'input'].forEach(ev =>
+    window.addEventListener(ev, () => { ultimoToque = Date.now(); }, { capture: true, passive: true }));
+
+  // Drawer único do portal (#drawer/#drawer-overlay, usado por Novo Pedido,
+  // Carrinho, Adicionar Produto etc.) e os overlays soltos do Catálogo
+  // (compartilhar fotos, IA de materiais) — todos neste documento.
+  const SOBREPOSICAO = '#drawer.open,#drawer-overlay.open,#cat-share-modal,#ia-modal,dialog[open],[role="dialog"],[aria-modal="true"]';
+
+  // O CRM roda num iframe (./crm/index.html) com seus próprios modais
+  // (.modal-ov.open) — outro document, então não aparece no querySelectorAll
+  // acima. try/catch: se o iframe ainda não carregou, contentDocument falha.
+  function crmComModalAberto() {
+    try {
+      const doc = document.getElementById('crm-frame')?.contentDocument;
+      if (!doc) return false;
+      return [...doc.querySelectorAll('.modal-ov.open')].some(el => el.getClientRects().length > 0);
+    } catch (e) { return false; }
+  }
+
+  function ocupado() {
+    const a = document.activeElement;
+    if (a && (a.isContentEditable || (/^(INPUT|TEXTAREA)$/.test(a.tagName) && a.value !== ''))) return true;
+    if ([...document.querySelectorAll(SOBREPOSICAO)].some(el => el.getClientRects().length > 0)) return true;
+    if (crmComModalAberto()) return true;
+    // Gancho para trabalho que o DOM não mostra (nenhum encontrado hoje: PDF
+    // do catálogo abre em janela própria, e upload de foto/catálogo acontece
+    // dentro do drawer já aberto, então cai na checagem acima).
+    return typeof window.trabalhoEmAndamento === 'function' && window.trabalhoEmAndamento();
+  }
+
+  function podeRecarregarAgora() {
+    if (ocupado()) return false;
+    return document.visibilityState === 'hidden' || Date.now() - ultimoToque > OCIOSO_MS;
+  }
+
+  function aplicarVersaoNova() {
+    if (!versaoNovaPronta || recarregando || !podeRecarregarAgora()) return;
+    recarregando = true;
+    window.salvarAntesDeAtualizar?.();
     location.reload();
+  }
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!temControlador) { temControlador = true; return; }
+    versaoNovaPronta = true;
+    aplicarVersaoNova();
   });
+  document.addEventListener('visibilitychange', aplicarVersaoNova);
+  setInterval(aplicarVersaoNova, 60 * 1000);
 
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then((reg) => {
