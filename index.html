@@ -653,6 +653,43 @@ const SUPA_URL = 'https://vishxwdxqiygbxmtpfoy.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpc2h4d2R4cWl5Z2J4bXRwZm95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0Njg2MjIsImV4cCI6MjA4ODA0NDYyMn0.J647m3ieDHahNQYBWMRESl0aPFXsT_zt_7ZcDvyB-SA';
 const BLING_FN = `${SUPA_URL}/functions/v1/bling-proxy`;
 
+// Login automático só existe no banco de TESTE (serve-staging.py troca a URL/chave
+// em memória, nunca no disco); em produção BONONI_TEST_MODE é sempre false e o fetch
+// abaixo nem roda, porque essa Edge Function só existe no projeto de teste.
+// Este app não carrega supabase-js na hora do login (fluxo é fetch cru contra
+// /auth/v1/*, ver AUTO LOGIN abaixo) — por isso, ao contrário de crm/index.html,
+// aqui não se usa sb.auth.setSession: grava o token no MESMO localStorage
+// ('sb-vishxwdxqiygbxmtpfoy-auth-token') que o restante do fluxo já lê.
+const BONONI_TEST_MODE = SUPA_URL.includes('gxzhuewczlixksqrmjuk');
+
+async function bononiAutoLoginTeste() {
+  if (!BONONI_TEST_MODE) return false;
+  try {
+    const resp = await fetch(`${SUPA_URL}/functions/v1/auto-login-teste`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPA_KEY },
+      body: '{}',
+    });
+    const data = await resp.json();
+    if (!data.ok) return false;
+    localStorage.setItem('sb-vishxwdxqiygbxmtpfoy-auth-token', JSON.stringify({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: Math.floor(Date.now()/1000) + 3600
+    }));
+    const userRes = await fetch(`${SUPA_URL}/auth/v1/user`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + data.access_token }
+    });
+    if (!userRes.ok) return false;
+    const userData = await userRes.json();
+    if (!userData.id || !temAcessoStonni(userData.user_metadata ?? {})) return false;
+    await carregarUsuario(userData, data.access_token);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 let HEADERS = {
   'apikey': SUPA_KEY,
   'Content-Type': 'application/json',
@@ -1211,6 +1248,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
     }
   } catch(e) {}
+
+  if (await bononiAutoLoginTeste()) return;
 
   // Sem sessão válida — mostra login
   document.getElementById('login-screen').classList.remove('hidden');
