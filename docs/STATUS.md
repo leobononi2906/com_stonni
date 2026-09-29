@@ -1,6 +1,12 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-09-28
+> Atualizado: 2026-09-29
+
+## Dev-log 29/09/2026 — Catálogo: preço da promoção e selo com valor
+
+- **Preço da promoção aparecia nunca:** `catPrecoFinal` não devolvia o valor com ação; agora devolve `precoPromo` e o catálogo mostra o de tabela riscado + o valor em verde. O pedido segue calculando pela tabela + ações (não pelo selo) — decisão pendente.
+- **Selo exige preço:** no cadastro do produto (Configurações), Promoção/Queima de estoque pedem valor original + desconto (% ou valor); colunas `selo_preco_original` e `selo_preco_promo` (`docs/sql/2026-09-29_selo_preco_catalogo.sql`, **aplicada em produção em 29/09/2026**, 3 produtos já tinham selo e ficam sem preço até serem editados). Produtos com selo sobem para o topo do catálogo.
+- Não testado com login real.
 
 ## Dev-log 28/09/2026 — Sino de pendências, Leads do site e selos no menu
 

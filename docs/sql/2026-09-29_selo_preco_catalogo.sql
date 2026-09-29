@@ -1,3 +1,4 @@
+-- aplicada em produção em 2026-09-29
 -- Preço do selo (Promoção / Queima de estoque) em ped_catalogo_produtos
 -- Cria: selo_preco_original e selo_preco_promo (numeric(12,2), nulas).
 -- Não apaga nada; linhas existentes ficam com as duas nulas (o catálogo segue
