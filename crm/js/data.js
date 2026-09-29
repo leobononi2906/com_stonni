@@ -11,7 +11,10 @@ async function init() {
   await Promise.all([loadDocs(), loadCarteira(), loadProspeccao(), loadUmbler(), loadUmblerVendMap(), loadOverdue(), loadToday()]);
   // Gestão carrega em background — não bloqueia o CRM
   refreshGestao().catch(e => console.warn('refreshGestao:', e));
-  gotoTab('crm'); // abre direto no CRM
+  // Abre direto no CRM, mas só se ninguém escolheu tela ainda: o Portal (crmGoto)
+  // e o clique do usuário chamam gotoTab enquanto os dados carregam, e este
+  // gotoTab fixo, por último, jogava a pessoa de volta para o CRM.
+  gotoTab(S.tabEscolhida ? S.tab : 'crm');
   // Log de sessão iniciada
   logAcao('SESSAO_INICIADA', { detalhe: { hora: new Date().toLocaleString('pt-BR') } });
 

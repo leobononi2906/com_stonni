@@ -2,6 +2,13 @@
 
 > Atualizado: 2026-09-29
 
+## Dev-log 29/09/2026 — CRM (iframe) não devolve mais a pessoa para a Carteira
+
+- **Sintoma:** no Portal, ao abrir uma aba do CRM (Home, Vendedores, Produtos, Prospecção) e clicar logo, a tela voltava sozinha para a Carteira alguns segundos depois.
+- **Causa:** `init()` do CRM (`crm/js/data.js`) terminava com `gotoTab('crm')` fixo, depois de carregar todas as tabelas, e sobrescrevia a escolha feita nesse meio tempo (pelo Portal via `crmGoto` ou pelo clique).
+- **Correção:** `gotoTab` marca `S.tabEscolhida` (`crm/js/ui.js`); o `init()` só abre o CRM se ninguém escolheu tela. `?v=20260929a` em `ui.js`/`data.js`.
+- **Não resolvido:** a sub-aba Agenda do CRM não é lembrada no F5 (volta para a Carteira). Não testado com login real.
+
 ## Dev-log 29/09/2026 — Catálogo: preço da promoção e selo com valor
 
 - **Preço da promoção aparecia nunca:** `catPrecoFinal` não devolvia o valor com ação; agora devolve `precoPromo` e o catálogo mostra o de tabela riscado + o valor em verde. O pedido segue calculando pela tabela + ações (não pelo selo) — decisão pendente.

@@ -19,6 +19,7 @@ function toast(msg,tipo='ok',acao) {
 
 function gotoTab(tab) {
   S.tab=tab;
+  S.tabEscolhida=true;
   if(window.setPageInfo) window.setPageInfo(tab);
   // sidebar active
   ['home','vendedores','linhas','crm','prospeccao','agenda','config','materiais'].forEach(t=>{
