@@ -124,8 +124,15 @@ function catPrecoFinal(produto) {
     }
   }
 
-  // Sempre retorna preço de tabela — desconto aparece separado
-  return { preco: precoTabela, descontoPerc, acaoAtiva };
+  // `preco` continua sendo o de tabela (o pedido desconta a ação por conta própria).
+  // `precoPromo` é o valor com a ação aplicada, só para o catálogo mostrar.
+  let precoPromo = null;
+  if (acaoAtiva && descontoPerc > 0) {
+    precoPromo = acaoAtiva.tipo === 'preco_fixo'
+      ? Number(acaoAtiva.valor)
+      : parseFloat((precoTabela * (1 - descontoPerc / 100)).toFixed(2));
+  }
+  return { preco: precoTabela, precoPromo, descontoPerc, acaoAtiva };
 }
 
 const CAT_SELOS = { promocao: 'PROMOÇÃO', queima_estoque: 'QUEIMA DE ESTOQUE' };
@@ -173,7 +180,8 @@ window.catFiltrar = function() {
 
   grid.innerHTML = lista.map(p => {
     const foto = catFotoUrl(p, 900);
-    const { preco, precoOriginal, acaoAtiva } = catPrecoFinal(p);
+    const { preco: precoTab, precoPromo, acaoAtiva } = catPrecoFinal(p);
+    const preco = precoPromo ?? precoTab, precoOriginal = precoPromo != null ? precoTab : null;
 
     return `
       <div class="cat-card ${(p.esgotado||p.esgotado_manual) ? 'cat-card-esgotado' : ''}" onclick="catAbrirProduto(${p.id})">
@@ -214,7 +222,8 @@ window.catFiltrar = function() {
 window.catAbrirProduto = function(id) {
   const p = (window._catProdutos||[]).find(p => p.id === id);
   if (!p) return;
-  const { preco, precoOriginal, acaoAtiva } = catPrecoFinal(p);
+  const { preco: precoTab, precoPromo, acaoAtiva } = catPrecoFinal(p);
+  const preco = precoPromo ?? precoTab, precoOriginal = precoPromo != null ? precoTab : null;
   const fotos = p.fotos_exibir || p.fotos || [];
 
   const fotosHtml = fotos.length
