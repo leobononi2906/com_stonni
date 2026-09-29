@@ -105,10 +105,15 @@ function catPrecoFinal(produto) {
     if (a.data_inicio && a.data_inicio > hoje) return false;
     if (a.data_fim   && a.data_fim   < hoje)  return false;
     if (a.escopo === 'produto') return String(a.id_produto) === String(produto.id_produto_erp);
+    // Mesma regra do pedido (pedidos.js descontoAcaoItem): a ação grava só o NOME
+    // do grupo/subgrupo; comparar id nulo com id nulo casava produto sem grupo.
     if (a.escopo === 'grupo') {
-      if (String(a.id_grupo) !== String(produto.id_grupo)) return false;
-      if (a.id_subgrupo && String(a.id_subgrupo) !== String(produto.id_subgrupo)) return false;
-      return true;
+      const ng = (a.nome_grupo || '').toLowerCase().trim();
+      const g  = (produto.grupo || '').toLowerCase().trim();
+      if (!ng || !g || !(g.includes(ng) || ng.includes(g))) return false;
+      const ns = (a.nome_subgrupo || '').toLowerCase().trim();
+      const s  = (produto.subgrupo || '').toLowerCase().trim();
+      return !ns || (!!s && (s.includes(ns) || ns.includes(s)));
     }
     return false;
   });

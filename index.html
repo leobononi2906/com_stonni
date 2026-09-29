@@ -951,7 +951,9 @@ window.appLog = async function(tipo, descricao, opcoes) {
   const cat = (opcoes||{}).categoria || 'sistema';
   const det = (opcoes||{}).detalhe   || null;
   try {
-    const token = window.HEADERS?.['Authorization']?.replace('Bearer ','') || '';
+    // HEADERS e USUARIO são `let` deste script: não existem como window.* (liam
+    // sempre undefined — token vazio, o log nunca era gravado).
+    const token = HEADERS['Authorization']?.replace('Bearer ','') || '';
     if (!token) return; // sem token não loga
     await fetch(`${SUPA_URL}/rest/v1/app_logs`, {
       method: 'POST',
@@ -965,7 +967,7 @@ window.appLog = async function(tipo, descricao, opcoes) {
         tipo, descricao,
         categoria: cat,
         detalhe: det ? (typeof det==='string' ? det : JSON.stringify(det,null,2)) : null,
-        usuario: window.USUARIO?.nome || null
+        usuario: USUARIO?.nome || null
       })
     });
   } catch(e) { /* silencioso */ }

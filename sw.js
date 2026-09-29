@@ -30,7 +30,9 @@
 // recalculados em irPara), tela nova "Leads do site" (leads.js, script novo
 // no index.html) e crm.js/crmGoto agora sabe abrir a sub-aba Agenda dentro
 // do iframe do CRM (28/09/2026).
-const CACHE_VERSION = 'stonni-v15-20260928';
+// v16: window.appLog (index.html) lia window.HEADERS/window.USUARIO, que nao
+// existem (sao `let` do script) — o Portal nao gravava log nenhum (28/09/2026).
+const CACHE_VERSION = 'stonni-v16-20260928';
 const APP_SHELL = [
   './',
   './index.html',
