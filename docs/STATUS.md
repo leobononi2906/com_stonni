@@ -2,6 +2,14 @@
 
 > Atualizado: 2026-09-29
 
+## Dev-log 29/09/2026 — Oferta de grupo aparecia em produto sem grupo (`a1fce8c`)
+
+- **Sintoma:** a ação "Queima estoque Kit Placas Solares" (R$ 699, grupo STONNI DIVERSOS / PAINEL SOLAR) mostrava OFERTA na Geladeira ST 18L, no Ar Condic. Clean Parede e na Válvula Scania, e não nos kits 16768/16769.
+- **Causa:** o formulário de Ações grava só `nome_grupo`/`nome_subgrupo`; `catPrecoFinal` (`catalogo.js`) comparava `id_grupo`, e `String(null)==='null'` casava todo produto sem grupo. O pedido (`pedidos.js` `descontoAcaoItem`) já casava por nome e calculava certo.
+- **Correção:** catálogo usa a mesma regra do pedido (nome contém, nos dois sentidos, vazio não casa). Conferido em produção: a ação passa a casar só 16768 e 16769. Nenhum dado alterado.
+- **Junto no push:** `window.appLog` (`index.html`) lia `window.HEADERS`/`window.USUARIO`, que não existem — o Portal não gravava log; `sw.js` → `stonni-v16-20260928`.
+- **Não testado:** a tela no navegador (só o arquivo publicado e a regra no banco).
+
 ## Dev-log 29/09/2026 — CRM (iframe) não devolve mais a pessoa para a Carteira
 
 - **Sintoma:** no Portal, ao abrir uma aba do CRM (Home, Vendedores, Produtos, Prospecção) e clicar logo, a tela voltava sozinha para a Carteira alguns segundos depois.
