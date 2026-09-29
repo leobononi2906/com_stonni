@@ -1340,12 +1340,27 @@ window.cfgEditarProduto = async function(id) {
       </div>
       <div class="form-field" style="margin:0 0 var(--space-2-5)">
         <label>Selo no catálogo</label>
-        <select id="ep-selo" class="cfg-input">
+        <select id="ep-selo" class="cfg-input" onchange="cfgSeloToggle()">
           <option value="" ${!p.selo?'selected':''}>Nenhum</option>
           <option value="promocao" ${p.selo==='promocao'?'selected':''}>Promoção</option>
           <option value="queima_estoque" ${p.selo==='queima_estoque'?'selected':''}>Queima de estoque</option>
         </select>
         <span style="font-size:var(--fs-075);color:var(--text-muted)">Aparece no card do produto para o representante</span>
+      </div>
+      <div id="ep-selo-preco" class="cfg-grid-2" style="margin:0 0 var(--space-2-5);display:${p.selo?'grid':'none'}">
+        <div class="form-field" style="margin:0">
+          <label>Valor original (R$)</label>
+          <input type="number" id="ep-selo-orig" class="cfg-input" min="0" step="0.01" value="${p.selo_preco_original ?? p.preco_base ?? ''}" oninput="cfgSeloCalc('orig')">
+        </div>
+        <div class="form-field" style="margin:0">
+          <label>Desconto (%)</label>
+          <input type="number" id="ep-selo-perc" class="cfg-input" min="0" max="99.99" step="0.01" value="${(p.selo_preco_original>0 && p.selo_preco_promo>0) ? parseFloat(((1-p.selo_preco_promo/p.selo_preco_original)*100).toFixed(2)) : ''}" oninput="cfgSeloCalc('perc')">
+        </div>
+        <div class="form-field" style="margin:0;grid-column:1/-1">
+          <label>Valor com desconto (R$)</label>
+          <input type="number" id="ep-selo-promo" class="cfg-input" min="0" step="0.01" value="${p.selo_preco_promo ?? ''}" oninput="cfgSeloCalc('promo')">
+          <span style="font-size:var(--fs-075);color:var(--text-muted)">Preencha o desconto ou o valor; o outro é calculado. É o que o representante vê no catálogo, com o valor original riscado.</span>
+        </div>
       </div>
     </div>
   `, `
@@ -1392,6 +1407,23 @@ window.cfgSincronizarBling = async function(id, sku) {
 };
 
 
+window.cfgSeloToggle = function() {
+  const box = document.getElementById('ep-selo-preco');
+  if (box) box.style.display = document.getElementById('ep-selo')?.value ? 'grid' : 'none';
+};
+
+// Original, % e valor final andam juntos: mexeu em um, recalcula o outro.
+window.cfgSeloCalc = function(quem) {
+  const o = document.getElementById('ep-selo-orig'), pc = document.getElementById('ep-selo-perc'), v = document.getElementById('ep-selo-promo');
+  const orig = parseFloat(o.value), perc = parseFloat(pc.value), promo = parseFloat(v.value);
+  if (quem === 'perc' && orig > 0 && perc >= 0) v.value = (orig * (1 - perc / 100)).toFixed(2);
+  else if (quem === 'promo' && orig > 0 && promo >= 0) pc.value = parseFloat(((1 - promo / orig) * 100).toFixed(2));
+  else if (quem === 'orig' && orig > 0) {
+    if (perc >= 0) v.value = (orig * (1 - perc / 100)).toFixed(2);
+    else if (promo >= 0) pc.value = parseFloat(((1 - promo / orig) * 100).toFixed(2));
+  }
+};
+
 window.cfgToggleEsgotado = async function(id, esgotado) {
   // Salva só esgotado_manual — sync nunca toca aqui
   const status = await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { esgotado_manual: esgotado, alterado_por: USUARIO?.email || null, atualizado_em: new Date().toISOString() });
@@ -1417,6 +1449,16 @@ window.cfgToggleEsgotado = async function(id, esgotado) {
 
 window.cfgAtualizarProduto = async function(id) {
   console.log('cfgAtualizarProduto id:', id);
+  // Selo de promoção/queima sem preço não serve: o representante não veria o que mudou.
+  const seloVal = document.getElementById('ep-selo')?.value || '';
+  const seloOrig = parseFloat(document.getElementById('ep-selo-orig')?.value);
+  const seloPromo = parseFloat(document.getElementById('ep-selo-promo')?.value);
+  if (seloVal) {
+    if (!(seloOrig > 0) || !(seloPromo > 0) || seloPromo >= seloOrig) {
+      alert('Para usar Promoção ou Queima de estoque, informe o valor original e o desconto (% ou valor). O valor com desconto precisa ser menor que o original.');
+      return;
+    }
+  }
   const esgotadoCheck = document.getElementById('ep-esgotado-check');
   console.log('esgotado-check element:', esgotadoCheck, 'checked:', esgotadoCheck?.checked);
   const patch = { sync_fotos: document.getElementById('ep-sync-fotos')?.checked !== false, sync_medidas: document.getElementById('ep-sync-medidas')?.checked !== false, nome: document.getElementById('ep-nome').value.trim(), referencia: document.getElementById('ep-ref').value.trim(), aplicacao: document.getElementById('ep-aplicacao').value.trim(), grupo: document.getElementById('ep-grupo').value.trim(), subgrupo: document.getElementById('ep-subgrupo').value.trim(), preco_base: parseFloat(document.getElementById('ep-preco').value) || 0, ipi_perc: parseFloat(document.getElementById('ep-ipi')?.value) || 0, st_sp: parseFloat(document.getElementById('ep-st-sp')?.value) || 0, st_pr: parseFloat(document.getElementById('ep-st-pr')?.value) || 0, descricao: document.getElementById('ep-desc').value.trim(), ativo: document.getElementById('ep-ativo').checked, esgotado_manual: document.getElementById('ep-esgotado-check')?.checked || false, atualizado_em: new Date().toISOString(), alterado_por: USUARIO?.email || null };
@@ -1442,8 +1484,15 @@ window.cfgAtualizarProduto = async function(id) {
   // Selo separado: se a coluna ainda não existir no banco, só ele falha
   const epSelo = document.getElementById('ep-selo');
   const p0 = (window._cfgProdutos || []).find(x => x.id === id);
-  if (epSelo && (epSelo.value || null) !== (p0?.selo || null)) {
-    await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { selo: epSelo.value || null, alterado_por: USUARIO?.email || null, atualizado_em: new Date().toISOString() });
+  const seloMudou = epSelo && ((epSelo.value || null) !== (p0?.selo || null)
+    || (seloVal && (seloOrig !== Number(p0?.selo_preco_original) || seloPromo !== Number(p0?.selo_preco_promo))));
+  if (seloMudou) {
+    await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, {
+      selo: seloVal || null,
+      selo_preco_original: seloVal ? seloOrig : null,
+      selo_preco_promo: seloVal ? seloPromo : null,
+      alterado_por: USUARIO?.email || null, atualizado_em: new Date().toISOString()
+    });
   }
 
   fecharDrawer(); cfgAba('catalogo', null);

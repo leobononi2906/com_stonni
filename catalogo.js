@@ -132,7 +132,14 @@ function catPrecoFinal(produto) {
       ? Number(acaoAtiva.valor)
       : parseFloat((precoTabela * (1 - descontoPerc / 100)).toFixed(2));
   }
-  return { preco: precoTabela, precoPromo, descontoPerc, acaoAtiva };
+  // Selo com preço configurado no cadastro do produto vale mais que a ação:
+  // é o que o gestor digitou (valor original + desconto) para aquele produto.
+  let precoRef = precoTabela;
+  if (produto.selo && Number(produto.selo_preco_promo) > 0 && Number(produto.selo_preco_original) > Number(produto.selo_preco_promo)) {
+    precoRef   = Number(produto.selo_preco_original);
+    precoPromo = Number(produto.selo_preco_promo);
+  }
+  return { preco: precoTabela, precoRef, precoPromo, descontoPerc, acaoAtiva };
 }
 
 const CAT_SELOS = { promocao: 'PROMOÇÃO', queima_estoque: 'QUEIMA DE ESTOQUE' };
@@ -160,11 +167,13 @@ window.catFiltrar = function() {
   if (seloFiltro) lista = lista.filter(p => p.selo === seloFiltro);
   if (disp==='disp') lista = lista.filter(p => !p.esgotado && !p.esgotado_manual);
   if (disp==='esg')  lista = lista.filter(p => p.esgotado || p.esgotado_manual);
-  // Esgotados/fora de linha sempre no final
+  // Esgotados/fora de linha sempre no final; dentro de cada bloco, quem tem selo vem primeiro
   lista.sort((a, b) => {
     const ea = (a.esgotado || a.esgotado_manual) ? 1 : 0;
     const eb = (b.esgotado || b.esgotado_manual) ? 1 : 0;
-    return ea - eb;
+    if (ea !== eb) return ea - eb;
+    // Com selo (promoção / queima de estoque) sobe para o topo
+    return (b.selo ? 1 : 0) - (a.selo ? 1 : 0);
   });
 
   const count = document.getElementById('cat-count');
@@ -180,7 +189,7 @@ window.catFiltrar = function() {
 
   grid.innerHTML = lista.map(p => {
     const foto = catFotoUrl(p, 900);
-    const { preco: precoTab, precoPromo, acaoAtiva } = catPrecoFinal(p);
+    const { precoRef: precoTab, precoPromo, acaoAtiva } = catPrecoFinal(p);
     const preco = precoPromo ?? precoTab, precoOriginal = precoPromo != null ? precoTab : null;
 
     return `
@@ -200,7 +209,7 @@ window.catFiltrar = function() {
           <div class="cat-card-ref">Ref: ${p.referencia || '—'}</div>
           <div class="cat-card-preco">
             ${precoOriginal ? `<span class="cat-preco-original">R$ ${precoOriginal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>` : ''}
-            <span class="cat-preco-final ${acaoAtiva ? 'cat-preco-oferta' : ''}">
+            <span class="cat-preco-final ${precoOriginal ? 'cat-preco-oferta' : ''}">
               R$ ${preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}
             </span>
             ${acaoAtiva?.tipo==='desconto' ? `<span class="cat-desconto-badge">-${acaoAtiva.valor}%</span>` : ''}
@@ -222,7 +231,7 @@ window.catFiltrar = function() {
 window.catAbrirProduto = function(id) {
   const p = (window._catProdutos||[]).find(p => p.id === id);
   if (!p) return;
-  const { preco: precoTab, precoPromo, acaoAtiva } = catPrecoFinal(p);
+  const { precoRef: precoTab, precoPromo, acaoAtiva } = catPrecoFinal(p);
   const preco = precoPromo ?? precoTab, precoOriginal = precoPromo != null ? precoTab : null;
   const fotos = p.fotos_exibir || p.fotos || [];
 
@@ -255,7 +264,7 @@ window.catAbrirProduto = function(id) {
     ${acaoAtiva ? `<div class="alert alert-success" style="margin-bottom:var(--space-3)"><span class="alert-icon"><i class="ic ic-sm" data-ic="target"></i></span><strong>${acaoAtiva.nome}</strong> — ${acaoAtiva.tipo==='desconto'?`${acaoAtiva.valor}% de desconto`:`Preço especial`}</div>` : ''}
     <div style="display:flex;align-items:baseline;gap:var(--space-3);margin-bottom:var(--space-4)">
       ${precoOriginal ? `<span style="font-size:var(--fs-300);color:var(--text-muted);text-decoration:line-through">R$ ${precoOriginal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>` : ''}
-      <span style="font-size:28px;font-weight:700;font-family:var(--font-mono);color:${acaoAtiva?'var(--green)':'var(--blue-dark)'}">R$ ${preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+      <span style="font-size:28px;font-weight:700;font-family:var(--font-mono);color:${precoOriginal?'var(--green)':'var(--blue-dark)'}">R$ ${preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
     </div>
     ${p.aplicacao ? `<div style="margin-bottom:var(--space-3)"><span style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-muted)">Aplicação</span><div style="font-size:var(--fs-200);margin-top:var(--space-1)"><i class="ic ic-sm" data-ic="map-pin"></i> ${p.aplicacao}</div></div>` : ''}
     ${p.descricao ? `<div style="margin-bottom:var(--space-4)"><span style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-muted)">Descrição</span><div style="font-size:var(--fs-200);color:var(--text-secondary);margin-top:var(--space-1);line-height:1.5">${p.descricao}</div></div>` : ''}
