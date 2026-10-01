@@ -974,6 +974,7 @@ window.appLog = async function(tipo, descricao, opcoes) {
 };
 
 function irPara(paginaId, params = {}) {
+  window.GeralCentral && GeralCentral.tela(paginaId); // caminho (geral-central v15)
   // Remove active de todos
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   const navEl = document.getElementById(`nav-${paginaId}`);
@@ -1461,7 +1462,7 @@ function renderRepresentantes(el, params) {
      bononi-hub/ds/geral-acesso.js — subir o ?v= junto ao trocar o arquivo. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ds/geral-acesso.js?v=2"></script>
-<script src="ds/geral-central.js?v=14"></script>
+<script src="ds/geral-central.js?v=15"></script>
 <script src="configuracoes.js"></script>
 <script src="catalogo-pdf.js"></script>
 <script src="catalogo.js"></script>

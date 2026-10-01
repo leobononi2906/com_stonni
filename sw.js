@@ -32,7 +32,7 @@
 // do iframe do CRM (28/09/2026).
 // v16: window.appLog (index.html) lia window.HEADERS/window.USUARIO, que nao
 // existem (sao `let` do script) — o Portal nao gravava log nenhum (28/09/2026).
-const CACHE_VERSION = 'stonni-v16-20260928';
+const CACHE_VERSION = 'stonni-v17-20261001';
 const APP_SHELL = [
   './',
   './index.html',

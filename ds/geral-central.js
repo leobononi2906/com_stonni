@@ -1,7 +1,19 @@
 /* ============================================================
    geral-central.js — Sugestão, avisos, atualização cadastral,
-   expiração de senha e sino de pendências  |  v14 — 28/09/2026
+   expiração de senha, sino de pendências e caminho  |  v15 — 01/10/2026
    ============================================================
+   v15: CAMINHO DENTRO DOS APPS. Grava qual app e qual tela a sessão
+   abriu (RPC geral_registrar_navegacao, migration 0031 do bononi-hub) —
+   é o que a tela "Acessos fora do horário" do Painel Dev mostra como
+   "Hub → Vendas › envios". Grava ao iniciar e a cada troca de tela:
+     - app com rotas (React Router, hash): sozinho, escutando
+       pushState/replaceState/popstate/hashchange; número e uuid no
+       caminho viram ":id" (/picking/123 → /picking/:id);
+     - app de tela única (navegarPara/irPara): o app chama
+       GeralCentral.tela('cmp-pedidos') na própria função de navegação.
+       Chamada antes do iniciar fica guardada e vira a tela de entrada.
+   Repetição seguida não grava. Sem a 0031 no banco, a chamada falha em
+   silêncio e nada muda na tela.
    v14: SINO DE PENDÊNCIAS. Botão flutuante acima do "Sugerir melhoria"
    com o que está esperando ação: as filas deste app + o que é
    nominalmente da pessoa em qualquer outro app (no Hub, tudo). Vem da
@@ -109,7 +121,7 @@
 (function () {
   'use strict';
 
-  var VERSAO = '14';
+  var VERSAO = '15';
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -982,8 +994,67 @@
     });
   }
 
+  // ── 7. Caminho (v15) ─────────────────────────────────────────────
+  var _nav = { o: null, ultima: null, pendente: null, escutando: false };
+
+  function rotaAtual() {
+    var p = (location.pathname || '/') + (location.hash && location.hash.length > 1 ? location.hash : '');
+    return p
+      .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ':id')
+      .replace(/\/\d+(?=\/|$|\?|#)/g, '/:id');
+  }
+
+  async function registrarTela(tela) {
+    var o = _nav.o;
+    if (!o || !tela || tela === _nav.ultima) return;
+    _nav.ultima = tela;
+    try {
+      o.token = (await token(o)) || o.token; // o token renova a cada hora
+      await rest(o, 'rpc/geral_registrar_navegacao', {
+        method: 'POST',
+        body: JSON.stringify({ p_app: o.appId, p_tela: String(tela).slice(0, 120) }),
+      });
+    } catch (e) { /* silencioso: caminho não pode atrapalhar o app */ }
+  }
+
+  function escutarRotas() {
+    if (_nav.escutando) return;
+    _nav.escutando = true;
+    var aoMudar = function () { setTimeout(function () { registrarTela(rotaAtual()); }, 0); };
+    ['pushState', 'replaceState'].forEach(function (m) {
+      var orig = history[m];
+      if (typeof orig !== 'function') return;
+      history[m] = function () {
+        var r = orig.apply(this, arguments);
+        // app de tela única que usa replaceState só para limpar ?abrir= não
+        // conta: nele quem diz a tela é GeralCentral.tela()
+        if (!_nav.manual) aoMudar();
+        return r;
+      };
+    });
+    window.addEventListener('popstate', function () { if (!_nav.manual) aoMudar(); });
+    window.addEventListener('hashchange', function () { if (!_nav.manual) aoMudar(); });
+  }
+
+  function iniciarCaminho(o) {
+    _nav.o = o;
+    if (_nav.pendente) { registrarTela(_nav.pendente); _nav.pendente = null; }
+    // app de tela única costuma dizer a tela logo depois do iniciar: espera um
+    // instante antes de gravar a rota, para não registrar um "/" à toa
+    else setTimeout(function () { if (!_nav.manual) registrarTela(rotaAtual()); }, 1500);
+    escutarRotas();
+  }
+
   var GeralCentral = {
     versao: VERSAO,
+
+    /** v15: o app de tela única avisa a troca de tela (id estável, ex. 'cmp-pedidos'). */
+    tela: function (id) {
+      if (!id) return;
+      _nav.manual = true;
+      if (!_nav.o) { _nav.pendente = String(id); return; }
+      registrarTela(String(id));
+    },
 
     /** Última lista do sino (a mesma que o evento `gc:pendencias` entrega). */
     pendencias: function () { return _pend.itens.slice(); },
@@ -1015,6 +1086,7 @@
       if (!opts || !opts.appId || !opts.url || !opts.key || !opts.sb || !opts.usuario) return;
       opts.token = await token(opts);
       if (!opts.token) return; // sem sessão, não faz nada
+      iniciarCaminho(opts);    // v15: primeiro, sem await — não espera aviso nem senha
 
       var bloqueado = await verificarExpiracaoSenha(opts);
       if (bloqueado) {
