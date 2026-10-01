@@ -1,6 +1,6 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-09-29
+> Atualizado: 2026-10-01
 
 ## Dev-log 29/09/2026 — Oferta de grupo aparecia em produto sem grupo (`a1fce8c`)
 
@@ -342,6 +342,7 @@ HTML/JS vanilla, sem build. `index.html` (shell/login/nav dirigido por `construi
 - `configuracoes.js` grande — refatoração gradual.
 
 ## Dev-log
+- 2026-10-01 — **Caminho dentro do app (geral-central v15).** Cada sessão passa a gravar qual app e qual tela abriu (RPC `geral_registrar_navegacao`, migration 0031 do `bononi-hub`), e a tela "Acessos fora do horário" do painel-dev mostra o caminho. Pedido do Gustavo depois de não dar para saber em qual app o Henrique Trombini entrou em 05/09 10:55. Gancho em `irPara(paginaId)` (cobre as abas do CRM). SW `stonni-v17-20261001`. Commit 0c95418.
 - 2026-09-17 — **`ds/stonni-ds.css` estava desatualizado em relação ao canônico do `stonni-assistencia`** (referência do design system Stonni interno): faltava o bloco `tokens/base.css` (reset, `body`, `h1..h6`, `a`, `code`, `hr`, `::selection`, `small`, `[hidden]`, `prefers-reduced-motion`), e a ordem dos blocos era diferente. Nenhum token mudou de nome ou valor. Substituído por cópia verbatim do canônico. Ponte de variáveis (`index.html` e `crm/css/styles.css`) conferida token a token: nenhuma colisão, nada precisou mudar. Cache-buster de `stonni-ds.css` subiu de `?v=20260915` para `?v=20260917` em `index.html` e `crm/index.html`, e o `CACHE_VERSION` do `sw.js` foi de `stonni-v7-20260916` para `stonni-v8-20260917` — sem isso o service worker continuaria servindo o CSS velho por cache. Auditoria (`auditar-tokens.py`): zero padrões que falham calados introduzidos pela troca; os 12 tokens indefinidos em `geral-acesso.js` e o hex/medida literal remanescentes são pré-existentes e documentados, fora de escopo desta sincronização.
 - 2026-09-16 — **`temAcessoStonni()` fazia `return true`: a porta deste app estava escancarada.** A função se chamava "verifica acesso ao módulo `atacado`" e o comentário dizia que *"a restrição real é feita pelo `ped_gestores`/`ped_representantes` em `carregarUsuario`"*. **Não era.** `carregarUsuario` não tem caminho de recusa — quem não é gestor nem representante cai no `iniciarApp()` igual. Como o Supabase Auth é compartilhado pelos 22 apps do grupo, **as 53 contas entravam aqui**: compras, expedição, varejo, RH, financeiro e os 12 parceiros da rede autorizada. Não era vazamento de tela — sem módulo o nav sai vazio ("Sem áreas liberadas") — mas era token entregue a quem não tem o que fazer aqui, e uma mensagem de erro (`Sem acesso a este sistema`) que **nunca podia disparar**.
   - **A porta agora é a soma das áreas de dentro**, e sai da mesma lista que elas: `MODULOS_DESTE_APP = ['stonni','atacado']` + `admin`. `temPortal()` e `ehInterno()` passaram a chamar a mesma função da porta (`liberaAlgumaArea`), então porta e nav **não têm como discordar** — era esse o buraco, não a linha `return true` em si.
