@@ -1,6 +1,12 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-10-01
+> Atualizado: 2026-10-05
+
+## Dev-log 05/10/2026 — Link no aviso aparece como link (`a1e8f77`)
+
+- **Causa:** O estilo base do app zera cor e sublinhado do `<a>`, então o link escrito no aviso (`<a href="https://...">`) já funcionava mas saía igual ao resto do texto e ninguém via que dava para clicar. Caso que revelou: o aviso das notas paradas há 24h na Expedição, com "abrir as notas paradas".
+- **Correção:** `geral-central.js` recopiado do `bononi-hub` (mesma v15, só a linha do link em `escHtmlSimples` muda: vermelho `#c11f25`, sublinhado, negrito). `?v=16` no `index.html` e `crm/index.html` (estava em `?v=14`).
+- Conferido no ar: o `geral-central.js` publicado já traz o estilo novo. Não visto na tela (o aviso só aparece com login).
 
 ## Dev-log 29/09/2026 — Oferta de grupo aparecia em produto sem grupo (`a1fce8c`)
 
