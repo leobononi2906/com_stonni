@@ -963,11 +963,18 @@ window.appLog = async function(tipo, descricao, opcoes) {
         'Authorization': 'Bearer ' + token,
         'Prefer':        'return=minimal'
       },
+      // Colunas reais de app_logs (produção): nivel, modulo, funcao, mensagem,
+      // detalhe, usuario, url, user_agent. tipo/descricao/categoria NÃO existem
+      // (PostgREST recusa o insert inteiro, e o catch engolia).
       body: JSON.stringify({
-        tipo, descricao,
-        categoria: cat,
+        nivel: /^err/i.test(tipo) ? 'ERROR' : /^warn/i.test(tipo) ? 'WARN' : 'INFO',
+        modulo: 'com_stonni',
+        funcao: cat,
+        mensagem: descricao,
         detalhe: det ? (typeof det==='string' ? det : JSON.stringify(det,null,2)) : null,
-        usuario: USUARIO?.nome || null
+        usuario: USUARIO?.email || USUARIO?.nome || null,
+        url: location.href,
+        user_agent: navigator.userAgent
       })
     });
   } catch(e) { /* silencioso */ }

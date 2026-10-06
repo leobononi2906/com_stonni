@@ -1944,15 +1944,16 @@ async function cfgCarregarLogs(el) {
   const query = [
     'order=criado_em.desc',
     'limit=200',
-    tipoFiltro ? `tipo=eq.${tipoFiltro}` : '',
-    catFiltro  ? `categoria=eq.${catFiltro}` : '',
+    'modulo=eq.com_stonni',
+    tipoFiltro ? `nivel=eq.${tipoFiltro==='erro'?'ERROR':'INFO'}` : '',
+    catFiltro  ? `funcao=eq.${encodeURIComponent(catFiltro)}` : '',
   ].filter(Boolean).join('&');
 
   const logs = await supa('app_logs', query) || [];
 
   const iconeTipo = { acao: '<i class="ic ic-sm" data-ic="check-circle"></i>', erro: '<i class="ic ic-sm" data-ic="circle"></i>' };
   const corTipo   = { acao: 'var(--green)', erro: 'var(--red)' };
-  const categorias = [...new Set(logs.map(l=>l.categoria).filter(Boolean))].sort();
+  const categorias = [...new Set(logs.map(l=>l.funcao).filter(Boolean))].sort();
 
   el.innerHTML = `
     <div style="display:flex;align-items:center;gap:var(--space-2-5);flex-wrap:wrap;margin-bottom:var(--space-4)">
@@ -1983,11 +1984,11 @@ async function cfgCarregarLogs(el) {
       </div>` : `
     <div style="display:flex;flex-direction:column;gap:var(--space-2)">
       ${logs.map(l => `
-        <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${corTipo[l.tipo]||'var(--border)'};border-radius:var(--radius-lg);padding:var(--space-3) var(--space-3-5)">
+        <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${corTipo[l.nivel==='ERROR'?'erro':'acao']||'var(--border)'};border-radius:var(--radius-lg);padding:var(--space-3) var(--space-3-5)">
           <div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap">
-            <span style="font-size:var(--fs-300)">${iconeTipo[l.tipo]||'•'}</span>
-            <span style="font-size:var(--fs-200);font-weight:600;flex:1">${l.descricao||''}</span>
-            ${l.categoria ? `<span style="font-size:var(--fs-075);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:var(--space-0-5) 7px;color:var(--text-muted)">${l.categoria}</span>` : ''}
+            <span style="font-size:var(--fs-300)">${iconeTipo[l.nivel==='ERROR'?'erro':'acao']||'•'}</span>
+            <span style="font-size:var(--fs-200);font-weight:600;flex:1">${l.mensagem||''}</span>
+            ${l.funcao ? `<span style="font-size:var(--fs-075);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:var(--space-0-5) 7px;color:var(--text-muted)">${l.funcao}</span>` : ''}
             <span style="font-size:var(--fs-090);color:var(--text-muted);white-space:nowrap">${new Date(l.criado_em).toLocaleString('pt-BR')}</span>
           </div>
           ${l.usuario ? `<div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-1)"><i class="ic ic-sm" data-ic="user"></i> ${l.usuario}</div>` : ''}
@@ -2002,7 +2003,7 @@ async function cfgCarregarLogs(el) {
 
 window.cfgLimparLogs = async function() {
   if (!confirm('Limpar todos os logs de ERRO? (ações são mantidas)')) return;
-  await fetch(`${SUPA_URL}/rest/v1/app_logs?tipo=eq.erro`, { method:'DELETE', headers: HEADERS });
+  await fetch(`${SUPA_URL}/rest/v1/app_logs?modulo=eq.com_stonni&nivel=eq.ERROR`, { method:'DELETE', headers: HEADERS });
   cfgAba('logs', document.querySelector('.cfg-tab.active'));
 };
 
@@ -2253,7 +2254,7 @@ window.cfgLogsErros = async function() {
   const dias = window._logsPeriodo ?? 7;
   const desde = dias === 999 ? '2020-01-01' : new Date(Date.now() - dias * 86400000).toISOString().slice(0,10);
 
-  const logs = await supa('app_logs', `criado_em=gte.${desde}&order=criado_em.desc&select=*&limit=300`) || [];
+  const logs = await supa('app_logs', `modulo=eq.com_stonni&criado_em=gte.${desde}&order=criado_em.desc&select=*&limit=300`) || [];
   window._logsErrosDados = logs;
 
   body.innerHTML = cfgLogsFiltroHtml('cfgLogsErrosRender') + `<div id="logs-err-lista"></div>`;
