@@ -14,6 +14,17 @@ function fmtPreco(v) {
 
 const BLING_PROXY = `${SUPA_URL}/functions/v1/bling-proxy`;
 
+// O bling-proxy passou a exigir login (06/10/2026): sem o token do usuário ele responde 401.
+// Uma renovação e uma repetição se o token venceu (o mesmo cuidado do supa()).
+async function blingProxyGet(qs) {
+  const chamar = () => fetch(`${BLING_PROXY}?${qs}`, {
+    headers: { apikey: SUPA_KEY, Authorization: HEADERS['Authorization'] || '' }
+  });
+  let r = await chamar();
+  if (r.status === 401 && typeof renovarToken === 'function' && await renovarToken()) r = await chamar();
+  return r;
+}
+
 async function renderConfiguracoes(el) {
   el.innerHTML = `
     <div class="cfg-wrap">
@@ -947,7 +958,7 @@ window.cfgSincronizarTodos = async function() {
     </div>`;
     try {
       const skuLimpo = String(parseInt(p.referencia));
-      const r = await fetch(`${BLING_PROXY}?acao=fotos-cache&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({}));
+      const r = await blingProxyGet(`acao=fotos-cache&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({}));
       const patch = {};
       if ((r?.fotos||[]).length > 0) patch.fotos = r.fotos;
       if (r?.foto_miniatura) patch.foto_miniatura = r.foto_miniatura;
@@ -1105,8 +1116,8 @@ window.cfgSalvarProduto = async function() {
   try {
     const skuLimpo = String(parseInt(referencia));
     const [rFotos, rDim] = await Promise.all([
-      fetch(`${BLING_PROXY}?acao=fotos-cache&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})),
-      fetch(`${BLING_PROXY}?acao=dimensoes&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({}))
+      blingProxyGet(`acao=fotos-cache&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})),
+      blingProxyGet(`acao=dimensoes&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({}))
     ]);
     const patch = {};
     if ((rFotos?.fotos||[]).length > 0) patch.fotos = rFotos.fotos;
@@ -1381,8 +1392,8 @@ window.cfgSincronizarBling = async function(id, sku) {
   try {
     const skuLimpo = String(parseInt(sku));
     const [rFotos, rDim] = await Promise.all([
-      syncFotos   ? fetch(`${BLING_PROXY}?acao=fotos-cache&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})) : Promise.resolve({}),
-      syncMedidas ? fetch(`${BLING_PROXY}?acao=dimensoes&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})) : Promise.resolve({})
+      syncFotos   ? blingProxyGet(`acao=fotos-cache&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})) : Promise.resolve({}),
+      syncMedidas ? blingProxyGet(`acao=dimensoes&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})) : Promise.resolve({})
     ]);
     const patch = {};
     const fotos = rFotos?.fotos || [];

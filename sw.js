@@ -32,7 +32,9 @@
 // do iframe do CRM (28/09/2026).
 // v16: window.appLog (index.html) lia window.HEADERS/window.USUARIO, que nao
 // existem (sao `let` do script) — o Portal nao gravava log nenhum (28/09/2026).
-const CACHE_VERSION = 'stonni-v17-20261001';
+// v18: configuracoes.js manda o token do usuario ao bling-proxy (a funcao passou a exigir
+// login em 06/10/2026); quem ficou com o JS velho em cache receberia 401 nas fotos/medidas.
+const CACHE_VERSION = 'stonni-v18-20261006';
 const APP_SHELL = [
   './',
   './index.html',
