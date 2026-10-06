@@ -1,6 +1,13 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-10-05
+> Atualizado: 2026-10-06
+
+## Dev-log 06/10/2026 — `ped_configuracoes` deixou de expor as credenciais do Bling (banco, sem mudança de código)
+
+- **Causa:** a tabela guarda `bling_access_token`, `bling_refresh_token` e `bling_api_token` e estava sem RLS, com leitura e escrita liberadas à chave anon (a que está no fonte de todo app). Achada ao investigar o `bling-sync` aberto, durante o fechamento do anon do `bononiecommerce`.
+- **Aplicado em produção:** `docs/sql/2026-10-06_ped_configuracoes_fecha_bling.sql` (ensaiada antes com rollback, 13 conferências). RLS ligada; as 7 linhas `bling_*` só o `service_role` alcança; as demais continuam legíveis a todos e só quem tem o módulo `stonni`/`atacado` (ou é admin) escreve, pela função `ped_config_pode_editar()`. Conferido de fora com a chave pública: lê 0 linhas `bling_*`, lê as `catalogo_*`, `PATCH` barrado com 401. As Edge Functions `bling-sync`, `bling-proxy`, `bling-callback` e `bling-debug` usam a service key e não são afetadas.
+- **Efeito visível:** a tela Configurações deixa de listar as chaves `bling_*`.
+- **Pendente:** girar as credenciais do Bling (reautorizar o app no painel do Bling), já que não dá para saber se foram lidas antes; `bling-sync`, `bling-proxy` e `bling-debug` seguem chamáveis sem login (decisão sobre protegê-las ou desligar a `bling-debug`); uma linha `debug_fotos_resultado` sobrou na tabela por uma chamada de teste à `bling-debug`.
 
 ## Dev-log 05/10/2026 — Link no aviso aparece como link (`a1e8f77`)
 
