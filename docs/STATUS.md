@@ -1,6 +1,10 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-10-06
+> Atualizado: 2026-10-07
+
+## Dev-log 07/10/2026 — Sino e botões não saem na impressão (`3397295`)
+
+- **Sino e botões do geral-central não saem mais na impressão** (`geral-central.js` v16, `?v=17`). O módulo põe sino de Pendências, "Sugerir melhoria", cartão de treinamento e avisos em `position:fixed` sem regra de impressão, e o sino saiu no romaneio impresso da Expedição (06/10). Agora um `@media print` esconde tudo isso. Só a cópia de `ds/geral-central.js` e o `?v=` do `index.html` mudaram; este app imprime em janela própria, então não era afetado, e a cópia só mantém o arquivo igual ao do Hub (original em `bononi-hub/ds/`) (`3397295`).
 
 ## Dev-log 06/10/2026 — `ped_configuracoes` deixou de expor as credenciais do Bling (banco, sem mudança de código)
 
