@@ -1,7 +1,10 @@
 /* ============================================================
    geral-central.js — Sugestão, avisos, atualização cadastral,
-   expiração de senha, sino de pendências e caminho  |  v15 — 01/10/2026
+   expiração de senha, sino de pendências e caminho  |  v16 — 07/10/2026
    ============================================================
+   v16: NÃO SAI NA IMPRESSÃO. Sino, "Sugerir melhoria", cartão de
+   treinamento e overlays ficam escondidos em @media print — o sino
+   saía no romaneio impresso da Expedição (06/10/2026).
    v15: CAMINHO DENTRO DOS APPS. Grava qual app e qual tela a sessão
    abriu (RPC geral_registrar_navegacao, migration 0031 do bononi-hub) —
    é o que a tela "Acessos fora do horário" do Painel Dev mostra como
@@ -121,7 +124,17 @@
 (function () {
   'use strict';
 
-  var VERSAO = '15';
+  var VERSAO = '16';
+
+  // v16: nada deste arquivo vai para o papel (romaneio, etiqueta, organograma).
+  function garantirEstiloImpressao() {
+    if (document.getElementById('gc-print-estilo')) return;
+    var s = document.createElement('style');
+    s.id = 'gc-print-estilo';
+    s.textContent = '@media print{.gc-fab-wrap,#gc-sino-wrap,#gc-sino-painel,#gc-trein-prazo,' +
+      '[id^="gc-aviso-"],#gc-senha,#gc-cadastro,#gc-sugestao{display:none !important}}';
+    document.head.appendChild(s);
+  }
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -1084,6 +1097,7 @@
      */
     iniciar: async function (opts) {
       if (!opts || !opts.appId || !opts.url || !opts.key || !opts.sb || !opts.usuario) return;
+      garantirEstiloImpressao();
       opts.token = await token(opts);
       if (!opts.token) return; // sem sessão, não faz nada
       iniciarCaminho(opts);    // v15: primeiro, sem await — não espera aviso nem senha
