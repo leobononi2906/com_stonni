@@ -2,6 +2,10 @@
 
 > Atualizado: 2026-10-08
 
+## Dev-log 08/10/2026 — Bling: migração para JWT
+
+- **Bling: migração para JWT (prazo 15/10/2026).** Header `enable-jwt: 1` em `bling-callback` (versionado agora a partir do download do publicado) e em toda chamada/renovação do `bling-proxy` (família `ped_configuracoes`). Sem o header a renovação devolve token opaco de novo; com ele, a próxima renovação já grava JWT (conferir pelo formato: 3 partes separadas por ponto). Commit local; as 2 funções precisam ser publicadas por ele com `--no-verify-jwt`.
+
 ## Dev-log 08/10/2026 — Aba "Regras de Faturamento"
 
 - Aba nova no Portal (`regras-faturamento.js`), a primeira do menu. O login com senha abre direto nela. Quem dá F5 ou recebe deploy novo continua restaurando a última tela (`ABRIR_NO_LOGIN` no `index.html`).
