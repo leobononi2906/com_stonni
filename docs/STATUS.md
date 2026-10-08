@@ -1,6 +1,15 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-10-07
+> Atualizado: 2026-10-08
+
+## Dev-log 08/10/2026 — Aba "Regras de Faturamento"
+
+- Aba nova no Portal (`regras-faturamento.js`), a primeira do menu. O login com senha abre direto nela. Quem dá F5 ou recebe deploy novo continua restaurando a última tela (`ABRIR_NO_LOGIN` no `index.html`).
+- O admin edita num editor Quill 1.3.7, passa obrigatoriamente pela pré-visualização e então publica. O conteúdo exibido passa pelo DOMPurify. As duas libs são carregadas sob demanda do cdnjs. O rascunho fica no localStorage até publicar.
+- O selo mostra "Última atualização: data por nome". O botão Histórico lista todas as versões.
+- A tabela `ped_regras_faturamento` é só de insert: cada publicação vira uma linha nova, então a tabela é o próprio histórico. A RLS deixa ler qualquer authenticated, insert só com `user_metadata.admin = true` e `autor_email` igual ao do token. Não há update nem delete (revoke). Foi aplicada em produção em 08/10 (`docs/sql/2026-10-08_ped_regras_faturamento.sql`).
+- Ensaio no banco de teste: o rep é recusado, o admin grava, update e delete são recusados.
+- `sw.js`: CACHE subiu para v19.
 
 ## Dev-log 07/10/2026 — Sino e botões não saem na impressão (`3397295`)
 

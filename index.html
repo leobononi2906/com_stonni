@@ -832,6 +832,7 @@ async function fazerLogin() {
       }));
     } catch (e) {}
 
+    ABRIR_NO_LOGIN = 'regras-faturamento'; // só login com senha; F5 restaura a última tela
     await carregarUsuario(data.user, data.access_token);
   } catch (e) {
     erroEl.textContent = 'Erro de conexão. Tente novamente.';
@@ -855,6 +856,7 @@ async function fazerLogout() {
 //  NAV — menus por perfil
 // ============================================================
 let paginaAtual = '';
+let ABRIR_NO_LOGIN = null; // tela forçada no próximo iniciarApp (setada por fazerLogin)
 
 // ============================================================
 //  ACESSO DIRIGIDO PELO HUB (user_metadata.modulos + admin)
@@ -883,7 +885,9 @@ function construirNav() {
   // PRINCIPAL — portal (catálogo + pedidos). Interno também vê.
   if (temPortal()) {
     const itens = [
-      { id: 'catalogo',    icon: '<i class="ic ic-sm" data-ic="shopping-bag"></i>', label: 'Catálogo',    breadcrumb: 'Portal · Catálogo' },
+      // Primeira do portal: é onde o login cai (ver ABRIR_NO_LOGIN em iniciarApp).
+      { id: 'regras-faturamento', icon: '<i class="ic ic-sm" data-ic="file-text"></i>', label: 'Regras de Faturamento', breadcrumb: 'Portal · Regras de Faturamento' },
+      { id: 'catalogo',   icon: '<i class="ic ic-sm" data-ic="shopping-bag"></i>', label: 'Catálogo',    breadcrumb: 'Portal · Catálogo' },
       { id: 'novo-pedido', icon: '<i class="ic ic-sm" data-ic="plus"></i>', label: 'Novo Pedido',  breadcrumb: 'Portal · Novo Pedido' },
     ];
     // Rep vê só os pedidos dele; interno/gestor/admin vê todos.
@@ -1024,6 +1028,7 @@ function renderPagina(id, params) {
   el.innerHTML = '<div class="loading-overlay"><div class="spinner"></div></div>';
 
   switch (id) {
+    case 'regras-faturamento': renderRegrasFaturamento(el, params); break;
     case 'catalogo':       renderCatalogo(el, params); break;
     case 'novo-pedido':    renderNovoPedido(el, params); break;
     case 'meus-pedidos':   renderMeusPedidos(el, params); break;
@@ -1358,6 +1363,12 @@ function iniciarApp() {
       paramsIniciais = salvo.params || {};
     }
   } catch(e) {}
+  // Login com senha (não F5/deploy novo) abre as Regras de Faturamento.
+  if (ABRIR_NO_LOGIN && idsLiberados.includes(ABRIR_NO_LOGIN)) {
+    paginaInicial = ABRIR_NO_LOGIN;
+    paramsIniciais = {};
+  }
+  ABRIR_NO_LOGIN = null;
   if (paginaInicial) irPara(paginaInicial, paramsIniciais);
 }
 
@@ -1478,6 +1489,7 @@ function renderRepresentantes(el, params) {
 <script src="pdf-orcamento-file.js"></script>
 <script src="gestao.js"></script>
 <script src="leads.js"></script>
+<script src="regras-faturamento.js"></script>
 <script src="wshare.js"></script>
 <script src="materiais.js"></script>
 <script src="crm.js"></script>
