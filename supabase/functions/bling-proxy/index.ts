@@ -48,7 +48,7 @@ async function trocarToken(refreshToken: string): Promise<{ access_token: string
   const creds = btoa(`${CLIENT_ID}:${CLIENT_SECRET}`);
   const tokenRes = await fetch('https://www.bling.com.br/Api/v3/oauth/token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Authorization: `Basic ${creds}` },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'enable-jwt': '1', Authorization: `Basic ${creds}` },
     body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken }),
   });
   const tokenData = await tokenRes.json();
@@ -130,7 +130,7 @@ async function renovarToken(): Promise<string> {
 
 async function buscarTodasFotos(idBling: number, accessToken: string, prodObj: Record<string, unknown>): Promise<{ fotos: string[]; miniatura: string | null }> {
   try {
-    const imgRes = await fetch(`${BLING_API}/produtos/${idBling}/imagens`, { headers: { Authorization: `Bearer ${accessToken}` } });
+    const imgRes = await fetch(`${BLING_API}/produtos/${idBling}/imagens`, { headers: { 'enable-jwt': '1', Authorization: `Bearer ${accessToken}` } });
     if (imgRes.ok) {
       const imgData = await imgRes.json();
       const lista = Array.isArray(imgData?.data) ? imgData.data as Record<string, unknown>[] : [];
@@ -246,13 +246,13 @@ Deno.serve(async (req: Request) => {
     if (acao === 'fotos') {
       if (!sku) return new Response(JSON.stringify({ erro: 'sku obrigatorio' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
       const skuLimpo = String(parseInt(sku, 10));
-      const buscaRes = await fetch(`${BLING_API}/produtos?codigo=${encodeURIComponent(skuLimpo)}&limite=5`, { headers: { Authorization: `Bearer ${accessToken}` } });
+      const buscaRes = await fetch(`${BLING_API}/produtos?codigo=${encodeURIComponent(skuLimpo)}&limite=5`, { headers: { 'enable-jwt': '1', Authorization: `Bearer ${accessToken}` } });
       const buscaData = await buscaRes.json();
       const lista = Array.isArray(buscaData?.data) ? buscaData.data : [];
       if (!lista.length) return new Response(JSON.stringify({ fotos: [], encontrado: false }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
       const idBling = lista[0]?.id as number;
       const nomeBling = lista[0]?.nome;
-      const detalheRes = await fetch(`${BLING_API}/produtos/${idBling}`, { headers: { Authorization: `Bearer ${accessToken}` } });
+      const detalheRes = await fetch(`${BLING_API}/produtos/${idBling}`, { headers: { 'enable-jwt': '1', Authorization: `Bearer ${accessToken}` } });
       const detalheData = await detalheRes.json();
       const prodObj = detalheData?.data as Record<string, unknown> || {};
       const { fotos } = await buscarTodasFotos(idBling, accessToken, prodObj);
@@ -262,13 +262,13 @@ Deno.serve(async (req: Request) => {
     if (acao === 'fotos-cache') {
       if (!sku) return new Response(JSON.stringify({ erro: 'sku obrigatorio' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
       const skuLimpo = String(parseInt(sku, 10));
-      const buscaRes = await fetch(`${BLING_API}/produtos?codigo=${encodeURIComponent(skuLimpo)}&limite=5`, { headers: { Authorization: `Bearer ${accessToken}` } });
+      const buscaRes = await fetch(`${BLING_API}/produtos?codigo=${encodeURIComponent(skuLimpo)}&limite=5`, { headers: { 'enable-jwt': '1', Authorization: `Bearer ${accessToken}` } });
       const buscaData = await buscaRes.json();
       const lista = Array.isArray(buscaData?.data) ? buscaData.data : [];
       if (!lista.length) return new Response(JSON.stringify({ fotos: [], foto_miniatura: null, encontrado: false }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
       const idBling = lista[0]?.id as number;
       const nomeBling = lista[0]?.nome;
-      const detalheRes = await fetch(`${BLING_API}/produtos/${idBling}`, { headers: { Authorization: `Bearer ${accessToken}` } });
+      const detalheRes = await fetch(`${BLING_API}/produtos/${idBling}`, { headers: { 'enable-jwt': '1', Authorization: `Bearer ${accessToken}` } });
       const detalheData = await detalheRes.json();
       const prodObj = detalheData?.data as Record<string, unknown> || {};
       const { fotos: fotosOriginais, miniatura: urlMiniaturaBling } = await buscarTodasFotos(idBling, accessToken, prodObj);
@@ -297,13 +297,13 @@ Deno.serve(async (req: Request) => {
     if (acao === 'dimensoes') {
       if (!sku) return new Response(JSON.stringify({ erro: 'sku obrigatorio' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
       const skuLimpo = String(parseInt(sku, 10));
-      const buscaRes = await fetch(`${BLING_API}/produtos?codigo=${encodeURIComponent(skuLimpo)}&limite=5`, { headers: { Authorization: `Bearer ${accessToken}` } });
+      const buscaRes = await fetch(`${BLING_API}/produtos?codigo=${encodeURIComponent(skuLimpo)}&limite=5`, { headers: { 'enable-jwt': '1', Authorization: `Bearer ${accessToken}` } });
       const buscaData = await buscaRes.json();
       const lista = Array.isArray(buscaData?.data) ? buscaData.data : [];
       if (!lista.length) return new Response(JSON.stringify({ encontrado: false }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
       const idBling = lista[0]?.id;
       const nomeBling = lista[0]?.nome;
-      const detalheRes = await fetch(`${BLING_API}/produtos/${idBling}`, { headers: { Authorization: `Bearer ${accessToken}` } });
+      const detalheRes = await fetch(`${BLING_API}/produtos/${idBling}`, { headers: { 'enable-jwt': '1', Authorization: `Bearer ${accessToken}` } });
       const detalheData = await detalheRes.json();
       const prodObj = detalheData?.data as Record<string, unknown>;
       const dimensoes = extrairDimensoes(prodObj || {});
@@ -313,14 +313,14 @@ Deno.serve(async (req: Request) => {
     if (acao === 'produto') {
       if (!sku) return new Response(JSON.stringify({ erro: 'sku obrigatorio' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
       const skuLimpo = String(parseInt(sku, 10));
-      const res = await fetch(`${BLING_API}/produtos?codigo=${encodeURIComponent(skuLimpo)}&limite=5`, { headers: { Authorization: `Bearer ${accessToken}` } });
+      const res = await fetch(`${BLING_API}/produtos?codigo=${encodeURIComponent(skuLimpo)}&limite=5`, { headers: { 'enable-jwt': '1', Authorization: `Bearer ${accessToken}` } });
       const data = await res.json();
       return new Response(JSON.stringify(data), { headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
 
     if (acao === 'listar') {
       const pagina = parseInt(url.searchParams.get('pagina') ?? '1');
-      const res = await fetch(`${BLING_API}/produtos?situacao=A&limite=100&pagina=${pagina}`, { headers: { Authorization: `Bearer ${accessToken}` } });
+      const res = await fetch(`${BLING_API}/produtos?situacao=A&limite=100&pagina=${pagina}`, { headers: { 'enable-jwt': '1', Authorization: `Bearer ${accessToken}` } });
       const data = await res.json();
       return new Response(JSON.stringify(data), { headers: { ...CORS, 'Content-Type': 'application/json' } });
     }

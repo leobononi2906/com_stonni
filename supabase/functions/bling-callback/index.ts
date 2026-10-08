@@ -30,7 +30,7 @@ Deno.serve(async (req: Request) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': `Basic ${credentials}`,
+      'enable-jwt': '1', 'Authorization': `Basic ${credentials}`,
     },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
