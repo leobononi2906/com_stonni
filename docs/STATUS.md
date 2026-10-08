@@ -2,6 +2,12 @@
 
 > Atualizado: 2026-10-08
 
+## Dev-log 08/10/2026 — Cotar frete não quebra com transportadora sem valor
+
+`cotar-frete-index` pode devolver transportadora com `valor_frete` null; `pedCotarFrete` fazia
+`toLocaleString` nela e a lista inteira caía (`app_logs` 220, 07/10, CEP 78550970). Agora
+`pedidos.js` filtra opção sem valor numérico antes de montar a lista. `sw.js` → `stonni-v20-20261008`.
+
 ## Dev-log 08/10/2026 — Bling: migração para JWT
 
 - **Bling: migração para JWT (prazo 15/10/2026).** Header `enable-jwt: 1` em `bling-callback` (versionado agora a partir do download do publicado) e em toda chamada/renovação do `bling-proxy` (família `ped_configuracoes`). Sem o header a renovação devolve token opaco de novo; com ele, a próxima renovação já grava JWT (conferir pelo formato: 3 partes separadas por ponto). Commit local; as 2 funções precisam ser publicadas por ele com `--no-verify-jwt`.

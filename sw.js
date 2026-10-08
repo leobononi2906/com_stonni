@@ -36,7 +36,7 @@
 // login em 06/10/2026); quem ficou com o JS velho em cache receberia 401 nas fotos/medidas.
 // v19: aba nova "Regras de Faturamento" (regras-faturamento.js, script novo no
 // index.html) e o login com senha passa a abrir nela (08/10/2026).
-const CACHE_VERSION = 'stonni-v19-20261008';
+const CACHE_VERSION = 'stonni-v20-20261008';
 const APP_SHELL = [
   './',
   './index.html',

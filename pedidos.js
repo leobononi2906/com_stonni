@@ -932,7 +932,9 @@ window.pedCotarFrete = async function() {
       body: JSON.stringify(payload)
     });
     const data = await r.json();
-    const resultados = data?.resultados || [];
+    // Transportadora que não cotou volta com valor_frete null; sem este filtro o
+    // toLocaleString derrubava a lista inteira (app_logs 220, 07/10/2026).
+    const resultados = (data?.resultados || []).filter(r => Number.isFinite(Number(r?.valor_frete)) && r.valor_frete !== null);
 
     // Log quando API retorna mas sem resultados (CEP inválido, produto sem dimensões, etc)
     if (!resultados.length) {
