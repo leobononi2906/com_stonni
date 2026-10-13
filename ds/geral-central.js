@@ -763,7 +763,7 @@
     assistencia: 'Assistência Stonni', compras: 'Compras', cobranca: 'Cobrança',
     stonni: 'Comercial Stonni', atacado: 'CRM Atacado', varejo: 'Consulta Vendas',
     frete: 'Frete', loja: 'Loja Física', expedicao: 'Expedição', financeiro: 'Financeiro',
-    'painel-dev': 'Painel Dev', hub: 'Hub', treinamento: 'Treinamento', rh: 'RH',
+    'painel-dev': 'Painel Dev', hub: 'Hub', treinamento: 'Treinamento', rh: 'RH', recrutamento: 'Recrutamento',
   };
   // appId do app que carrega este arquivo → apps cujas filas moram nele
   // (o CRM Atacado roda dentro do Comercial Stonni, com appId próprio).
