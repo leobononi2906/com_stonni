@@ -1,7 +1,10 @@
 /* ============================================================
    geral-central.js — Sugestão, avisos, atualização cadastral,
-   expiração de senha, sino de pendências e caminho  |  v16 — 07/10/2026
+   expiração de senha, sino de pendências e caminho  |  v17 — 13/10/2026
    ============================================================
+   v17: "Enviar" da sugestão se desabilita durante o POST e ignora clique
+   repetido (reabilita só se der erro). Sem isso o duplo clique gravava o
+   mesmo pedido duas vezes em geral_pedidos_melhoria (pedidos 7/8 e 12/13).
    v16: NÃO SAI NA IMPRESSÃO. Sino, "Sugerir melhoria", cartão de
    treinamento e overlays ficam escondidos em @media print — o sino
    saía no romaneio impresso da Expedição (06/10/2026).
@@ -719,6 +722,10 @@
         if (!diferente) { msgEl.style.color = '#c11f25'; msgEl.textContent = 'Escreva alguma coisa.'; return; }
         mensagem = diferente;
       }
+      var btnEnviar = this;
+      if (btnEnviar.disabled) return;
+      btnEnviar.disabled = true;
+      btnEnviar.style.opacity = '.6';
       try {
         var resp = await rest(o, 'geral_pedidos_melhoria', {
           method: 'POST',
@@ -738,6 +745,8 @@
       } catch (e) {
         msgEl.style.color = '#c11f25';
         msgEl.textContent = 'Erro ao enviar: ' + e.message;
+        btnEnviar.disabled = false;
+        btnEnviar.style.opacity = '';
       }
     });
   }
