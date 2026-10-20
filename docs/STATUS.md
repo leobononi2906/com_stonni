@@ -1,6 +1,14 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-10-08
+> Atualizado: 2026-10-20
+
+## Dev-log 20/10/2026 — Tema escuro (claro / escuro / automático) no Portal e no CRM
+
+Pedido do dono: todas as aplicações com tema escuro, sem bugar (4d45a3c). Botão de tema na barra lateral do Portal e do CRM (`crm/index.html`); o automático segue o aparelho e a escolha fica no navegador, aplicada antes da página pintar (`ds/stonni-tema.js` no `<head>`). Paleta escura em `ds/stonni-dark.css` (fonte: skill `stonni-design-interno/tokens/colors.dark.css`), só remapeando os aliases do `stonni-ds.css`; o CRM (`crm/css/styles.css` e `crm/js/*.js`) trocou cores fixas por token. `ds/geral-central.js` (sino) tokenizado nesta cópia. `sw.js` com cache novo (v21).
+
+- `--green`, `--red`, `--success` e `--blue-mid` serviam de texto e de fundo sólido com texto branco: no escuro o texto usa as versões `--x-fg` mais claras e os fundos sólidos ficam como estavam.
+- Os PDFs (`pdf-pedido`, `catalogo-pdf`) não foram tocados e seguem claros. Há uma segunda paleta escura Stonni em `bononiecommerce/src/ds/stonni-dark.css`, quase igual: unificar quando um dos dois for mexido.
+- Conferido no app local (banco de teste, logado em modo de teste): as 12 telas do Portal e as 7 do CRM com varredura de contraste (único achado leve: o botão verde do WhatsApp em Materiais, 4,2, cor da marca). Os dados do CRM não carregam no banco de teste (faltam as tabelas `atac_*`), então o CRM com dados reais **não foi visto**; não conferi o PDF em si nem os modais.
 
 ## Dev-log 08/10/2026 — Cotar frete não quebra com transportadora sem valor
 
