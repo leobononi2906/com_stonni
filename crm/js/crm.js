@@ -19,7 +19,7 @@ async function renderAlertasCRM() {
     el.innerHTML = `
       <div style="height:28px;border-bottom:1px solid var(--border);padding:0 var(--space-3);display:flex;align-items:center;gap:var(--space-1-5);background:var(--surface2)">
         <span style="font-size:var(--fs-075);color:var(--text-muted)">Alertas ocultos</span>
-        <button onclick="toggleAlertasCRM()" style="font-size:var(--fs-075);font-weight:600;color:var(--blue-mid);background:none;border:none;cursor:pointer">Mostrar</button>
+        <button onclick="toggleAlertasCRM()" style="font-size:var(--fs-075);font-weight:600;color:var(--blue-mid-fg);background:none;border:none;cursor:pointer">Mostrar</button>
       </div>`;
     return;
   }
@@ -44,8 +44,8 @@ async function renderAlertasCRM() {
   // Uma única linha compacta
   el.innerHTML = `
     <div style="height:30px;border-bottom:1px solid var(--border);padding:0 var(--space-3);display:flex;align-items:center;gap:var(--space-1-5);background:var(--surface2);flex-shrink:0">
-      ${nHj>0  ? `<span onclick="setMainTab('agenda')" style="background:var(--blue-pale);color:var(--blue-dark);font-size:var(--fs-075);font-weight:700;padding:var(--space-0-5) 9px;border-radius:var(--radius-pill);cursor:pointer;white-space:nowrap"><i class="ic ic-sm" data-ic="map-pin"></i> ${nHj} hoje</span>` : ''}
-      ${nAtr>0 ? `<span onclick="setMainTab('agenda')" style="background:var(--red-bg);color:var(--red);font-size:var(--fs-075);font-weight:700;padding:var(--space-0-5) 9px;border-radius:var(--radius-pill);cursor:pointer;white-space:nowrap"><i class="ic ic-sm" data-ic="alert-triangle"></i> ${nAtr} atrasada${nAtr>1?'s':''}</span>` : ''}
+      ${nHj>0  ? `<span onclick="setMainTab('agenda')" style="background:var(--blue-pale);color:var(--blue-dark-fg);font-size:var(--fs-075);font-weight:700;padding:var(--space-0-5) 9px;border-radius:var(--radius-pill);cursor:pointer;white-space:nowrap"><i class="ic ic-sm" data-ic="map-pin"></i> ${nHj} hoje</span>` : ''}
+      ${nAtr>0 ? `<span onclick="setMainTab('agenda')" style="background:var(--red-bg);color:var(--red-fg);font-size:var(--fs-075);font-weight:700;padding:var(--space-0-5) 9px;border-radius:var(--radius-pill);cursor:pointer;white-space:nowrap"><i class="ic ic-sm" data-ic="alert-triangle"></i> ${nAtr} atrasada${nAtr>1?'s':''}</span>` : ''}
       ${nProx>0? `<span onclick="setMainTab('agenda')" style="background:var(--surface);color:var(--text-muted);font-size:var(--fs-075);font-weight:600;padding:var(--space-0-5) 9px;border-radius:var(--radius-pill);border:1px solid var(--border);cursor:pointer;white-space:nowrap"><i class="ic ic-sm" data-ic="calendar"></i> ${nProx} próx. 7 dias</span>` : ''}
       <button onclick="toggleAlertasCRM()" style="margin-left:auto;font-size:var(--fs-075);color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0 var(--space-1);flex-shrink:0">Ocultar <i class="ic ic-sm" data-ic="x"></i></button>
     </div>`;
@@ -66,7 +66,7 @@ function renderUmbler() {
   // Altura de ~5 itens visíveis (~80px cada) com scroll para o resto
   el.innerHTML=`
     <div class="umbl-header${open?'':' coll'}" onclick="toggleUmbler()" style="border-bottom:1px solid var(--border)">
-      <span style="font-size:var(--fs-090);color:var(--danger-500)">${open?'▼':'▶'}</span>
+      <span style="font-size:var(--fs-090);color:var(--text-danger)">${open?'▼':'▶'}</span>
       <span class="umbl-title"><i class="ic ic-sm" data-ic="smartphone"></i> Contatos Sem Tratativa</span>
       <span class="umbl-badge">${S.umbler.length}</span>
     </div>
@@ -77,12 +77,12 @@ function renderUmbler() {
         <div class="umbl-nome">${c.nome_contato||'Sem nome'}</div>
         <div class="umbl-info"><span>${fmtP(c.telefone)}</span><span>${sN(c.nome_atendente)}</span><span>${fmtDT(c.ultimo_contato)}</span></div>
         ${sug ? `<div style="display:flex;align-items:center;gap:var(--space-1-5);margin:var(--space-1) 0;padding:5px var(--space-2);background:var(--blue-veil);border:1px solid var(--blue-veil-strong);border-radius:var(--radius-md)">
-          <span style="font-size:var(--fs-090);color:var(--blue-mid);font-weight:600"><i class="ic ic-sm" data-ic="external-link"></i> Possível: ${sug.nome}</span>
-          <button class="btn-vinc" style="margin-left:auto;border-color:var(--blue-mid);color:var(--blue-mid);font-size:var(--fs-075);padding:var(--space-0-5) 7px" onclick="abrirVincComSugestao('${esc(c.telefone)}','${esc(c.nome_contato)}','${esc(c.nome_atendente)}',${sug.id},'${esc(sug.nome)}')">Vincular</button>
+          <span style="font-size:var(--fs-090);color:var(--blue-mid-fg);font-weight:600"><i class="ic ic-sm" data-ic="external-link"></i> Possível: ${sug.nome}</span>
+          <button class="btn-vinc" style="margin-left:auto;border-color:var(--blue-mid);color:var(--blue-mid-fg);font-size:var(--fs-075);padding:var(--space-0-5) 7px" onclick="abrirVincComSugestao('${esc(c.telefone)}','${esc(c.nome_contato)}','${esc(c.nome_atendente)}',${sug.id},'${esc(sug.nome)}')">Vincular</button>
         </div>` : ''}
         <div class="umbl-acts">
           <button class="btn-vinc" onclick="abrirVinc('${esc(c.telefone)}','${esc(c.nome_contato)}','${esc(c.nome_atendente)}')"><i class="ic ic-sm" data-ic="external-link"></i> Vincular</button>
-          ${!sug ? `<button class="btn-vinc" style="border-color:var(--blue-mid);color:var(--blue-mid)" onclick="abrirNovoContato('${esc(c.telefone)}','${esc(c.nome_contato)}','${esc(c.nome_atendente)}')"><i class="ic ic-sm" data-ic="user"></i> Criar Novo</button>` : ''}
+          ${!sug ? `<button class="btn-vinc" style="border-color:var(--blue-mid);color:var(--blue-mid-fg)" onclick="abrirNovoContato('${esc(c.telefone)}','${esc(c.nome_contato)}','${esc(c.nome_atendente)}')"><i class="ic ic-sm" data-ic="user"></i> Criar Novo</button>` : ''}
           <button class="btn-nc" onclick="naoComercial('${esc(c.telefone)}')"><i class="ic ic-sm" data-ic="x"></i> Não comercial</button>
         </div>
       </div>`;
@@ -100,7 +100,7 @@ function renderLista() {
     if(!data.length){
       el.innerHTML=`<div class="empty-msg">
         <p style="margin-bottom:var(--space-2)">Nenhum cliente disponível na prospecção</p>
-        <p style="font-size:var(--fs-090);color:var(--neutral-700)">Aparecem aqui os clientes sem vendedor, os liberados por prazo vencido e os de vendedor inativado</p>
+        <p style="font-size:var(--fs-090);color:var(--text-body)">Aparecem aqui os clientes sem vendedor, os liberados por prazo vencido e os de vendedor inativado</p>
       </div>`;
       return;
     }
@@ -114,19 +114,19 @@ function renderLista() {
             <div class="pg-row1">
               <span class="pg-nome">${c.nome_cliente}</span>
               ${bdg(c.status_crm||'PROSPECCAO')}
-              ${c.nome_ultimo_responsavel?`<span title="${c.ex_vendedor_inativo?'Vendedor saiu da equipe':'Vínculo liberado por prazo vencido'} — disponível para assumir" style="font-size:9.5px;font-weight:700;background:var(--orange-bg);color:var(--orange);border-radius:var(--radius-sm);padding:1px var(--space-1-5);white-space:nowrap">era de ${sN(c.nome_ultimo_responsavel)}</span>`:''}
+              ${c.nome_ultimo_responsavel?`<span title="${c.ex_vendedor_inativo?'Vendedor saiu da equipe':'Vínculo liberado por prazo vencido'} — disponível para assumir" style="font-size:9.5px;font-weight:700;background:var(--orange-bg);color:var(--orange-fg);border-radius:var(--radius-sm);padding:1px var(--space-1-5);white-space:nowrap">era de ${sN(c.nome_ultimo_responsavel)}</span>`:''}
             </div>
             <div class="pg-meta">
               <span>${dim.cidade?dim.cidade+(dim.uf?' - '+dim.uf:''):'—'}</span>
-              <span>Sem compra há <strong style="color:var(--danger-500)">${dc<9999?dc+'d':'—'}</strong></span>
+              <span>Sem compra há <strong style="color:var(--text-danger)">${dc<9999?dc+'d':'—'}</strong></span>
             </div>
-            ${dim.cnpj_cpf?`<div style="font-size:var(--fs-075);color:var(--neutral-700);margin-top:var(--space-0-5);font-family:monospace">${fmtC(dim.cnpj_cpf)}</div>`:''}
+            ${dim.cnpj_cpf?`<div style="font-size:var(--fs-075);color:var(--text-body);margin-top:var(--space-0-5);font-family:monospace">${fmtC(dim.cnpj_cpf)}</div>`:''}
           </div>
           <div style="display:flex;flex-direction:column;gap:var(--space-1);flex-shrink:0">
             <button class="btn-assumir" onclick="assumirCliente(${c.id_cliente},'${esc(c.nome_cliente)}')">+ Assumir</button>
             <button onclick="descartarCliente(${c.id_cliente},'${esc(c.nome_cliente)}')"
               style="font-size:var(--fs-090);padding:var(--space-1) var(--space-2-5);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--text-muted);background:none;cursor:pointer;font-weight:500;transition:all .15s"
-              onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+              onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red-fg)'"
               onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
               <i class="ic ic-sm" data-ic="x"></i> Descartar
             </button>
@@ -162,8 +162,8 @@ function renderLista() {
           <div class="cl-row1">
             <span class="cl-nome">${c.nome_cliente}</span>
             ${bdg(st)}
-            ${dc>=30?'<span style="color:var(--warning-500);font-size:var(--fs-100);flex-shrink:0"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>':''}
-            ${S.overdueIds.has(c.id_cliente)?'<span style="color:var(--danger-500);font-size:var(--fs-100);flex-shrink:0"><i class="ic ic-sm" data-ic="bell"></i></span>':''}
+            ${dc>=30?'<span style="color:var(--text-warning);font-size:var(--fs-100);flex-shrink:0"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>':''}
+            ${S.overdueIds.has(c.id_cliente)?'<span style="color:var(--text-danger);font-size:var(--fs-100);flex-shrink:0"><i class="ic ic-sm" data-ic="bell"></i></span>':''}
             ${prazoBdg}
           </div>
           ${semaforo(c)}
@@ -176,7 +176,7 @@ function renderLista() {
         <button onclick="event.stopPropagation();descartarCliente(${c.id_cliente},'${esc(c.nome_cliente)}')"
           title="Descartar cliente"
           style="flex-shrink:0;margin-top:var(--space-0-5);width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);background:none;color:var(--text-muted);cursor:pointer;font-size:var(--fs-090);display:flex;align-items:center;justify-content:center;transition:all .15s"
-          onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'"
+          onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red-fg)';this.style.background='var(--red-bg)'"
           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)';this.style.background='none'"><i class="ic ic-sm" data-ic="x"></i></button>
       </div>
     </div>`;

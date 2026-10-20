@@ -191,7 +191,7 @@ function renderLinhas(){
   }catch(err){
     console.error('renderLinhas',err);
     if(window.logAcao) try{ logAcao('ERRO_LINHAS',{nivel:'ERROR',erro:err?.message}); }catch(e){}
-    el.innerHTML=`<div style="background:var(--red-bg);border:1px solid var(--danger-veil-strong);border-radius:var(--radius);padding:var(--space-4);color:var(--red);font-size:var(--fs-200)">Não foi possível carregar a análise de linhas.<br><span style="color:var(--text-muted);font-size:var(--fs-090)">${escH(err?.message||'')}</span></div>`;
+    el.innerHTML=`<div style="background:var(--red-bg);border:1px solid var(--danger-veil-strong);border-radius:var(--radius);padding:var(--space-4);color:var(--red-fg);font-size:var(--fs-200)">Não foi possível carregar a análise de linhas.<br><span style="color:var(--text-muted);font-size:var(--fs-090)">${escH(err?.message||'')}</span></div>`;
   }
 }
 

@@ -11,7 +11,7 @@ async function selCliente(id){
   document.getElementById('cd-ph')?.classList.add('hidden');
   document.getElementById('dw-title').textContent=S.selCliente?.nome_cliente||'Ficha';
   document.getElementById('dw-wa').style.display='none';
-  document.getElementById('dw-body').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:80px;color:var(--neutral-600)"><span class="spin">⟳</span></div>';
+  document.getElementById('dw-body').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:80px;color:var(--text-secondary)"><span class="spin">⟳</span></div>';
   await loadDetalhe(id);
   renderDrawer();
 }
@@ -34,11 +34,11 @@ function renderDrawer(){
 
   el.innerHTML=`
     <div>
-      ${S.dupSugestao?`<div style="background:var(--warning-50);border:1px solid var(--warning-600);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);margin-bottom:var(--space-2-5)">
-        <div style="font-size:var(--fs-100);font-weight:700;color:var(--warning-600);margin-bottom:3px"><i class="ic ic-sm" data-ic="alert-triangle"></i> Possível duplicado ${S.dupSugestao.motivo==='CNPJ'?'· mesmo CNPJ':'· mesmo telefone'}</div>
+      ${S.dupSugestao?`<div style="background:var(--feedback-warning-bg);border:1px solid var(--text-warning);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);margin-bottom:var(--space-2-5)">
+        <div style="font-size:var(--fs-100);font-weight:700;color:var(--text-warning);margin-bottom:3px"><i class="ic ic-sm" data-ic="alert-triangle"></i> Possível duplicado ${S.dupSugestao.motivo==='CNPJ'?'· mesmo CNPJ':'· mesmo telefone'}</div>
         <div style="font-size:11.5px;color:var(--text-secondary);margin-bottom:var(--space-2)">
           Existe no ERP: <strong>${escH(sN(S.dupSugestao.nome_erp))}</strong>${S.dupSugestao.faturamento_erp?` · R$ ${Number(S.dupSugestao.faturamento_erp).toLocaleString('pt-BR',{maximumFractionDigits:0})} em distribuição`:''}.
-          ${S.dupSugestao.motivo==='TELEFONE'?'<br><span style="color:var(--warning-600)">Telefone igual não garante mesmo cliente — confira antes.</span>':''}
+          ${S.dupSugestao.motivo==='TELEFONE'?'<br><span style="color:var(--text-warning)">Telefone igual não garante mesmo cliente — confira antes.</span>':''}
         </div>
         <div style="display:flex;gap:var(--space-2)">
           <button onclick="fundirDuplicado()" style="font-size:var(--fs-090);font-weight:700;padding:5px var(--space-3);border:none;border-radius:var(--radius-lg);background:var(--green);color:var(--neutral-0);cursor:pointer">Fundir cards</button>
@@ -54,14 +54,14 @@ function renderDrawer(){
         ${(dim.cnpj_cpf||c.cnpj_cpf)?`<span style="font-family:monospace">${fmtC(dim.cnpj_cpf||c.cnpj_cpf)}</span>`:''}
         ${(dim.cidade||c.cidade)?`<span>${dim.cidade||c.cidade}${(dim.uf||c.uf)?' - '+(dim.uf||c.uf):''}</span>`:''}
         ${dim.email?`<span><i class="ic ic-sm" data-ic="mail"></i> ${dim.email}</span>`:''}
-        <span style="color:var(--neutral-700)">Cód. ERP: ${c.id_cliente}</span>
+        <span style="color:var(--text-body)">Cód. ERP: ${c.id_cliente}</span>
       </div>
       <div style="display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-2-5);flex-wrap:wrap">
         <span style="font-size:var(--fs-090);color:var(--text-muted)">Vendedor:</span>
-        <strong style="font-size:var(--fs-100);color:var(--text-primary)">${c.nome_vendedor_responsavel?sN(c.nome_vendedor_responsavel):'<em style=\"color:var(--purple);font-style:normal;font-weight:600\">Sem vendedor</em>'}</strong>
-        ${c.dono_por_venda?`<span title="Vinculado automaticamente por ter feito a última venda de distribuição" style="font-size:9.5px;font-weight:700;background:var(--green-bg);color:var(--green);border-radius:var(--radius-sm);padding:var(--space-0-5) 7px;white-space:nowrap"><i class="ic ic-sm" data-ic="receipt"></i> por venda</span>`:''}
+        <strong style="font-size:var(--fs-100);color:var(--text-primary)">${c.nome_vendedor_responsavel?sN(c.nome_vendedor_responsavel):'<em style=\"color:var(--purple-fg);font-style:normal;font-weight:600\">Sem vendedor</em>'}</strong>
+        ${c.dono_por_venda?`<span title="Vinculado automaticamente por ter feito a última venda de distribuição" style="font-size:9.5px;font-weight:700;background:var(--green-bg);color:var(--green-fg);border-radius:var(--radius-sm);padding:var(--space-0-5) 7px;white-space:nowrap"><i class="ic ic-sm" data-ic="receipt"></i> por venda</span>`:''}
         <button onclick="abrirModalVendedor(${c.id_cliente},'${esc(c.nome_cliente)}',${c.id_vendedor_responsavel||'null'})"
-          style="font-size:var(--fs-090);padding:3px 9px;border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--blue-mid);background:var(--blue-pale);cursor:pointer;font-weight:600">
+          style="font-size:var(--fs-090);padding:3px 9px;border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--blue-mid-fg);background:var(--blue-pale);cursor:pointer;font-weight:600">
           <i class="ic ic-sm" data-ic="pencil"></i> Alterar
         </button>
         ${!c.nome_vendedor_responsavel?`<button class="btn-assumir" style="padding:3px 9px;font-size:var(--fs-090)" onclick="assumirCliente(${c.id_cliente},'${esc(c.nome_cliente)}')">+ Assumir</button>`:''}
@@ -98,11 +98,11 @@ function renderDrawer(){
           </div>
           <div style="display:flex;gap:var(--space-1-5);flex-shrink:0">
             <button onclick="editarVincERP('${v.id}','${esc(v.nome_cliente_erp||'')}','${esc(v.cnpj_cpf_erp||'')}',${c.id_cliente})"
-              style="font-size:var(--fs-090);padding:var(--space-1) var(--space-2);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--blue-mid);background:var(--blue-pale);cursor:pointer;font-weight:500">
+              style="font-size:var(--fs-090);padding:var(--space-1) var(--space-2);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--blue-mid-fg);background:var(--blue-pale);cursor:pointer;font-weight:500">
               <i class="ic ic-sm" data-ic="pencil"></i> Editar
             </button>
             <button onclick="desvincularERP('${v.id}',${c.id_cliente},'${esc(v.nome_cliente_erp||'')}')"
-              style="font-size:var(--fs-090);padding:var(--space-1) var(--space-2);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--red);background:var(--red-bg);cursor:pointer;font-weight:500">
+              style="font-size:var(--fs-090);padding:var(--space-1) var(--space-2);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--red-fg);background:var(--red-bg);cursor:pointer;font-weight:500">
               <i class="ic ic-sm" data-ic="x"></i> Remover
             </button>
           </div>
@@ -113,11 +113,11 @@ function renderDrawer(){
     </div>` : ''}
 
     ${S.finAlerta ? `
-    <div style="display:flex;align-items:center;gap:var(--space-2-5);padding:var(--space-2-5) var(--space-3);background:var(--danger-50);border:1.5px solid var(--danger-100);border-radius:var(--radius-lg);margin-bottom:var(--space-0-5)">
+    <div style="display:flex;align-items:center;gap:var(--space-2-5);padding:var(--space-2-5) var(--space-3);background:var(--feedback-danger-bg);border:1.5px solid var(--feedback-danger-border);border-radius:var(--radius-lg);margin-bottom:var(--space-0-5)">
       <span style="font-size:var(--fs-550)"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:var(--fs-100);font-weight:700;color:var(--danger-600)">Pendência Financeira</div>
-        <div style="font-size:var(--fs-090);color:var(--danger-700);margin-top:1px">
+        <div style="font-size:var(--fs-100);font-weight:700;color:var(--text-danger)">Pendência Financeira</div>
+        <div style="font-size:var(--fs-090);color:var(--text-danger);margin-top:1px">
           ${S.finAlerta.qtd} título${S.finAlerta.qtd>1?'s':''} em aberto · ${fmt(S.finAlerta.total)} · maior atraso: ${S.finAlerta.maxAtraso}d
         </div>
       </div>
@@ -149,14 +149,14 @@ function renderDrawer(){
             ${t.nome_contato?`<span class="ph-name">${t.nome_contato}${t.cargo?' · '+t.cargo:''}</span>`:''}
             ${t.descricao&&!t.nome_contato?`<span class="ph-name" style="color:var(--text-muted)">(${t.descricao})</span>`:''}
             ${t.principal?'<span class="ph-princ">Principal</span>':''}
-            ${umbl?`<span style="font-size:var(--fs-075);color:var(--blue-mid);font-weight:600"><i class="ic ic-sm" data-ic="message-square"></i> Umbler · ${sN(umbl.nome_atendente)} · ${fmtD(umbl.ultimo_contato)}</span>`:''}
+            ${umbl?`<span style="font-size:var(--fs-075);color:var(--blue-mid-fg);font-weight:600"><i class="ic ic-sm" data-ic="message-square"></i> Umbler · ${sN(umbl.nome_atendente)} · ${fmtD(umbl.ultimo_contato)}</span>`:''}
           </div>
           <div class="ph-acts">
 
             <button class="ph-del" title="Remover" onclick="delPhone('${t.id}')"><i class="ic ic-sm" data-ic="x"></i></button>
           </div>
         </div>`;
-      }).join('')||'<p style="color:var(--neutral-600);font-size:var(--fs-100)">Nenhum telefone</p>'}
+      }).join('')||'<p style="color:var(--text-secondary);font-size:var(--fs-100)">Nenhum telefone</p>'}
     </div>
 
     ${(S.membrosSecundarios && S.membrosSecundarios.length) ? `
@@ -182,7 +182,7 @@ function renderDrawer(){
                   return `<div style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--fs-100);flex-wrap:wrap">
                     <span style="font-weight:600"><i class="ic ic-sm" data-ic="phone"></i> ${fmtP(t.telefone)}</span>
                     ${t.nome_contato?`<span style="color:var(--text-muted)">${escH(t.nome_contato)}</span>`:''}
-                    ${umbl?`<span style="font-size:var(--fs-075);color:var(--blue-mid);font-weight:600"><i class="ic ic-sm" data-ic="message-square"></i> ${sN(umbl.nome_atendente)} · ${fmtD(umbl.ultimo_contato)}</span>`:''}
+                    ${umbl?`<span style="font-size:var(--fs-075);color:var(--blue-mid-fg);font-weight:600"><i class="ic ic-sm" data-ic="message-square"></i> ${sN(umbl.nome_atendente)} · ${fmtD(umbl.ultimo_contato)}</span>`:''}
                   </div>`;
                 }).join('')}
               </div>`:'<div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-1-5)">Sem telefone neste cadastro</div>'}
@@ -233,12 +233,12 @@ function renderDrawer(){
               <div style="display:flex;align-items:center;gap:var(--space-1-5)">${tipoBdg(n.tipo)}<span class="nc-meta">${fmtD(n.data_criacao)}${n.criado_por?' · '+n.criado_por:''}</span></div>
               <div style="display:flex;gap:var(--space-1);align-items:center">
                 ${!n.resolvido && n.tipo==='TAREFA' && !n.reagendado ? `<button style="font-size:var(--fs-075);padding:var(--space-0-5) 7px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface2);color:var(--text-secondary);cursor:pointer" onclick="reagendarNotaDrawer('${n.id}','${n.data_prevista||''}',${n.qtd_reagendamentos||0})">↻</button>` : ''}
-                ${!n.resolvido?`<button class="btn-res" onclick="resolverNotaDrawer('${n.id}',${c.id_cliente},'${esc(c.nome_cliente)}',${c.id_vendedor_responsavel||'null'})"><i class="ic ic-sm" data-ic="check"></i> Resolver</button>`:'<span style="font-size:var(--fs-075);color:var(--neutral-700)">Resolvido</span>'}
+                ${!n.resolvido?`<button class="btn-res" onclick="resolverNotaDrawer('${n.id}',${c.id_cliente},'${esc(c.nome_cliente)}',${c.id_vendedor_responsavel||'null'})"><i class="ic ic-sm" data-ic="check"></i> Resolver</button>`:'<span style="font-size:var(--fs-075);color:var(--text-body)">Resolvido</span>'}
               </div>
             </div>
             <p class="nc-txt">${n.texto}</p>
             ${n.data_prevista?`<p class="nc-date"><i class="ic ic-sm" data-ic="calendar"></i> ${fmtD(n.data_prevista)}</p>`:''}
-          </div>`).join('')||'<p style="color:var(--neutral-600);font-size:var(--fs-100)">Nenhuma nota</p>'}
+          </div>`).join('')||'<p style="color:var(--text-secondary);font-size:var(--fs-100)">Nenhuma nota</p>'}
       </div>
     </div>
 
@@ -335,7 +335,7 @@ async function delPhone(id){
   const ok = await new Promise(res => {
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;inset:0;background:var(--surface-overlay);z-index:9999;display:flex;align-items:center;justify-content:center';
-    d.innerHTML = `<div style='background:var(--neutral-0);border-radius:var(--radius-xl);padding:var(--space-6);max-width:300px;width:90%;text-align:center'>
+    d.innerHTML = `<div style='background:var(--surface-card);border-radius:var(--radius-xl);padding:var(--space-6);max-width:300px;width:90%;text-align:center'>
       <p style='margin-bottom:var(--space-4);font-size:var(--fs-300)'>Remover este telefone?</p>
       <div style='display:flex;gap:var(--space-2);justify-content:center'>
         <button id='_dp_n' style='padding:var(--space-2) var(--space-5);border-radius:var(--radius-lg);border:1px solid var(--border-default);background:var(--surface-subtle);cursor:pointer'>Cancelar</button>

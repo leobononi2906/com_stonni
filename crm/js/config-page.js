@@ -27,7 +27,7 @@ async function renderConfig() {
     <!-- Tabs Config -->
     <div style="display:flex;gap:var(--space-1);margin-bottom:var(--space-5);border-bottom:2px solid var(--border);padding-bottom:0">
       <button id="cfg-tab-config" onclick="setCfgTab('config')"
-        style="padding:var(--space-2) var(--space-4);border:none;background:none;cursor:pointer;font-size:var(--fs-100);font-weight:600;color:var(--blue-dark);border-bottom:2px solid var(--blue-dark);margin-bottom:-2px">
+        style="padding:var(--space-2) var(--space-4);border:none;background:none;cursor:pointer;font-size:var(--fs-100);font-weight:600;color:var(--blue-dark-fg);border-bottom:2px solid var(--blue-dark);margin-bottom:-2px">
         <i class="ic ic-sm" data-ic="settings"></i> Configurações
       </button>
       <button id="cfg-tab-vendedores" onclick="setCfgTab('vendedores')"
@@ -82,7 +82,7 @@ async function renderConfig() {
           </button>
         </div>
       </div>
-      ${cfgUser ? `<p style="font-size:var(--fs-090);color:var(--green);margin-top:var(--space-2)"><i class="ic ic-sm" data-ic="check"></i> Perfil vinculado — CRM abre filtrado em <strong>${cfgUser.nome_vendedor}</strong></p>` : `<p style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-2)">Sem vínculo — CRM abre com filtro "Todos"</p>`}
+      ${cfgUser ? `<p style="font-size:var(--fs-090);color:var(--green-fg);margin-top:var(--space-2)"><i class="ic ic-sm" data-ic="check"></i> Perfil vinculado — CRM abre filtrado em <strong>${cfgUser.nome_vendedor}</strong></p>` : `<p style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-2)">Sem vínculo — CRM abre com filtro "Todos"</p>`}
     </div>
 
     <!-- Parâmetros CRM -->
@@ -118,7 +118,7 @@ async function renderConfig() {
         const vendSemVinc = S.vendedores.filter(v => !uvRows.some(r => r.id_vendedor_erp === v.id_vendedor));
         return vendSemVinc.length ? `
           <div style="background:var(--orange-bg);border:1px solid var(--warning-veil);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);margin-bottom:var(--space-3)">
-            <p style="font-size:var(--fs-090);font-weight:700;color:var(--orange);margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="alert-triangle"></i> Vendedores sem vínculo Umbler:</p>
+            <p style="font-size:var(--fs-090);font-weight:700;color:var(--orange-fg);margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="alert-triangle"></i> Vendedores sem vínculo Umbler:</p>
             ${vendSemVinc.map(v=>`
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-1)">
                 <span style="font-size:var(--fs-100);color:var(--text-primary)">${v.nome_vendedor}</span>
@@ -138,9 +138,9 @@ async function renderConfig() {
                 <div class="uv-vname">${r.nome_vendedor_erp||'Vendedor #'+r.id_vendedor_erp}</div>
                 <div class="uv-umbler" style="display:flex;gap:var(--space-2-5);flex-wrap:wrap">
                   <span>Usuário: <strong>${r.usuario_umbler||'—'}</strong></span>
-                  ${r.id_membro_umbler?`<span style="font-family:var(--font-mono);color:var(--text-muted)">ID: ${r.id_membro_umbler}</span>`:'<span style="color:var(--red);font-weight:600"><i class="ic ic-sm" data-ic="alert-triangle"></i> ID Membro não configurado</span>'}
+                  ${r.id_membro_umbler?`<span style="font-family:var(--font-mono);color:var(--text-muted)">ID: ${r.id_membro_umbler}</span>`:'<span style="color:var(--red-fg);font-weight:600"><i class="ic ic-sm" data-ic="alert-triangle"></i> ID Membro não configurado</span>'}
                   ${r.inbox_umbler?`<span style="color:var(--text-muted)">Inbox: ${r.inbox_umbler}</span>`:''}
-                  <span style="${r.ativo?'color:var(--green)':'color:var(--text-muted)'}">${r.ativo?'● Ativo':'○ Inativo'}</span>
+                  <span style="${r.ativo?'color:var(--green-fg)':'color:var(--text-muted)'}">${r.ativo?'● Ativo':'○ Inativo'}</span>
                 </div>
               </div>
               <div class="uv-acts">
@@ -151,7 +151,7 @@ async function renderConfig() {
           </div>`).join('')
         : '<p style="color:var(--text-muted);font-size:var(--fs-100);padding:var(--space-2) 0">Nenhum vínculo cadastrado</p>'}
       </div>
-      <button class="btn-sm" style="margin-top:var(--space-2-5);border-color:var(--blue-mid);color:var(--blue-mid)" onclick="newUV()">+ Novo Vínculo</button>
+      <button class="btn-sm" style="margin-top:var(--space-2-5);border-color:var(--blue-mid);color:var(--blue-mid-fg)" onclick="newUV()">+ Novo Vínculo</button>
     </div>
 
     <!-- Contatos Umbler (todos, com/sem vínculo) -->
@@ -177,7 +177,7 @@ async function renderConfig() {
             ${!vinculado?`
               <div style="display:flex;gap:var(--space-1);flex-shrink:0">
                 <button class="btn-sm" onclick="abrirVinc('${esc(c.telefone)}','${esc(c.nome_contato||'')}','${esc(c.nome_atendente||'')}')"><i class="ic ic-sm" data-ic="external-link"></i> Vincular</button>
-                <button class="btn-sm" style="color:var(--blue-mid)" onclick="abrirNovoContato('${esc(c.telefone)}','${esc(c.nome_contato||'')}','${esc(c.nome_atendente||'')}')"><i class="ic ic-sm" data-ic="user"></i> Criar</button>
+                <button class="btn-sm" style="color:var(--blue-mid-fg)" onclick="abrirNovoContato('${esc(c.telefone)}','${esc(c.nome_contato||'')}','${esc(c.nome_atendente||'')}')"><i class="ic ic-sm" data-ic="user"></i> Criar</button>
                 <button class="btn-sm danger" onclick="naoComercialConfig('${esc(c.telefone)}')"><i class="ic ic-sm" data-ic="x"></i> NC</button>
               </div>`:''}
           </div>`;
@@ -192,7 +192,7 @@ async function renderConfig() {
         ${[['Umbler Talk (WhatsApp)','Edge Function UMBLERATC'],['ERP Firebird → Supabase','Sync automático']].map(([n,d])=>`
           <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-2-5);background:var(--neutral-900);border:1px solid var(--neutral-700);border-radius:var(--radius-lg)">
             <div><p style="font-size:var(--fs-200);font-weight:600;color:var(--border-default)">${n}</p><p style="font-size:var(--fs-090);color:var(--text-subtle)">${d}</p></div>
-            <span style="font-size:var(--fs-075);background:var(--success-700);color:var(--success-500);border:1px solid var(--success-700);border-radius:var(--radius-pill);padding:var(--space-0-5) var(--space-2)">Ativo</span>
+            <span style="font-size:var(--fs-075);background:var(--success-700);color:var(--text-success);border:1px solid var(--text-success);border-radius:var(--radius-pill);padding:var(--space-0-5) var(--space-2)">Ativo</span>
           </div>`).join('')}
       </div>
     </div>
@@ -252,7 +252,7 @@ function setCfgTab(tab) {
     const on = (k === tab);
     if (p) p.style.display = on ? 'block' : 'none';
     if (b) {
-      b.style.color = on ? 'var(--blue-dark)' : 'var(--text-muted)';
+      b.style.color = on ? 'var(--blue-dark-fg)' : 'var(--text-muted)';
       b.style.borderBottom = on ? '2px solid var(--blue-dark)' : 'none';
       b.style.marginBottom = on ? '-2px' : '0';
     }
@@ -375,8 +375,8 @@ async function renderLogAcoes(filtro='', nivel='') {
     el.innerHTML = '<div class="empty-msg">Nenhum registro encontrado</div>';
     return;
   }
-
-  const corNivel = { INFO:'var(--blue-500)', WARN:'var(--warning-600)', ERROR:'var(--danger-600)' };
+  const corNivel = { INFO:'var(--blue-mid-fg)', WARN:'var(--orange-fg)', ERROR:'var(--red-fg)' };
+  const bgNivel  = { INFO:'var(--surface-selected)', WARN:'var(--feedback-warning-bg)', ERROR:'var(--feedback-danger-bg)' };
   const bgNivel  = { INFO:'var(--blue-50)', WARN:'var(--warning-50)', ERROR:'var(--danger-50)' };
 
   el.innerHTML = data.map(r => {
@@ -388,7 +388,7 @@ async function renderLogAcoes(filtro='', nivel='') {
       } catch(_) { det = String(r.detalhe); }
     }
     const dt = r.criado_em ? new Date(r.criado_em).toLocaleString('pt-BR') : '';
-    return `<div style="border:1px solid var(--border);border-left:4px solid ${corNivel[r.nivel]||'var(--neutral-400)'};border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);margin-bottom:var(--space-1-5);background:${bgNivel[r.nivel]||'var(--neutral-0)'}">
+    return `<div style="border:1px solid var(--border);border-left:4px solid ${corNivel[r.nivel]||'var(--neutral-400)'};border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);margin-bottom:var(--space-1-5);background:${bgNivel[r.nivel]||'var(--surface-card)'}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-1)">
         <div style="display:flex;align-items:center;gap:var(--space-2)">
           <span style="font-size:var(--fs-075);font-weight:700;color:${corNivel[r.nivel]||'var(--text-subtle)'};background:${bgNivel[r.nivel]};border:1px solid ${corNivel[r.nivel]||'var(--border-default)'};border-radius:var(--radius-sm);padding:1px 7px">${r.nivel||'INFO'}</span>
@@ -402,7 +402,7 @@ async function renderLogAcoes(filtro='', nivel='') {
         ${r.email_usuario ? `<span><i class="ic ic-sm" data-ic="mail"></i> ${r.email_usuario}</span>` : ''}
       </div>
       ${det ? `<div style="font-size:var(--fs-090);margin-top:var(--space-1);color:var(--text-secondary)">${det}</div>` : ''}
-      ${r.erro ? `<div style="font-size:var(--fs-090);margin-top:var(--space-1);color:var(--danger-600);font-family:var(--font-mono);word-break:break-all"><i class="ic ic-sm" data-ic="alert-triangle"></i> ${r.erro}</div>` : ''}
+      ${r.erro ? `<div style="font-size:var(--fs-090);margin-top:var(--space-1);color:var(--text-danger);font-family:var(--font-mono);word-break:break-all"><i class="ic ic-sm" data-ic="alert-triangle"></i> ${r.erro}</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -422,7 +422,7 @@ async function renderLogPainel() {
   try {
     rows = await sbQ('atac_log_painel', 'select=*&order=ultima_em.desc&limit=9999');
   } catch(e) {
-    el.innerHTML = `<div style="background:var(--red-bg);border:1px solid var(--red);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);font-size:var(--fs-100);color:var(--red)">Falha ao carregar o painel de erros: ${e?.message||e}</div>`;
+    el.innerHTML = `<div style="background:var(--red-bg);border:1px solid var(--red);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);font-size:var(--fs-100);color:var(--red-fg)">Falha ao carregar o painel de erros: ${e?.message||e}</div>`;
     return;
   }
   const data = Array.isArray(rows) ? rows : [];
@@ -446,7 +446,7 @@ async function renderLogPainel() {
   el.innerHTML = `
     <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1-5)">
       <span style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted)">Erros agrupados</span>
-      ${nAbertos>0 ? `<span style="font-size:var(--fs-075);font-weight:700;color:var(--red);background:var(--red-bg);border-radius:var(--radius-pill);padding:1px var(--space-2)">${nAbertos} em aberto</span>` : ''}
+      ${nAbertos>0 ? `<span style="font-size:var(--fs-075);font-weight:700;color:var(--red-fg);background:var(--red-bg);border-radius:var(--radius-pill);padding:1px var(--space-2)">${nAbertos} em aberto</span>` : ''}
     </div>
     <div style="border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface)">
     <table class="data-table">
@@ -459,7 +459,7 @@ async function renderLogPainel() {
         const dt = r.ultima_em ? new Date(r.ultima_em).toLocaleString('pt-BR') : '';
         const sig = encodeURIComponent(JSON.stringify({ acao: r.acao||'', erro: r.erro||'' }));
         const reg = r.status === 'REGRESSAO'
-          ? `<div style="font-size:var(--fs-075);color:var(--orange);margin-top:var(--space-0-5)"><i class="ic ic-sm" data-ic="alert-triangle"></i> ${r.ocorrencias_apos_fix||0} ocorrência(s) depois do fix de ${new Date(r.resolvido_em).toLocaleDateString('pt-BR')}</div>` : '';
+          ? `<div style="font-size:var(--fs-075);color:var(--orange-fg);margin-top:var(--space-0-5)"><i class="ic ic-sm" data-ic="alert-triangle"></i> ${r.ocorrencias_apos_fix||0} ocorrência(s) depois do fix de ${new Date(r.resolvido_em).toLocaleDateString('pt-BR')}</div>` : '';
         const res = (r.status === 'RESOLVIDO' && r.resolvido_em)
           ? `<div style="font-size:var(--fs-075);color:var(--text-muted);margin-top:var(--space-0-5)">${new Date(r.resolvido_em).toLocaleDateString('pt-BR')}${r.resolvido_por ? ' — '+r.resolvido_por : ''}${r.observacao ? ' · '+r.observacao : ''}</div>` : '';
         return `<tr style="cursor:default">
@@ -558,7 +558,7 @@ async function renderVendedoresConfig() {
   try {
     lista = await sbQ('atac_vendedores_painel', 'select=*');
   } catch(e) {
-    el.innerHTML = `<div style="background:var(--red-bg);border:1px solid var(--red);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);font-size:var(--fs-100);color:var(--red)">Falha ao carregar: ${e?.message||e}</div>`;
+    el.innerHTML = `<div style="background:var(--red-bg);border:1px solid var(--red);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3);font-size:var(--fs-100);color:var(--red-fg)">Falha ao carregar: ${e?.message||e}</div>`;
     return;
   }
   lista = Array.isArray(lista) ? lista : [];
@@ -578,22 +578,22 @@ async function renderVendedoresConfig() {
         <div style="font-weight:700;font-size:var(--fs-100);color:var(--text-primary)">${escH(u.nome_vendedor||'—')}</div>
         <div style="font-size:var(--fs-075);color:var(--text-muted);font-family:var(--font-mono)">ID ${u.id_vendedor_erp}</div>
         <div style="font-size:var(--fs-075);color:var(--text-muted);margin-top:var(--space-0-5)">
-          ${escH(u.departamento||'—')}${fora?' <span style="color:var(--warning-600);font-weight:600">· fora do atacado</span>':''}
+          ${escH(u.departamento||'—')}${fora?' <span style="color:var(--text-warning);font-weight:600">· fora do atacado</span>':''}
         </div>
       </td>
       <td style="font-size:var(--fs-090);color:${semLogin?'var(--text-muted)':'var(--text-secondary)'}">${semLogin?'— sem login —':escH(u.email)}</td>
       <td class="r mono" style="font-weight:700">
-        ${n}${!u.ativo && n>0 ? '<div style="font-size:9px;font-weight:600;color:var(--warning-600);white-space:nowrap">no balcão</div>' : ''}
+        ${n}${!u.ativo && n>0 ? '<div style="font-size:9px;font-weight:600;color:var(--text-warning);white-space:nowrap">no balcão</div>' : ''}
       </td>
       <td class="r mono cfg-vend-erp" style="font-size:var(--fs-090);white-space:nowrap">${u.clientes_erp||0}</td>
       <td class="r mono cfg-vend-erp" style="font-size:var(--fs-090);white-space:nowrap">${money(u.faturamento_erp)}</td>
       <td class="r mono cfg-vend-erp" style="font-size:var(--fs-090);white-space:nowrap">${dt(u.ultima_venda_erp)}</td>
       <td>${u.ativo
-        ? '<span style="font-size:var(--fs-075);font-weight:700;background:var(--green-bg);color:var(--green);border-radius:var(--radius-sm);padding:var(--space-0-5) var(--space-2);white-space:nowrap"><i class="ic ic-sm" data-ic="check-circle"></i> Ativo</span>'
+        ? '<span style="font-size:var(--fs-075);font-weight:700;background:var(--green-bg);color:var(--green-fg);border-radius:var(--radius-sm);padding:var(--space-0-5) var(--space-2);white-space:nowrap"><i class="ic ic-sm" data-ic="check-circle"></i> Ativo</span>'
         : '<span style="font-size:var(--fs-075);font-weight:700;background:var(--surface2);color:var(--text-muted);border-radius:var(--radius-sm);padding:var(--space-0-5) var(--space-2);white-space:nowrap"><i class="ic ic-sm" data-ic="ban"></i> Inativo</span>'}</td>
       <td class="r cfg-vend-acao">
         <button onclick="abrirToggleVendedor(${u.id_vendedor_erp})"
-          style="font-size:10.5px;font-weight:600;padding:5px var(--space-3);border-radius:var(--radius-lg);cursor:pointer;white-space:nowrap;border:1px solid ${u.ativo?'var(--red)':'var(--green)'};background:var(--surface);color:${u.ativo?'var(--red)':'var(--green)'}">
+          style="font-size:10.5px;font-weight:600;padding:5px var(--space-3);border-radius:var(--radius-lg);cursor:pointer;white-space:nowrap;border:1px solid ${u.ativo?'var(--red)':'var(--green)'};background:var(--surface);color:${u.ativo?'var(--red-fg)':'var(--green-fg)'}">
           ${u.ativo ? 'Inativar' : 'Reativar'}
         </button>
       </td>
@@ -680,7 +680,7 @@ async function abrirToggleVendedor(idErp) {
 
   const corpo = ativar
     ? `Os <strong>${n}</strong> cliente(s) que ainda estão vinculados a <strong>${escH(u.nome_vendedor)}</strong> voltam para a carteira dele e saem da Prospecção.`
-    : `<div style="background:var(--warning-50);border-left:3px solid var(--warning-600);padding:9px 11px;border-radius:var(--radius-sm);margin-bottom:var(--space-3)">
+    : `<div style="background:var(--feedback-warning-bg);border-left:3px solid var(--text-warning);padding:9px 11px;border-radius:var(--radius-sm);margin-bottom:var(--space-3)">
          Os <strong>${n}</strong> cliente(s) da carteira de <strong>${escH(u.nome_vendedor)}</strong> caem na
          <strong>Prospecção</strong> na hora, para qualquer vendedor assumir.
        </div>

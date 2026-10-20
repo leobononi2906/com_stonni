@@ -77,7 +77,7 @@ async function renderMateriais() {
   const chips = MAT_LINHAS.map(l => {
     const n = l.key ? MAT.items.filter(m => (m.linha_produto || '') === l.key).length : MAT.items.length;
     const on = MAT.linha === l.key;
-    return `<button onclick="matSetLinha('${l.key}')" style="display:inline-flex;align-items:center;gap:var(--space-1-5);padding:var(--space-1-5) var(--space-3);border-radius:var(--radius-pill);border:1.5px solid ${on ? 'var(--blue-mid)' : 'var(--border)'};background:${on ? 'var(--blue-pale)' : 'var(--surface)'};color:${on ? 'var(--blue-dark)' : 'var(--text-secondary)'};font-size:12.5px;font-weight:600;cursor:pointer">${l.icon} ${l.label} <span style="opacity:.7;font-weight:500">${n}</span></button>`;
+    return `<button onclick="matSetLinha('${l.key}')" style="display:inline-flex;align-items:center;gap:var(--space-1-5);padding:var(--space-1-5) var(--space-3);border-radius:var(--radius-pill);border:1.5px solid ${on ? 'var(--blue-mid)' : 'var(--border)'};background:${on ? 'var(--blue-pale)' : 'var(--surface)'};color:${on ? 'var(--blue-dark-fg)' : 'var(--text-secondary)'};font-size:12.5px;font-weight:600;cursor:pointer">${l.icon} ${l.label} <span style="opacity:.7;font-weight:500">${n}</span></button>`;
   }).join('');
 
   const cards = lista.length
@@ -111,13 +111,13 @@ function matCard(m) {
     const id = _matYtId(m.url);
     thumb = id
       ? `<div style="position:relative;aspect-ratio:16/9;background:var(--neutral-950);border-radius:var(--radius-lg);overflow:hidden"><img src="https://img.youtube.com/vi/${id}/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover" loading="lazy"/><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="width:46px;height:46px;border-radius:50%;background:var(--surface-overlay);color:var(--neutral-0);display:flex;align-items:center;justify-content:center;font-size:var(--fs-550)">▶</span></div></div>`
-      : matThumbIcon('▶', 'VÍDEO', 'var(--danger-600)');
+      : matThumbIcon('▶', 'VÍDEO', 'var(--text-danger)');
   } else if (tipo === 'imagem') {
     thumb = `<div style="aspect-ratio:16/9;background:var(--surface2);border-radius:var(--radius-lg);overflow:hidden"><img src="${_matEsc(m.url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/></div>`;
   } else if (tipo === 'pdf') {
-    thumb = matThumbIcon('<i class="ic ic-sm" data-ic="file-text"></i>', 'PDF', 'var(--blue-500)');
+    thumb = matThumbIcon('<i class="ic ic-sm" data-ic="file-text"></i>', 'PDF', 'var(--text-action)');
   } else {
-    thumb = matThumbIcon('<i class="ic ic-sm" data-ic="external-link"></i>', 'LINK', 'var(--success-500)');
+    thumb = matThumbIcon('<i class="ic ic-sm" data-ic="external-link"></i>', 'LINK', 'var(--text-success)');
   }
   return `<div onclick="matAbrir(${m.id})" title="Abrir" style="cursor:pointer;border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;background:var(--surface);transition:box-shadow .15s,transform .1s" onmouseover="this.style.boxShadow='0 4px 14px var(--surface-overlay)'" onmouseout="this.style.boxShadow='none'">
     ${thumb}
@@ -209,7 +209,7 @@ async function iaPerguntar() {
   const produto = document.getElementById('ia-produto')?.value || undefined;
   const btn = document.getElementById('ia-btn');
   const box = document.getElementById('ia-resp');
-  if (!pergunta) { if (box) box.innerHTML = '<div style="font-size:var(--fs-100);color:var(--red)">Escreva uma pergunta.</div>'; return; }
+  if (!pergunta) { if (box) box.innerHTML = '<div style="font-size:var(--fs-100);color:var(--red-fg)">Escreva uma pergunta.</div>'; return; }
   btn.disabled = true; btn.textContent = 'Pensando...';
   box.innerHTML = '<div class="empty-msg" style="padding:var(--space-3-5)"><div class="spinner" style="margin:0 auto var(--space-2)"></div>Consultando a base Stonni...</div>';
   try {
@@ -220,7 +220,7 @@ async function iaPerguntar() {
   } catch (e) {
     console.error('assist-perguntar', e);
     const msg = /401|jwt|auth/i.test(String(e && e.message)) ? 'Sessão expirada — saia e entre de novo pra usar a IA.' : 'Não consegui responder agora. Tente de novo.';
-    box.innerHTML = `<div style="font-size:12.5px;color:var(--red);background:var(--red-bg,var(--danger-50));border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3)">${msg}</div>`;
+    box.innerHTML = `<div style="font-size:12.5px;color:var(--red-fg);background:var(--red-bg,var(--feedback-danger-bg));border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-2-5) var(--space-3)">${msg}</div>`;
   } finally { btn.disabled = false; btn.textContent = 'Perguntar'; }
 }
 
@@ -231,7 +231,7 @@ function iaRespHtml(d) {
   const vids = videos.length
     ? `<div style="margin-top:var(--space-3)"><div style="font-size:var(--fs-090);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:var(--space-1-5)">Vídeos relacionados</div>${videos.map(v => {
         const id = _matYtId(v);
-        return `<a href="${_matEsc(v)}" target="_blank" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1-5) 0;font-size:12.5px;color:var(--blue-mid);text-decoration:none">▶ ${id ? 'youtu.be/' + id : _matEsc(v)}</a>`;
+        return `<a href="${_matEsc(v)}" target="_blank" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1-5) 0;font-size:12.5px;color:var(--blue-mid-fg);text-decoration:none">▶ ${id ? 'youtu.be/' + id : _matEsc(v)}</a>`;
       }).join('')}</div>`
     : '';
   return `<div style="border:1px solid var(--border);border-radius:var(--radius-10);padding:var(--space-3-5);background:var(--surface2)">

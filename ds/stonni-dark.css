@@ -1,0 +1,127 @@
+/* ============================================================================
+   Stonni — tema escuro (override dos aliases semânticos de semantic.css)
+   Ativado por <html data-theme="dark"> (ver tokens/theme.js). Só remapeia ALIASES;
+   as primitivas (--blue-*, --neutral-*, --indigo-*) não mudam. Código novo deve usar
+   alias, nunca primitiva direto — primitiva não troca com o tema.
+   Marca preservada: índigo no cromo (nav), azul/ciano nos links e ações (AA sobre o escuro).
+   Regra de ouro: --text-inverse / --text-on-brand continuam BRANCOS (texto sobre botão
+   azul/vermelho/nav). Texto "de ação" que precisa inverter = --text-action.
+   Impressão sempre clara: tudo dentro de @media not print.
+   ========================================================================= */
+
+/* Novos aliases (valem no claro; o escuro redefine abaixo) */
+:root{
+  --text-action:var(--blue-600);
+  --border-crit:var(--danger-100);
+}
+
+@media not print{
+:root[data-theme="dark"]{
+  color-scheme:dark;
+
+  /* Superfícies */
+  --surface-page:#0e1318;
+  --surface-card:#161c22;
+  --surface-raised:#1c232b;
+  --surface-sunken:#1f262e;
+  --surface-subtle:#12171d;
+  --surface-hover:#222a33;
+  --surface-active:#2a333d;
+  --surface-selected:#13284a;
+  --surface-inverse:#221c52;
+  --surface-nav:#100b2e;
+  --surface-nav-hover:rgba(255,255,255,.08);
+  --surface-nav-active:rgba(1,169,223,.20);
+  --surface-overlay:rgba(0,0,0,.70);
+
+  /* Texto */
+  --text-body:#d6dde6;
+  --text-heading:#f2f5f8;
+  --text-muted:#9aa7b5;
+  --text-subtle:#8593a2;
+  --text-disabled:#5f6b78;
+  --text-on-brand:#ffffff;
+  --text-inverse:#ffffff;
+  --text-on-nav:#E8EDF6;
+  --text-on-nav-muted:#9AA6C2;
+  --text-link:#6ba4e2;
+  --text-link-hover:#a2c6f0;
+  --text-brand:#6ba4e2;
+  --text-action:#6ba4e2;
+  --text-danger:#ff8f8f;
+  --text-success:#4cc38a;
+  --text-warning:#e8b25a;
+
+  /* Bordas */
+  --border-subtle:#232b34;
+  --border-default:#2f3944;
+  --border-strong:#46525f;
+  --border-field:#46525f;
+  --border-field-hover:#66727f;
+  --border-focus:#6ba4e2;
+  --border-danger:#e86060;
+  --border-crit:#6b2528;
+  --border-nav:rgba(255,255,255,.10);
+
+  /* Ações — primária (azul da marca; branco por cima = 4,8:1) */
+  --action-primary-bg:#1A74C4;
+  --action-primary-bg-hover:#145EA8;
+  --action-primary-bg-active:#0F4A85;
+  --action-primary-fg:#ffffff;
+
+  /* Ações — secundária */
+  --action-secondary-bg:#1c232b;
+  --action-secondary-bg-hover:#262f39;
+  --action-secondary-bg-active:#2f3944;
+  --action-secondary-fg:#e4e9ef;
+  --action-secondary-border:#46525f;
+
+  /* Ações — fantasma */
+  --action-ghost-bg-hover:#222a33;
+  --action-ghost-fg:#c3ccd6;
+
+  /* Ações — destrutiva */
+  --action-danger-bg:#c02626;
+  --action-danger-bg-hover:#d63636;
+  --action-danger-fg:#ffffff;
+
+  /* Desabilitado */
+  --action-disabled-bg:#1c232b;
+  --action-disabled-fg:#5f6b78;
+  --action-disabled-border:#2f3944;
+
+  /* Feedback */
+  --feedback-info-bg:#10253f;--feedback-info-border:#1d4a7a;--feedback-info-fg:#8ec1f5;
+  --feedback-success-bg:#0f2e20;--feedback-success-border:#1b5a3b;--feedback-success-fg:#4cc38a;
+  --feedback-warning-bg:#3a280c;--feedback-warning-border:#6b4a14;--feedback-warning-fg:#e8b25a;
+  --feedback-danger-bg:#3a1618;--feedback-danger-border:#7a2a2d;--feedback-danger-fg:#ff8f8f;
+
+  /* Elevação e foco */
+  --shadow-xs:0 1px 2px rgba(0,0,0,.40);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.40),0 1px 3px rgba(0,0,0,.30);
+  --shadow-md:0 2px 4px rgba(0,0,0,.40),0 4px 12px rgba(0,0,0,.40);
+  --shadow-lg:0 8px 16px rgba(0,0,0,.45),0 16px 40px rgba(0,0,0,.55);
+  --shadow-inset:inset 0 1px 0 rgba(255,255,255,.04);
+  --shadow-focus:0 0 0 var(--focus-ring-w,3px) rgba(107,164,226,.40);
+  --shadow-focus-danger:0 0 0 var(--focus-ring-w,3px) rgba(232,96,96,.40);
+  --gradient-brand-soft:linear-gradient(135deg,#10253f 0%,#12203a 55%,#1a1740 100%);
+
+  /* Aliases do kit Bononi usados por geral-central.js (cópia compartilhada).
+     Só no escuro: no claro valem os fallbacks do próprio arquivo. */
+  --text-strong:#f2f5f8;
+  --text-faint:#8593a2;
+  --text-accent:#ff8080;
+  --action-primary:#1A74C4;
+  --action-primary-hover:#145EA8;
+  --action-accent:#d6343b;
+  --status-warn-text:#e0a84a;
+  --status-warn-bg:#3a2a0e;
+  --status-ok-text:#4cc38a;
+  --status-ok-bg:#12301f;
+  --status-crit-text:#ff6b70;
+  --status-crit-bg:#3a1517;
+  --status-info-text:#6ea8e6;
+  --status-info-bg:#14263d;
+}
+:root[data-theme="dark"] ::selection{background:#1d4a7a;color:#fff}
+}

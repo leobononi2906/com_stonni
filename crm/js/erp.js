@@ -53,7 +53,7 @@ async function searchVincERP() {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-2)">
         <div class="mres-nome" style="flex:1">${c.nome_cliente||'—'}</div>
         <div style="display:flex;align-items:center;gap:var(--space-1-5);flex-shrink:0">
-          ${vincAtual.has(c.id_cliente) ? '<span style="font-size:var(--fs-075);color:var(--green);font-weight:600"><i class="ic ic-sm" data-ic="check"></i> Já vinculado</span>' : ''}
+          ${vincAtual.has(c.id_cliente) ? '<span style="font-size:var(--fs-075);color:var(--green-fg);font-weight:600"><i class="ic ic-sm" data-ic="check"></i> Já vinculado</span>' : ''}
           <span style="font-size:var(--fs-090);color:var(--text-muted)">#${c.id_cliente}</span>
         </div>
       </div>
@@ -188,7 +188,7 @@ async function desvincularERP(vincId, crmId, erpNome) {
   const okDesvincular = await new Promise(res => {
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;inset:0;background:var(--surface-overlay);z-index:9999;display:flex;align-items:center;justify-content:center';
-    d.innerHTML = `<div style='background:var(--neutral-0);border-radius:var(--radius-xl);padding:var(--space-6);max-width:320px;width:90%;text-align:center'>
+    d.innerHTML = `<div style='background:var(--surface-card);border-radius:var(--radius-xl);padding:var(--space-6);max-width:320px;width:90%;text-align:center'>
       <p style='margin-bottom:var(--space-4);font-size:var(--fs-300)'>Desvincular <b>${erpNome}</b>?<br><span style='font-size:var(--fs-100);color:var(--text-subtle)'>Telefones importados deste ERP também serão removidos.</span></p>
       <div style='display:flex;gap:var(--space-2);justify-content:center'>
         <button id='_dv_n' style='padding:var(--space-2) var(--space-5);border-radius:var(--radius-lg);border:1px solid var(--border-default);background:var(--surface-subtle);cursor:pointer'>Cancelar</button>

@@ -104,8 +104,8 @@ async function buscarNoSupabase(q) {
       <div class="cl-row1">
         <span class="cl-nome">${c.nome_cliente}</span>
         ${bdg(st)}
-        ${dc>=30?'<span style="color:var(--orange);font-size:var(--fs-100);flex-shrink:0"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>':''}
-        ${S.overdueIds.has(c.id_cliente)?'<span style="color:var(--red);font-size:var(--fs-100);flex-shrink:0"><i class="ic ic-sm" data-ic="bell"></i></span>':''}
+        ${dc>=30?'<span style="color:var(--orange-fg);font-size:var(--fs-100);flex-shrink:0"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>':''}
+        ${S.overdueIds.has(c.id_cliente)?'<span style="color:var(--red-fg);font-size:var(--fs-100);flex-shrink:0"><i class="ic ic-sm" data-ic="bell"></i></span>':''}
       </div>
       ${semaforo(c)}
       <div class="cl-row2">${sN(c.nome_vendedor_responsavel)}</div>
@@ -202,7 +202,7 @@ async function assumirCliente(id, nomeCliente) {
   const ok = await new Promise(res => {
     const div = document.createElement('div');
     div.style.cssText = 'position:fixed;inset:0;background:var(--surface-overlay);z-index:9999;display:flex;align-items:center;justify-content:center';
-    div.innerHTML = `<div style='background:var(--neutral-0);border-radius:var(--radius-xl);padding:var(--space-6);max-width:340px;width:90%;text-align:center'>
+    div.innerHTML = `<div style='background:var(--surface-card);border-radius:var(--radius-xl);padding:var(--space-6);max-width:340px;width:90%;text-align:center'>
       <p style='margin-bottom:var(--space-4);font-size:var(--fs-300)'>Atribuir <b>${nomeCliente}</b> à carteira de <b>${sN(vNome)}</b>?<br><span style='font-size:var(--fs-100);color:var(--text-subtle)'>O vendedor terá ${CFG.prospeccao_prazo_contato_dias} dias para registrar uma interação.</span></p>
       <div style='display:flex;gap:var(--space-2);justify-content:center'>
         <button id='_ac_n' style='padding:var(--space-2) var(--space-5);border-radius:var(--radius-lg);border:1px solid var(--border-default);background:var(--surface-subtle);cursor:pointer'>Cancelar</button>

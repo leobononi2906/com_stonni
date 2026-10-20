@@ -6,14 +6,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stonni — Atacado CRM</title>
+<script src="../ds/stonni-tema.js?v=20261020a"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- Design system Stonni — tem de vir ANTES do styles.css: e o styles.css
      que faz a ponte (--bg: var(--surface-page), ...) e precisa dos tokens. -->
 <link rel="stylesheet" href="../ds/stonni-ds.css?v=20260917">
+<link rel="stylesheet" href="../ds/stonni-dark.css?v=20261020a">
 <link rel="stylesheet" href="../ds/stonni-icones.css?v=20260915">
-<link rel="stylesheet" href="css/styles.css?v=20260923a">
+<link rel="stylesheet" href="css/styles.css?v=20261020a">
 <!-- Embutido no app unificado: esconde a barra interna (a navegação vem da sidebar do Portal) -->
 <script>if(window.top!==window.self){document.documentElement.classList.add('is-embedded');}</script>
 <style>html.is-embedded .sidebar{display:none!important}html.is-embedded .menu-toggle{display:none!important}</style>
@@ -284,7 +286,7 @@
       <p style="font-size:var(--fs-090);color:var(--text-muted);text-transform:uppercase;font-weight:700;letter-spacing:0.8px;margin-bottom:var(--space-1)">O que foi feito (opcional)</p>
       <input id="re-obs" placeholder="Ex: corrigido no crm.js — setTab trocado por setMainTab">
       <p style="font-size:var(--fs-090);color:var(--text-secondary);margin-top:var(--space-2-5);line-height:1.5">
-        Marca todas as ocorrências deste erro como resolvidas. Se o erro voltar a acontecer depois de agora, ele reaparece aqui como <strong style="color:var(--orange)"><i class="ic ic-sm" data-ic="refresh-cw"></i> Regressão</strong>.
+        Marca todas as ocorrências deste erro como resolvidas. Se o erro voltar a acontecer depois de agora, ele reaparece aqui como <strong style="color:var(--orange-fg)"><i class="ic ic-sm" data-ic="refresh-cw"></i> Regressão</strong>.
       </p>
     </div>
     <div class="modal-footer">
@@ -360,7 +362,7 @@
       <button class="btn-mc" onclick="fecharNovoContato()"><i class="ic ic-sm" data-ic="x"></i></button>
     </div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:var(--space-2-5)">
-      <div style="background:var(--blue-pale);border:1px solid var(--blue-veil);border-radius:var(--radius-lg);padding:var(--space-2) var(--space-3);font-size:var(--fs-100);color:var(--blue-dark)">
+      <div style="background:var(--blue-pale);border:1px solid var(--blue-veil);border-radius:var(--radius-lg);padding:var(--space-2) var(--space-3);font-size:var(--fs-100);color:var(--blue-dark-fg)">
         <i class="ic ic-sm" data-ic="map-pin"></i> O cliente será criado em <strong>atac_clientes</strong> (origem: UMBLER) e adicionado à prospecção automaticamente.
       </div>
       <div>
@@ -479,7 +481,7 @@
       <button class="btn-mc" onclick="fecharVincularERP()"><i class="ic ic-sm" data-ic="x"></i></button>
     </div>
     <div class="modal-body">
-      <div style="background:var(--blue-pale);border:1px solid var(--blue-veil);border-radius:var(--radius-lg);padding:var(--space-2) var(--space-3);font-size:var(--fs-100);color:var(--blue-dark);margin-bottom:var(--space-2-5)">
+      <div style="background:var(--blue-pale);border:1px solid var(--blue-veil);border-radius:var(--radius-lg);padding:var(--space-2) var(--space-3);font-size:var(--fs-100);color:var(--blue-dark-fg);margin-bottom:var(--space-2-5)">
         <i class="ic ic-sm" data-ic="external-link"></i> Vincule este cliente a um ou mais clientes reais do ERP.<br>
         Os pedidos e datas serão sempre o mais recente entre todos os vínculos.
       </div>
@@ -498,7 +500,7 @@
 
 <!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../ds/geral-central.js?v=19"></script>
+<script src="../ds/geral-central.js?v=20"></script>
 <script>
 'use strict';
 
@@ -642,18 +644,18 @@ window.hideLoading = hideLoading;
 <script src="js/supabase.js?v=20260727a"></script>
 <script src="js/ui.js?v=20260929a"></script>
 <script src="js/data.js?v=20260929a"></script>
-<script src="js/home.js?v=20260727a"></script>
-<script src="js/linhas.js?v=20260727a"></script>
-<script src="js/vendedores.js?v=20260727a"></script>
-<script src="js/crm.js?v=20260727a"></script>
-<script src="js/drawer.js?v=20260727a"></script>
-<script src="js/umbler.js?v=20260727a"></script>
-<script src="js/erp.js?v=20260727a"></script>
-<script src="js/vendedor-modal.js?v=20260727a"></script>
-<script src="js/agenda.js?v=20260727a"></script>
-<script src="js/config-page.js?v=20260727a"></script>
+<script src="js/home.js?v=20261020a"></script>
+<script src="js/linhas.js?v=20261020a"></script>
+<script src="js/vendedores.js?v=20261020a"></script>
+<script src="js/crm.js?v=20261020a"></script>
+<script src="js/drawer.js?v=20261020a"></script>
+<script src="js/umbler.js?v=20261020a"></script>
+<script src="js/erp.js?v=20261020a"></script>
+<script src="js/vendedor-modal.js?v=20261020a"></script>
+<script src="js/agenda.js?v=20261020a"></script>
+<script src="js/config-page.js?v=20261020a"></script>
 <script src="js/exports.js?v=20260727a"></script>
-<script src="js/materiais.js?v=20260807a"></script>
+<script src="js/materiais.js?v=20261020a"></script>
 
 <!-- MODAL EDITAR VÍNCULO ERP -->
 <div id="modal-edit-vinc-erp" class="modal-ov">
@@ -792,7 +794,7 @@ window.hideLoading = hideLoading;
     </div>
     <div class="modal-body">
       <p style="font-size:var(--fs-200);color:var(--text-primary);margin-bottom:var(--space-1)">Tem certeza que deseja descartar:</p>
-      <p id="cd-nome" style="font-size:var(--fs-300);font-weight:700;color:var(--red);margin-bottom:var(--space-3-5)"></p>
+      <p id="cd-nome" style="font-size:var(--fs-300);font-weight:700;color:var(--red-fg);margin-bottom:var(--space-3-5)"></p>
       <p style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-2)">O cliente será removido da prospecção. Esta ação pode ser revertida pelo administrador.</p>
       <div>
         <label style="font-size:var(--fs-100);font-weight:600;color:var(--text-secondary);display:block;margin-bottom:var(--space-1)">Motivo *</label>

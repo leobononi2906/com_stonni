@@ -269,7 +269,7 @@ window.catAbrirProduto = function(id) {
     ${acaoAtiva ? `<div class="alert alert-success" style="margin-bottom:var(--space-3)"><span class="alert-icon"><i class="ic ic-sm" data-ic="target"></i></span><strong>${acaoAtiva.nome}</strong> — ${acaoAtiva.tipo==='desconto'?`${acaoAtiva.valor}% de desconto`:`Preço especial`}</div>` : ''}
     <div style="display:flex;align-items:baseline;gap:var(--space-3);margin-bottom:var(--space-4)">
       ${precoOriginal ? `<span style="font-size:var(--fs-300);color:var(--text-muted);text-decoration:line-through">R$ ${precoOriginal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>` : ''}
-      <span style="font-size:28px;font-weight:700;font-family:var(--font-mono);color:${precoOriginal?'var(--green)':'var(--blue-dark)'}">R$ ${preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+      <span style="font-size:28px;font-weight:700;font-family:var(--font-mono);color:${precoOriginal?'var(--green-fg)':'var(--blue-dark-fg)'}">R$ ${preco.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
     </div>
     ${p.aplicacao ? `<div style="margin-bottom:var(--space-3)"><span style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-muted)">Aplicação</span><div style="font-size:var(--fs-200);margin-top:var(--space-1)"><i class="ic ic-sm" data-ic="map-pin"></i> ${p.aplicacao}</div></div>` : ''}
     ${p.descricao ? `<div style="margin-bottom:var(--space-4)"><span style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-muted)">Descrição</span><div style="font-size:var(--fs-200);color:var(--text-secondary);margin-top:var(--space-1);line-height:1.5">${p.descricao}</div></div>` : ''}
@@ -315,7 +315,7 @@ window.catShareFotos = function(id) {
         </label>`).join('')}
       </div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;height:44px;background:#128C7E" onclick="catShareFotosEnviar()"><i class="ic ic-sm" data-ic="smartphone"></i> Enviar no WhatsApp</button>
-      <div id="cat-share-erro" style="font-size:var(--fs-100);color:var(--red);margin-top:var(--space-1-5)"></div>
+      <div id="cat-share-erro" style="font-size:var(--fs-100);color:var(--red-fg);margin-top:var(--space-1-5)"></div>
     </div>
   </div>`;
   ov.style.display = 'flex';
@@ -378,9 +378,9 @@ window.catAbrirGerenciarCatalogos = function() {
         <span style="font-size:var(--fs-650)"><i class="ic ic-sm" data-ic="book-open"></i></span>
         <div style="flex:1;min-width:0">
           <div style="font-size:var(--fs-200);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${String(c.titulo || '').replace(/</g, '&lt;')}</div>
-          <a href="${c.url}" target="_blank" style="font-size:var(--fs-090);color:var(--blue-mid)">abrir PDF</a>
+          <a href="${c.url}" target="_blank" style="font-size:var(--fs-090);color:var(--blue-mid-fg)">abrir PDF</a>
         </div>
-        <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="catExcluirCatalogo(${c.id})">Excluir</button>
+        <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red-fg)" onclick="catExcluirCatalogo(${c.id})">Excluir</button>
       </div>`).join('')
     : '<div style="font-size:var(--fs-100);color:var(--text-muted);padding:var(--space-2) 0">Nenhum catálogo salvo ainda.</div>';
 
@@ -471,8 +471,8 @@ window.catExcluirCatalogo = async function(id) {
     .cat-card-preco { margin-top:auto; padding-top:var(--space-2); display:flex; align-items:baseline; gap:var(--space-1-5); flex-wrap:wrap; }
     .cat-preco-original { font-size:var(--fs-100); color:var(--text-muted); text-decoration:line-through; font-family:var(--font-mono); }
     .cat-preco-final { font-size:var(--fs-450); font-weight:700; font-family:var(--font-mono); color:var(--text-primary); }
-    .cat-preco-oferta { color:var(--green); }
-    .cat-desconto-badge { font-size:var(--fs-075); font-weight:700; background:var(--green-bg); color:var(--green); padding:var(--space-0-5) var(--space-1-5); border-radius:var(--radius-sm); }
+    .cat-preco-oferta { color:var(--green-fg); }
+    .cat-desconto-badge { font-size:var(--fs-075); font-weight:700; background:var(--green-bg); color:var(--green-fg); padding:var(--space-0-5) var(--space-1-5); border-radius:var(--radius-sm); }
     .cat-card-footer { padding:var(--space-2-5) var(--space-3-5); border-top:1px solid var(--border); background:var(--surface2); }
     .cat-detalhe-fotos { margin-bottom:var(--space-4); }
     .cat-detalhe-foto-principal { width:100%; border-radius:var(--radius); overflow:hidden; background:var(--surface2); margin-bottom:var(--space-2); }
@@ -562,13 +562,13 @@ window.catAbrirCarrinho = function() {
         <div style="flex:1;min-width:0">
           <div style="font-size:var(--fs-200);font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nome}</div>
           <div style="font-size:var(--fs-090);color:var(--text-muted)">Ref: ${p.referencia}${ipi>0?` · IPI ${ipi}%`:''}</div>
-          <div style="font-size:var(--fs-100);color:var(--blue-dark);font-weight:600;margin-top:var(--space-0-5)">R$ ${preco.toLocaleString('pt-BR',{minimumFractionDigits:preco%1===0?0:2})}</div>
+          <div style="font-size:var(--fs-100);color:var(--blue-dark-fg);font-weight:600;margin-top:var(--space-0-5)">R$ ${preco.toLocaleString('pt-BR',{minimumFractionDigits:preco%1===0?0:2})}</div>
         </div>
         <div style="display:flex;align-items:center;gap:var(--space-1-5);flex-shrink:0">
           <button onclick="catCarrinhoQtd(${idx},-1)" style="width:28px;height:28px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);cursor:pointer;font-size:var(--fs-400)">−</button>
           <span style="min-width:22px;text-align:center;font-weight:700">${x.quantidade}</span>
           <button onclick="catCarrinhoQtd(${idx},1)" style="width:28px;height:28px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);cursor:pointer;font-size:var(--fs-400)">+</button>
-          <button onclick="catCarrinhoRemover(${idx})" style="width:28px;height:28px;border:none;background:var(--red-bg);color:var(--red);border-radius:var(--radius-sm);cursor:pointer;font-size:var(--fs-300)"><i class="ic ic-sm" data-ic="x"></i></button>
+          <button onclick="catCarrinhoRemover(${idx})" style="width:28px;height:28px;border:none;background:var(--red-bg);color:var(--red-fg);border-radius:var(--radius-sm);cursor:pointer;font-size:var(--fs-300)"><i class="ic ic-sm" data-ic="x"></i></button>
         </div>
       </div>`;
   }).join('');
@@ -582,7 +582,7 @@ window.catAbrirCarrinho = function() {
        <button onclick="catCarrinhoLimpar()" style="background:none;border:none;color:var(--text-muted);font-size:var(--fs-100);cursor:pointer;text-decoration:underline">Limpar carrinho</button>
        <div style="text-align:right">
          <div style="font-size:var(--fs-090);color:var(--text-muted)">Subtotal (sem IPI/frete)</div>
-         <div style="font-size:var(--fs-550);font-weight:700;color:var(--blue-dark)">R$ ${totalGeral.toLocaleString('pt-BR',{minimumFractionDigits:totalGeral%1===0?0:2})}</div>
+         <div style="font-size:var(--fs-550);font-weight:700;color:var(--blue-dark-fg)">R$ ${totalGeral.toLocaleString('pt-BR',{minimumFractionDigits:totalGeral%1===0?0:2})}</div>
        </div>
      </div>`,
     `<button class="btn btn-primary" style="width:100%" onclick="catIniciarComCarrinho()"><i class="ic ic-sm" data-ic="arrow-right"></i> Ir para Pedido / Cotação</button>`

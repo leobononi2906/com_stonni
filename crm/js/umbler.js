@@ -3,7 +3,7 @@ async function naoComercial(tel){
   const motivo = await new Promise(res => {
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;inset:0;background:var(--surface-overlay);z-index:9999;display:flex;align-items:center;justify-content:center';
-    d.innerHTML = `<div style='background:var(--neutral-0);border-radius:var(--radius-xl);padding:var(--space-6);max-width:320px;width:90%'>
+    d.innerHTML = `<div style='background:var(--surface-card);border-radius:var(--radius-xl);padding:var(--space-6);max-width:320px;width:90%'>
       <p style='margin-bottom:var(--space-3);font-size:var(--fs-300);font-weight:600'>Marcar como não comercial</p>
       <input id='_nc_m' placeholder='Motivo obrigatório' style='width:100%;padding:var(--space-2);border:1px solid var(--border-default);border-radius:var(--radius-lg);font-size:var(--fs-200);box-sizing:border-box;margin-bottom:var(--space-3)'>
       <div style='display:flex;gap:var(--space-2);justify-content:flex-end'>
@@ -23,7 +23,7 @@ async function naoComercialConfig(tel){
   const motivo = await new Promise(res => {
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;inset:0;background:var(--surface-overlay);z-index:9999;display:flex;align-items:center;justify-content:center';
-    d.innerHTML = `<div style='background:var(--neutral-0);border-radius:var(--radius-xl);padding:var(--space-6);max-width:320px;width:90%'>
+    d.innerHTML = `<div style='background:var(--surface-card);border-radius:var(--radius-xl);padding:var(--space-6);max-width:320px;width:90%'>
       <p style='margin-bottom:var(--space-3);font-size:var(--fs-300);font-weight:600'>Marcar como não comercial</p>
       <input id='_ncC_m' placeholder='Motivo obrigatório' style='width:100%;padding:var(--space-2);border:1px solid var(--border-default);border-radius:var(--radius-lg);font-size:var(--fs-200);box-sizing:border-box;margin-bottom:var(--space-3)'>
       <div style='display:flex;gap:var(--space-2);justify-content:flex-end'>
@@ -69,7 +69,7 @@ async function abrirVincComSugestao(tel, nome, atend, erpId, erpNome) {
   const el = document.getElementById('vinc-results');
   if (el) {
     el.innerHTML = `
-      <div style="background:var(--blue-veil);border:1px solid var(--blue-veil-strong);border-radius:var(--radius-md);padding:var(--space-2) var(--space-2-5);margin-bottom:var(--space-1-5);font-size:var(--fs-090);color:var(--blue-mid)">
+      <div style="background:var(--blue-veil);border:1px solid var(--blue-veil-strong);border-radius:var(--radius-md);padding:var(--space-2) var(--space-2-5);margin-bottom:var(--space-1-5);font-size:var(--fs-090);color:var(--blue-mid-fg)">
         <i class="ic ic-sm" data-ic="external-link"></i> Sugestão baseada no telefone — confirme se é o cliente correto
       </div>
       <button class="mres-btn" onclick="confirmarVinc(${erpId},'${esc(erpNome)}')" style="border-color:var(--blue-veil-strong)">
@@ -332,16 +332,16 @@ async function toggleVincsTel(phId, telefone) {
         <div style="min-width:0;flex:1">
           <span style="font-size:var(--fs-100);font-weight:600;color:var(--text-primary)">${v.nome_cliente}</span>
           <span style="font-size:var(--fs-075);color:var(--text-muted);margin-left:var(--space-1-5)">#${v.id_cliente}</span>
-          ${v.principal?'<span style="font-size:9px;background:var(--blue-pale);color:var(--blue-dark);border-radius:var(--radius-sm);padding:1px 5px;margin-left:var(--space-1);font-weight:700">Principal</span>':''}
+          ${v.principal?'<span style="font-size:9px;background:var(--blue-pale);color:var(--blue-dark-fg);border-radius:var(--radius-sm);padding:1px 5px;margin-left:var(--space-1);font-weight:700">Principal</span>':''}
           ${v.descricao?`<span style="font-size:var(--fs-075);color:var(--text-muted);margin-left:var(--space-1)">(${v.descricao})</span>`:''}
         </div>
         <div style="display:flex;gap:var(--space-1);flex-shrink:0">
           <button onclick="selCliente(${v.id_cliente})" style="font-size:var(--fs-075);padding:3px var(--space-2);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--text-secondary);background:var(--surface);cursor:pointer;font-weight:500">Ver</button>
-          <button onclick="removerVincTel('${v.id}')" style="font-size:var(--fs-075);padding:3px var(--space-2);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--red);background:var(--red-bg);cursor:pointer;font-weight:500"><i class="ic ic-sm" data-ic="x"></i></button>
+          <button onclick="removerVincTel('${v.id}')" style="font-size:var(--fs-075);padding:3px var(--space-2);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--red-fg);background:var(--red-bg);cursor:pointer;font-weight:500"><i class="ic ic-sm" data-ic="x"></i></button>
         </div>
       </div>`).join('')}
     <button onclick="abrirVincTelExtra('${esc(telefone)}')"
-      style="font-size:var(--fs-090);color:var(--blue-mid);background:none;border:none;cursor:pointer;padding:var(--space-1) 0;font-weight:600;display:block">
+      style="font-size:var(--fs-090);color:var(--blue-mid-fg);background:none;border:none;cursor:pointer;padding:var(--space-1) 0;font-weight:600;display:block">
       + Vincular outro cliente a este número
     </button>`;
 }
@@ -362,7 +362,7 @@ async function removerVincTel(phId) {
   const okRem = await new Promise(res => {
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;inset:0;background:var(--surface-overlay);z-index:9999;display:flex;align-items:center;justify-content:center';
-    d.innerHTML = `<div style='background:var(--neutral-0);border-radius:var(--radius-xl);padding:var(--space-6);max-width:300px;width:90%;text-align:center'>
+    d.innerHTML = `<div style='background:var(--surface-card);border-radius:var(--radius-xl);padding:var(--space-6);max-width:300px;width:90%;text-align:center'>
       <p style='margin-bottom:var(--space-4);font-size:var(--fs-300)'>Remover vínculo com este número?<br><span style='font-size:var(--fs-100);color:var(--text-subtle)'>O cliente não é excluído, apenas a ligação com este telefone.</span></p>
       <div style='display:flex;gap:var(--space-2);justify-content:center'>
         <button id='_rv_n' style='padding:var(--space-2) var(--space-5);border-radius:var(--radius-lg);border:1px solid var(--border-default);background:var(--surface-subtle);cursor:pointer'>Cancelar</button>

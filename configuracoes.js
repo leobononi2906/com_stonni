@@ -158,7 +158,7 @@ async function cfgCarregarPDF(el) {
     <div class="form-field"><label>Endereço</label><input type="text" id="cfg-pdf-empresa-endereco" class="cfg-input" placeholder="Rua, número, cidade — UF" value="${cfgPDF['pdf_empresa_endereco'] || ''}"></div>
     <div class="form-field"><label>URL do logo</label><input type="text" id="cfg-pdf-logo-url" class="cfg-input" placeholder="logo-stonni-ink.png ou https://..." value="${(cfgPDF['pdf_logo_url'] && cfgPDF['pdf_logo_url'] !== 'logo.png') ? cfgPDF['pdf_logo_url'] : 'logo-stonni-ink.png'}"><span style="font-size:var(--fs-090);color:var(--text-muted)">Use "logo-stonni-ink.png" para o logo padrão do portal (versão para fundo claro, que é o papel), ou cole uma URL externa.</span></div>
     <div class="form-field"><label>Texto do rodapé</label><textarea id="cfg-pdf-rodape" class="cfg-input" rows="2" placeholder="Ex: Este documento não tem valor fiscal...">${cfgPDF['pdf_rodape'] || ''}</textarea></div>
-    <div id="cfg-pdf-status" style="font-size:var(--fs-100);color:var(--green);margin-top:var(--space-2);display:none"><i class="ic ic-sm" data-ic="check-circle"></i> Configurações de PDF salvas!</div>
+    <div id="cfg-pdf-status" style="font-size:var(--fs-100);color:var(--green-fg);margin-top:var(--space-2);display:none"><i class="ic ic-sm" data-ic="check-circle"></i> Configurações de PDF salvas!</div>
   `;
 }
 
@@ -194,7 +194,7 @@ async function cfgSalvarGeral() {
     }).catch(() => erros++);
   }
   msg.textContent = erros === 0 ? 'Configurações salvas!' : `${erros} erro(s) ao salvar.`;
-  msg.style.color = erros === 0 ? 'var(--green)' : 'var(--red)';
+  msg.style.color = erros === 0 ? 'var(--green-fg)' : 'var(--red-fg)';
   setTimeout(() => msg.textContent = '', 4000);
 }
 
@@ -240,9 +240,9 @@ async function cfgCarregarPrecos(el) {
       <div class="preco-tab-item ${t.id === tabelaSel ? 'active' : ''}" onclick="cfgSelTab(${t.id},this)">
         <div style="font-weight:600;font-size:var(--fs-200)">${t.nome}</div>
         <div style="font-size:var(--fs-090);margin-top:var(--space-0-5)">
-          <span style="color:${t.ativa ? 'var(--green)' : 'var(--text-muted)'}">${t.ativa ? '● Ativa' : '○ Inativa'}</span>
+          <span style="color:${t.ativa ? 'var(--green-fg)' : 'var(--text-muted)'}">${t.ativa ? '● Ativa' : '○ Inativa'}</span>
           ${t.markup_global != null && t.markup_global !== 0
-            ? `<span style="color:${t.markup_global > 0 ? 'var(--orange)' : 'var(--blue-mid)'};margin-left:var(--space-1-5)">${t.markup_global > 0 ? '+' : ''}${t.markup_global}%</span>`
+            ? `<span style="color:${t.markup_global > 0 ? 'var(--orange-fg)' : 'var(--blue-mid-fg)'};margin-left:var(--space-1-5)">${t.markup_global > 0 ? '+' : ''}${t.markup_global}%</span>`
             : '<span style="color:var(--text-muted);margin-left:var(--space-1-5)">padrão</span>'}
         </div>
       </div>
@@ -262,7 +262,7 @@ async function cfgCarregarPrecos(el) {
         <div style="padding:var(--space-4) var(--space-5);display:flex;gap:var(--space-6);align-items:center;flex-wrap:wrap">
           <div>
             <div style="font-size:var(--fs-090);text-transform:uppercase;color:var(--text-muted);font-weight:600;margin-bottom:var(--space-1)">Markup global</div>
-            <div style="font-size:var(--fs-650);font-weight:700;font-family:var(--font-mono);color:${(t.markup_global||0) === 0 ? 'var(--text-muted)' : (t.markup_global > 0 ? 'var(--orange)' : 'var(--blue-mid)')}">${(t.markup_global||0) > 0 ? '+' : ''}${t.markup_global || 0}%</div>
+            <div style="font-size:var(--fs-650);font-weight:700;font-family:var(--font-mono);color:${(t.markup_global||0) === 0 ? 'var(--text-muted)' : (t.markup_global > 0 ? 'var(--orange-fg)' : 'var(--blue-mid-fg)')}">${(t.markup_global||0) > 0 ? '+' : ''}${t.markup_global || 0}%</div>
             <div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-0-5)">sobre o preço base (Bononi SC)</div>
           </div>
           <div style="flex:1;min-width:160px">
@@ -285,12 +285,12 @@ async function cfgCarregarPrecos(el) {
               ${r.map(rg => `<tr>
                 <td><span class="badge badge-b">${cfgTipoLabel(rg.tipo)}</span></td>
                 <td style="font-size:var(--fs-100);color:var(--text-secondary)">${cfgCondicaoLabel(rg)}</td>
-                <td class="mono" style="color:var(--green);font-weight:600">${cfgRegraValorLabel(rg)}</td>
+                <td class="mono" style="color:var(--green-fg);font-weight:600">${cfgRegraValorLabel(rg)}</td>
                 <td style="font-size:var(--fs-100)">${rg.descricao || '—'}</td>
                 <td><span class="badge ${rg.ativa ? 'badge-aprovado' : 'badge-cancelado'}">${rg.ativa ? 'Ativa' : 'Inativa'}</span></td>
                 <td>
                   <button class="btn btn-outline btn-sm" onclick="cfgEditarRegra(${rg.id})">Editar</button>
-                  <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);margin-left:var(--space-1)" onclick="cfgExcluirRegra(${rg.id})"><i class="ic ic-sm" data-ic="x"></i></button>
+                  <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red-fg);margin-left:var(--space-1)" onclick="cfgExcluirRegra(${rg.id})"><i class="ic ic-sm" data-ic="x"></i></button>
                 </td>
               </tr>`).join('')}
             </tbody>
@@ -300,14 +300,14 @@ async function cfgCarregarPrecos(el) {
               <div class="cfg-card-row">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-1-5)">
                   <span class="badge badge-b">${cfgTipoLabel(rg.tipo)}</span>
-                  <span class="mono" style="color:var(--green);font-weight:600">${cfgRegraValorLabel(rg)}</span>
+                  <span class="mono" style="color:var(--green-fg);font-weight:600">${cfgRegraValorLabel(rg)}</span>
                 </div>
                 <div style="font-size:var(--fs-100);color:var(--text-secondary);margin-bottom:var(--space-1-5)">${cfgCondicaoLabel(rg)}</div>
                 ${rg.descricao ? `<div style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-2)">${rg.descricao}</div>` : ''}
                 <div style="display:flex;gap:var(--space-2);align-items:center">
                   <span class="badge ${rg.ativa ? 'badge-aprovado' : 'badge-cancelado'}">${rg.ativa ? 'Ativa' : 'Inativa'}</span>
                   <button class="btn btn-outline btn-sm" onclick="cfgEditarRegra(${rg.id})">Editar</button>
-                  <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="cfgExcluirRegra(${rg.id})"><i class="ic ic-sm" data-ic="x"></i></button>
+                  <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red-fg)" onclick="cfgExcluirRegra(${rg.id})"><i class="ic ic-sm" data-ic="x"></i></button>
                 </div>
               </div>`).join('')}
           </div>
@@ -577,7 +577,7 @@ async function cfgCarregarAcoes(el) {
     : (acoes||[]).map(a => {
         const s = statusAcao(a);
         const escopoLabel = a.escopo === 'produto' ? `Produto SKU ${a.id_produto}` : `Grupo ${a.nome_grupo || (a.id_grupo ? 'ID '+a.id_grupo : '—')}${a.nome_subgrupo ? ` / ${a.nome_subgrupo}` : (a.id_subgrupo ? ` / Sub ${a.id_subgrupo}` : '')}`;
-        const valorLabel = a.tipo === 'desconto' ? `<span style="color:var(--green);font-weight:600">-${a.valor}%</span>` : `<span style="color:var(--blue-mid);font-weight:600">R$ ${a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>`;
+        const valorLabel = a.tipo === 'desconto' ? `<span style="color:var(--green-fg);font-weight:600">-${a.valor}%</span>` : `<span style="color:var(--blue-mid-fg);font-weight:600">R$ ${a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>`;
         const validade = a.data_fim ? `${a.data_inicio ? fmtData(a.data_inicio)+' → ' : ''}${fmtData(a.data_fim)}` : (a.data_inicio ? `A partir de ${fmtData(a.data_inicio)}` : 'Sem prazo');
         return `<tr>
           <td><strong>${a.nome}</strong>${a.obs ? `<div style="font-size:var(--fs-090);color:var(--text-muted)">${a.obs}</div>` : ''}</td>
@@ -588,7 +588,7 @@ async function cfgCarregarAcoes(el) {
           <td><span class="badge ${s.classe}">${s.label}</span></td>
           <td>
             <button class="btn btn-outline btn-sm" onclick="cfgEditarAcao(${a.id})">Editar</button>
-            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);margin-left:var(--space-1)" onclick="cfgExcluirAcao(${a.id})"><i class="ic ic-sm" data-ic="x"></i></button>
+            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red-fg);margin-left:var(--space-1)" onclick="cfgExcluirAcao(${a.id})"><i class="ic ic-sm" data-ic="x"></i></button>
           </td>
         </tr>`;
       }).join('');
@@ -605,12 +605,12 @@ async function cfgCarregarAcoes(el) {
           </div>
           <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-2)">
             <span class="badge ${a.tipo==='desconto' ? 'badge-aprovado' : 'badge-b'}">${a.tipo==='desconto' ? 'Desconto' : 'Preço Fixo'}</span>
-            <span class="mono" style="font-size:var(--fs-100);font-weight:600;color:${a.tipo==='desconto'?'var(--green)':'var(--blue-mid)'}">${a.tipo==='desconto' ? '-'+a.valor+'%' : 'R$ '+a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+            <span class="mono" style="font-size:var(--fs-100);font-weight:600;color:${a.tipo==='desconto'?'var(--green-fg)':'var(--blue-mid-fg)'}">${a.tipo==='desconto' ? '-'+a.valor+'%' : 'R$ '+a.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
           </div>
           <div style="font-size:var(--fs-100);color:var(--text-muted);margin-bottom:var(--space-2)"><i class="ic ic-sm" data-ic="calendar"></i> ${validade}</div>
           <div style="display:flex;gap:var(--space-2)">
             <button class="btn btn-outline btn-sm" onclick="cfgEditarAcao(${a.id})" style="flex:1">Editar</button>
-            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="cfgExcluirAcao(${a.id})"><i class="ic ic-sm" data-ic="x"></i></button>
+            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red-fg)" onclick="cfgExcluirAcao(${a.id})"><i class="ic ic-sm" data-ic="x"></i></button>
           </div>
         </div>`;
       }).join('');
@@ -755,7 +755,7 @@ window.cfgAbrirTags = async function() {
           <span style="flex:1;font-size:var(--fs-200);font-weight:500">${t.nome}</span>
           <span class="badge ${t.ativo?'badge-aprovado':'badge-cancelado'}" style="font-size:var(--fs-075)">${t.ativo?'Ativa':'Inativa'}</span>
           <button class="btn btn-outline btn-sm" onclick="cfgEditarTag(${t.id})">Editar</button>
-          <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="cfgExcluirTag(${t.id})"><i class="ic ic-sm" data-ic="x"></i></button>
+          <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red-fg)" onclick="cfgExcluirTag(${t.id})"><i class="ic ic-sm" data-ic="x"></i></button>
         </div>`).join('')
     : '<div style="font-size:var(--fs-200);color:var(--text-muted);margin-bottom:var(--space-3)">Nenhuma tag ainda.</div>';
 
@@ -866,10 +866,10 @@ function cfgRenderLinhasProduto(lista) {
       <td class="mono" style="font-size:var(--fs-100)">${p.referencia||'—'}</td>
       <td style="font-size:var(--fs-100);color:var(--text-secondary)">${p.grupo||'—'}</td>
       <td class="right mono" style="font-weight:600">R$ ${(p.preco_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-      <td style="font-size:var(--fs-100);color:var(--text-muted)">${p.estoque_total != null ? `${Math.floor(p.estoque_total)} un.${p.estoque_manual != null ? ' <span title="Estoque manual" style="color:var(--orange);font-weight:700">(!)</span>' : ''}` : '—'}</td>
+      <td style="font-size:var(--fs-100);color:var(--text-muted)">${p.estoque_total != null ? `${Math.floor(p.estoque_total)} un.${p.estoque_manual != null ? ' <span title="Estoque manual" style="color:var(--orange-fg);font-weight:700">(!)</span>' : ''}` : '—'}</td>
       <td style="text-align:center">${p.peso_kg ? `<span title="Peso: ${p.peso_kg}kg · ${p.largura_cm||'?'}×${p.altura_cm||'?'}×${p.comprimento_cm||'?'}cm" style="font-size:var(--fs-450);cursor:default"><i class="ic ic-sm" data-ic="check-circle"></i></span>` : `<span title="Medidas não cadastradas" style="font-size:var(--fs-450);cursor:default;opacity:.35"></span>`}</td>
       <td><span class="badge ${badgeMap[status]} badge-status">${labelMap[status]}</span></td>
-      <td><div style="display:flex;gap:var(--space-1-5);align-items:center;justify-content:flex-end"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id})" title="Excluir produto"><i class="ic ic-sm" data-ic="x"></i></button></div></td>
+      <td><div style="display:flex;gap:var(--space-1-5);align-items:center;justify-content:flex-end"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red-fg);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id})" title="Excluir produto"><i class="ic ic-sm" data-ic="x"></i></button></div></td>
     </tr>`;
   }).join('');
 }
@@ -888,12 +888,12 @@ function cfgRenderCardsProduto(lista) {
         <div style="font-weight:600;font-size:var(--fs-200);margin-bottom:var(--space-0-5)">${p.nome}</div>
         <div style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-1-5)">Ref: ${p.referencia||'—'} · ${p.grupo||'—'}</div>
         <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap">
-          <span class="mono" style="font-weight:700;color:var(--blue-dark);font-size:var(--fs-200)">R$ ${(p.preco_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+          <span class="mono" style="font-weight:700;color:var(--blue-dark-fg);font-size:var(--fs-200)">R$ ${(p.preco_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
           <span class="badge ${badgeMap[status]} badge-status">${labelMap[status]}</span>
-          ${p.estoque_total != null ? `<span style="font-size:var(--fs-090);color:var(--text-muted)">${p.estoque_total} un.${p.estoque_manual != null ? ' <span title="Estoque manual" style="color:var(--orange);font-weight:700">(!)</span>' : ''}</span>` : ''}
+          ${p.estoque_total != null ? `<span style="font-size:var(--fs-090);color:var(--text-muted)">${p.estoque_total} un.${p.estoque_manual != null ? ' <span title="Estoque manual" style="color:var(--orange-fg);font-weight:700">(!)</span>' : ''}</span>` : ''}
         </div>
       </div>
-      <div style="display:flex;gap:var(--space-1-5);flex-shrink:0"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id})}')" title="Excluir"><i class="ic ic-sm" data-ic="x"></i></button></div>
+      <div style="display:flex;gap:var(--space-1-5);flex-shrink:0"><button class="btn btn-outline btn-sm" onclick="cfgEditarProduto(${p.id})">Editar</button><button class="btn btn-sm" style="background:var(--red-bg);color:var(--red-fg);border:1px solid var(--red)" onclick="cfgExcluirProduto(${p.id})}')" title="Excluir"><i class="ic ic-sm" data-ic="x"></i></button></div>
     </div>`;
   }).join('');
 }
@@ -1196,7 +1196,7 @@ window.cfgUploadFotoManual = async function(id, input) {
     await supaPatch('ped_catalogo_produtos', `id=eq.${id}`, { fotos_manual, foto_manual_miniatura: fotos_manual[0], alterado_por: USUARIO?.email || null, atualizado_em: new Date().toISOString() });
     cfgEditarProduto(id);   // recarrega o drawer com a foto nova
   } catch (e) {
-    if (msg) { msg.textContent = 'Falha ao enviar: ' + (e.message || e); msg.style.color = 'var(--red)'; }
+    if (msg) { msg.textContent = 'Falha ao enviar: ' + (e.message || e); msg.style.color = 'var(--red-fg)'; }
   }
 };
 
@@ -1263,17 +1263,17 @@ window.cfgEditarProduto = async function(id) {
             <button onclick="event.stopPropagation();cfgRemoverFoto(${id},${fi})" title="Apagar esta foto" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:var(--danger-600);color:var(--neutral-0);font-size:var(--fs-100);line-height:1;cursor:pointer;padding:0">×</button>
           </div>`).join('')}
         ${fotosErp.map(f => `
-          <div style="position:relative;border-radius:var(--radius-lg);overflow:hidden;border:2px solid var(--success-600)">
+          <div style="position:relative;border-radius:var(--radius-lg);overflow:hidden;border:2px solid var(--text-success)">
             <img src="${f}" title="Foto do ERP (automática)" style="width:72px;height:72px;object-fit:contain;background:var(--surface-page);display:block">
             <div style="position:absolute;bottom:0;left:0;right:0;background:var(--success-600);color:var(--neutral-0);font-size:9px;font-weight:700;text-align:center;padding:var(--space-0-5)">ERP</div>
           </div>`).join('')}
         ${(!fotos.length && !fotosErp.length) ? '<div style="font-size:var(--fs-100);color:var(--text-muted)">Sem foto do Bling nem do ERP — use a foto manual abaixo, ou sincronize com o Bling.</div>' : ''}
       </div>
       <div style="margin-top:var(--space-3);border-top:1px dashed var(--border);padding-top:var(--space-2-5)">
-        <div style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--warning-600);letter-spacing:.5px;margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="pencil"></i> Foto manual <span style="font-weight:400;color:var(--text-muted)">— aparece só quando não tem Bling nem ERP</span></div>
+        <div style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-warning);letter-spacing:.5px;margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="pencil"></i> Foto manual <span style="font-weight:400;color:var(--text-muted)">— aparece só quando não tem Bling nem ERP</span></div>
         <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-2)">
           ${fotosManual.map((f,fi) => `
-            <div style="position:relative;border-radius:var(--radius-lg);overflow:hidden;border:2px solid var(--warning-500)">
+            <div style="position:relative;border-radius:var(--radius-lg);overflow:hidden;border:2px solid var(--text-warning)">
               <img src="${f}" style="width:72px;height:72px;object-fit:contain;background:var(--surface-page);display:block">
               <div style="position:absolute;bottom:0;left:0;right:0;background:var(--warning-600);color:var(--neutral-0);font-size:9px;font-weight:700;text-align:center;padding:var(--space-0-5)">MANUAL</div>
               <button onclick="cfgRemoverFotoManual(${id},${fi})" title="Apagar foto manual" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:var(--danger-600);color:var(--neutral-0);font-size:var(--fs-100);line-height:1;cursor:pointer;padding:0">×</button>
@@ -1375,7 +1375,7 @@ window.cfgEditarProduto = async function(id) {
       </div>
     </div>
   `, `
-    <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red);margin-right:auto" onclick="cfgExcluirProduto(${id})" ><i class="ic ic-sm" data-ic="trash"></i> Excluir</button>
+    <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red-fg);border:1px solid var(--red);margin-right:auto" onclick="cfgExcluirProduto(${id})" ><i class="ic ic-sm" data-ic="trash"></i> Excluir</button>
     <button class="btn btn-outline" onclick="fecharDrawer()">Cancelar</button>
     <button class="btn btn-primary" onclick="cfgAtualizarProduto(${id})">Salvar</button>
   `);
@@ -1413,8 +1413,8 @@ window.cfgSincronizarBling = async function(id, sku) {
     if (fotos.length) msgs.push(`${fotos.length} foto(s)`);
     if (rDim?.peso_kg) msgs.push('dimensões');
     msg.textContent = msgs.length ? `Sincronizado: ${msgs.join(' · ')}` : 'Sem dados no Bling para este produto.';
-    msg.style.color = msgs.length ? 'var(--green)' : 'var(--orange)';
-  } catch(e) { msg.textContent = 'Erro ao sincronizar.'; msg.style.color = 'var(--red)'; }
+    msg.style.color = msgs.length ? 'var(--green-fg)' : 'var(--orange-fg)';
+  } catch(e) { msg.textContent = 'Erro ao sincronizar.'; msg.style.color = 'var(--red-fg)'; }
 };
 
 
@@ -1796,7 +1796,7 @@ function cfgRenderLinhasGestor(gestores) {
 
     /* ── INPUTS ── */
     .cfg-input { width: 100%; height:38px; padding:0 var(--space-3); border: 1.5px solid var(--border); border-radius: var(--radius-lg); font-family: var(--font-sans); font-size:var(--fs-200); color: var(--text-primary); background: var(--surface2); outline: none; transition: border-color 0.15s; }
-    .cfg-input:focus { border-color: var(--blue-mid); background: var(--neutral-0); }
+    .cfg-input:focus { border-color: var(--blue-mid); background: var(--surface-card); }
     textarea.cfg-input { height: auto; padding:var(--space-2-5) var(--space-3); resize: vertical; }
 
     /* ── GRIDS ── */
@@ -1971,7 +1971,7 @@ async function cfgCarregarLogs(el) {
         ${categorias.map(c=>`<option value="${c}" ${window._logCat===c?'selected':''}>${c}</option>`).join('')}
       </select>
       <span style="font-size:var(--fs-100);color:var(--text-muted);margin-left:auto">${logs.length} registro(s)</span>
-      <button onclick="cfgLimparLogs()" class="btn btn-sm btn-outline" style="color:var(--red);border-color:var(--red)">
+      <button onclick="cfgLimparLogs()" class="btn btn-sm btn-outline" style="color:var(--red-fg);border-color:var(--red)">
         <i class="ic ic-sm" data-ic="trash"></i> Limpar erros
       </button>
     </div>
@@ -2311,9 +2311,9 @@ window.cfgLogsErrosRender = function() {
               </div>` : ''}
             ${!resolvido ? `
               <div style="margin-top:var(--space-2)">
-                <button class="btn btn-sm btn-outline" style="font-size:var(--fs-090);color:var(--green)"
+                <button class="btn btn-sm btn-outline" style="font-size:var(--fs-090);color:var(--green-fg)"
                   onclick="cfgLogsMarcarResolvido(${l.id})"><i class="ic ic-sm" data-ic="check"></i> Marcar resolvido</button>
-              </div>` : `<div style="margin-top:var(--space-1-5);font-size:var(--fs-090);color:var(--green)"><i class="ic ic-sm" data-ic="check"></i> Resolvido${l.resolvido_por?' por '+l.resolvido_por:''}</div>`}
+              </div>` : `<div style="margin-top:var(--space-1-5);font-size:var(--fs-090);color:var(--green-fg)"><i class="ic ic-sm" data-ic="check"></i> Resolvido${l.resolvido_por?' por '+l.resolvido_por:''}</div>`}
           </div>`;
       }).join('')}
     </div>

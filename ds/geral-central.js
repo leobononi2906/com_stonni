@@ -153,7 +153,7 @@
     var t = esc(s);
     t = t.replace(/&lt;br\s*\/?&gt;/gi, '<br>');
     t = t.replace(/&lt;(\/?)(b|strong|i|em|u)&gt;/gi, '<$1$2>');
-    t = t.replace(/&lt;a href=&quot;(https?:\/\/[^&"]*)&quot;&gt;/gi, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:#c11f25;text-decoration:underline;font-weight:700;cursor:pointer">');
+    t = t.replace(/&lt;a href=&quot;(https?:\/\/[^&"]*)&quot;&gt;/gi, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:var(--text-accent,#c11f25);text-decoration:underline;font-weight:700;cursor:pointer">');
     t = t.replace(/&lt;\/a&gt;/gi, '</a>');
     return t;
   }
@@ -170,7 +170,7 @@
   }
 
   function caixa() {
-    return 'background:#fff;color:#14161a;border-radius:10px;max-width:420px;width:100%;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.25);font-family:inherit';
+    return 'background:var(--surface-card,#fff);color:var(--text-strong,#14161a);border-radius:10px;max-width:420px;width:100%;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.25);font-family:inherit';
   }
 
   async function rest(o, caminho, opcoes) {
@@ -218,13 +218,13 @@
       return new Promise(function (resolve) {
         var el = overlay('gc-senha', '<div style="' + caixa() + '">' +
           '<h3 style="font-size:16px;margin-bottom:6px">Hora de trocar sua senha</h3>' +
-          '<p style="font-size:13px;color:#6b7382;margin-bottom:16px">Já se passaram mais de ' + dias + ' dias desde a última troca. Defina uma senha nova para continuar.</p>' +
+          '<p style="font-size:13px;color:var(--text-muted,#6b7382);margin-bottom:16px">Já se passaram mais de ' + dias + ' dias desde a última troca. Defina uma senha nova para continuar.</p>' +
           '<label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px">Nova senha</label>' +
-          '<input id="gc-nova-senha" type="password" minlength="6" style="width:100%;padding:9px 11px;border:1px solid #e2e5ea;border-radius:5px;margin-bottom:10px">' +
+          '<input id="gc-nova-senha" type="password" minlength="6" style="width:100%;padding:9px 11px;border:1px solid var(--border-subtle,#e2e5ea);border-radius:5px;margin-bottom:10px">' +
           '<label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px">Confirmar senha</label>' +
-          '<input id="gc-confirma-senha" type="password" minlength="6" style="width:100%;padding:9px 11px;border:1px solid #e2e5ea;border-radius:5px">' +
-          '<div id="gc-senha-erro" style="color:#c11f25;font-size:12px;margin-top:8px;min-height:16px"></div>' +
-          '<button id="gc-senha-salvar" style="margin-top:10px;width:100%;padding:10px;background:#14161a;color:#fff;border:none;border-radius:5px;font-weight:700">Salvar e continuar</button>' +
+          '<input id="gc-confirma-senha" type="password" minlength="6" style="width:100%;padding:9px 11px;border:1px solid var(--border-subtle,#e2e5ea);border-radius:5px">' +
+          '<div id="gc-senha-erro" style="color:var(--text-accent,#c11f25);font-size:12px;margin-top:8px;min-height:16px"></div>' +
+          '<button id="gc-senha-salvar" style="margin-top:10px;width:100%;padding:10px;background:var(--action-primary,#14161a);color:var(--text-inverse,#fff);border:none;border-radius:5px;font-weight:700">Salvar e continuar</button>' +
           '</div>');
 
         el.querySelector('#gc-senha-salvar').addEventListener('click', async function () {
@@ -307,10 +307,10 @@
   function mostrarAviso(o, aviso) {
     return new Promise(function (resolve) {
       var el = overlay('gc-aviso-' + aviso.id, '<div style="' + caixa() + '">' +
-        '<div style="font-size:11px;font-weight:700;color:#c11f25;letter-spacing:.03em;margin-bottom:6px">AVISO</div>' +
+        '<div style="font-size:11px;font-weight:700;color:var(--text-accent,#c11f25);letter-spacing:.03em;margin-bottom:6px">AVISO</div>' +
         '<h3 style="font-size:16px;margin-bottom:8px">' + esc(aviso.titulo) + '</h3>' +
         '<p style="font-size:13px;line-height:1.5;white-space:pre-wrap;margin-bottom:18px">' + escHtmlSimples(aviso.mensagem) + '</p>' +
-        '<button id="gc-aviso-ok" style="width:100%;padding:10px;background:#14161a;color:#fff;border:none;border-radius:5px;font-weight:700;opacity:.5" disabled>Entendi</button>' +
+        '<button id="gc-aviso-ok" style="width:100%;padding:10px;background:var(--action-primary,#14161a);color:var(--text-inverse,#fff);border:none;border-radius:5px;font-weight:700;opacity:.5" disabled>Entendi</button>' +
         '</div>');
 
       var btn = el.querySelector('#gc-aviso-ok');
@@ -377,7 +377,7 @@
       el.id = 'gc-trein-prazo';
       el.setAttribute('role', 'status');
       el.style.cssText = 'position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:10;' +
-        'max-width:min(340px,calc(100vw - 96px));background:#fff;color:#14161a;border:1px solid #e3e5e8;' +
+        'max-width:min(340px,calc(100vw - 96px));background:var(--surface-card,#fff);color:var(--text-strong,#14161a);border:1px solid var(--border-subtle,#e2e5ea);' +
         'border-left:4px solid ' + cor + ';border-radius:8px;padding:12px 14px;box-shadow:0 6px 24px rgba(20,22,26,.18);' +
         'font-family:inherit;font-size:13px;line-height:1.4';
       el.innerHTML =
@@ -386,14 +386,14 @@
         itens.map(function (p) {
           return '<div style="margin-bottom:4px"><a href="' + linkGrupo(p) + '" target="_blank" rel="noopener" ' +
             'style="color:inherit;font-weight:700;text-decoration:underline">' + esc(p.grupo_nome) + '</a>' +
-            (p.obrigatorio ? ' <span style="font-size:10.5px;font-weight:700;color:#b26a00">(obrigatório)</span>' : '') +
+            (p.obrigatorio ? ' <span style="font-size:10.5px;font-weight:700;color:var(--status-warn-text,#b26a00)">(obrigatório)</span>' : '') +
             ' — ' + esc(textoPrazo(p)) + '</div>';
         }).join('') +
         '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' +
-          '<a id="gc-trein-abrir" href="' + linkGrupo(itens[0]) + '" target="_blank" rel="noopener" style="background:#14161a;color:#fff;' +
+          '<a id="gc-trein-abrir" href="' + linkGrupo(itens[0]) + '" target="_blank" rel="noopener" style="background:var(--action-primary,#14161a);color:var(--text-inverse,#fff);' +
             'text-decoration:none;border-radius:5px;padding:7px 12px;font-weight:700;font-size:12.5px">Abrir treinamento</a>' +
-          '<button id="gc-trein-adiar" style="background:none;border:1px solid #d5d8dc;border-radius:5px;padding:7px 10px;' +
-            'font-size:12.5px;cursor:pointer;color:#14161a">Lembrar amanhã</button>' +
+          '<button id="gc-trein-adiar" style="background:none;border:1px solid var(--border-subtle,#e2e5ea);border-radius:5px;padding:7px 10px;' +
+            'font-size:12.5px;cursor:pointer;color:var(--text-strong,#14161a)">Lembrar amanhã</button>' +
         '</div>';
       document.body.appendChild(el);
       el.querySelector('#gc-trein-adiar').addEventListener('click', function () {
@@ -435,20 +435,20 @@
       var camposHtml = pedidos.map(function (c) {
         var atual = dadosAtuais[c.valor];
         return '<label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px">' + esc(c.label) + '</label>' +
-          '<div style="width:100%;padding:8px 11px;border-radius:5px;margin-bottom:4px;background:#f4f5f7;color:#6b7382;font-size:13px">' +
+          '<div style="width:100%;padding:8px 11px;border-radius:5px;margin-bottom:4px;background:var(--surface-hover,#f5f6f8);color:var(--text-muted,#6b7382);font-size:13px">' +
           (atual ? esc(atual) : 'ainda não informado') + '</div>' +
           '<input data-campo="' + c.valor + '" type="' + c.tipo + '" placeholder="Deixe em branco se está certo, ou digite o valor certo" ' +
-          'style="width:100%;padding:9px 11px;border:1px solid #e2e5ea;border-radius:5px;margin-bottom:10px">';
+          'style="width:100%;padding:9px 11px;border:1px solid var(--border-subtle,#e2e5ea);border-radius:5px;margin-bottom:10px">';
       }).join('');
 
       var el = overlay('gc-cadastro', '<div style="' + caixa() + '">' +
         '<h3 style="font-size:16px;margin-bottom:4px">' + esc(aviso.titulo) + '</h3>' +
-        '<p style="font-size:13px;color:#6b7382;margin-bottom:14px">' + escHtmlSimples(aviso.mensagem) + '</p>' +
+        '<p style="font-size:13px;color:var(--text-muted,#6b7382);margin-bottom:14px">' + escHtmlSimples(aviso.mensagem) + '</p>' +
         camposHtml +
-        '<div id="gc-cad-erro" style="color:#c11f25;font-size:12px;margin-top:-2px;margin-bottom:8px;min-height:16px"></div>' +
+        '<div id="gc-cad-erro" style="color:var(--text-accent,#c11f25);font-size:12px;margin-top:-2px;margin-bottom:8px;min-height:16px"></div>' +
         '<div style="display:flex;gap:8px;margin-top:2px">' +
-        (travado ? '' : '<button id="gc-cad-depois" style="flex:1;padding:10px;background:#fff;color:#14161a;border:1px solid #e2e5ea;border-radius:5px;font-weight:600">Depois</button>') +
-        '<button id="gc-cad-salvar" style="flex:' + (travado ? '1' : '2') + ';padding:10px;background:#14161a;color:#fff;border:none;border-radius:5px;font-weight:700">Salvar' + (travado ? ' e continuar' : '') + '</button>' +
+        (travado ? '' : '<button id="gc-cad-depois" style="flex:1;padding:10px;background:var(--surface-card,#fff);color:var(--text-strong,#14161a);border:1px solid var(--border-subtle,#e2e5ea);border-radius:5px;font-weight:600">Depois</button>') +
+        '<button id="gc-cad-salvar" style="flex:' + (travado ? '1' : '2') + ';padding:10px;background:var(--action-primary,#14161a);color:var(--text-inverse,#fff);border:none;border-radius:5px;font-weight:700">Salvar' + (travado ? ' e continuar' : '') + '</button>' +
         '</div></div>');
 
       var btnDepois = el.querySelector('#gc-cad-depois');
@@ -515,35 +515,35 @@
       '.gc-oculto{display:none !important}' +
       '.gc-fab-wrap{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:10;' +
         'display:flex;align-items:center;gap:8px}' +
-      '.gc-fab-tooltip{background:#14161a;color:#fff;font-size:12px;font-weight:600;padding:6px 11px;' +
+      '.gc-fab-tooltip{background:var(--action-primary,#14161a);color:var(--text-inverse,#fff);font-size:12px;font-weight:600;padding:6px 11px;' +
         'border-radius:6px;white-space:nowrap;opacity:0;transform:translateX(6px);pointer-events:none;' +
         'transition:opacity .15s ease,transform .15s ease;box-shadow:0 2px 8px rgba(20,22,26,.18)}' +
       '.gc-fab-wrap:hover .gc-fab-tooltip,.gc-fab-wrap:focus-within .gc-fab-tooltip{opacity:1;transform:translateX(0)}' +
       '#gc-fab-sugestao{width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;position:relative;' +
-        'background:var(--action-primary,#14161a);color:#fff;display:flex;align-items:center;justify-content:center;' +
+        'background:var(--action-primary,#14161a);color:var(--text-inverse,#fff);display:flex;align-items:center;justify-content:center;' +
         'box-shadow:var(--shadow-raised,0 4px 16px rgba(20,22,26,.25));flex:none}' +
       '#gc-fab-sugestao:active{transform:translateY(1px)}' +
       '.gc-fab-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:999px;' +
-        'background:#c11f25;color:#fff;font-size:10px;font-weight:800;line-height:16px;text-align:center;' +
-        'padding:0 4px;border:2px solid #fff;box-sizing:content-box}' +
-      '.gc-modo-toggle{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid #e2e5ea;padding-bottom:10px}' +
+        'background:var(--action-accent,#c11f25);color:var(--text-inverse,#fff);font-size:10px;font-weight:800;line-height:16px;text-align:center;' +
+        'padding:0 4px;border:2px solid var(--surface-card,#fff);box-sizing:content-box}' +
+      '.gc-modo-toggle{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--border-subtle,#e2e5ea);padding-bottom:10px}' +
       '.gc-modo-btn{flex:1;padding:7px 8px;font-size:12px;font-weight:700;border-radius:6px;border:none;' +
-        'background:transparent;color:#6b7382;cursor:pointer;text-align:center;position:relative}' +
-      '.gc-modo-btn.ativo{background:#f5f6f8;color:#14161a}' +
-      '.gc-modo-btn .gc-fab-badge{position:absolute;top:2px;right:6px;border-color:#f5f6f8}' +
-      '.gc-pedido-item{border:1px solid #e2e5ea;border-radius:6px;padding:10px;margin-bottom:8px;font-size:12px}' +
-      '.gc-pedido-item .topo{display:flex;justify-content:space-between;gap:8px;color:#6b7382;font-size:11px;margin-bottom:4px}' +
-      '.gc-pedido-item .msg{white-space:pre-wrap;color:#14161a;margin-bottom:6px}' +
-      '.gc-pedido-item .resposta{background:#f5f6f8;border-radius:5px;padding:7px 9px;font-size:11px;color:#14161a;margin-top:6px}' +
+        'background:transparent;color:var(--text-muted,#6b7382);cursor:pointer;text-align:center;position:relative}' +
+      '.gc-modo-btn.ativo{background:var(--surface-hover,#f5f6f8);color:var(--text-strong,#14161a)}' +
+      '.gc-modo-btn .gc-fab-badge{position:absolute;top:2px;right:6px;border-color:var(--surface-hover,#f5f6f8)}' +
+      '.gc-pedido-item{border:1px solid var(--border-subtle,#e2e5ea);border-radius:6px;padding:10px;margin-bottom:8px;font-size:12px}' +
+      '.gc-pedido-item .topo{display:flex;justify-content:space-between;gap:8px;color:var(--text-muted,#6b7382);font-size:11px;margin-bottom:4px}' +
+      '.gc-pedido-item .msg{white-space:pre-wrap;color:var(--text-strong,#14161a);margin-bottom:6px}' +
+      '.gc-pedido-item .resposta{background:var(--surface-hover,#f5f6f8);border-radius:5px;padding:7px 9px;font-size:11px;color:var(--text-strong,#14161a);margin-top:6px}' +
       '.gc-tipo-toggle{display:flex;gap:6px;margin-bottom:14px}' +
       '.gc-tipo-btn{flex:1;padding:9px 8px;font-size:12px;font-weight:600;border-radius:6px;' +
-        'border:1px solid #e2e5ea;background:#fff;color:#14161a;cursor:pointer;text-align:center;' +
+        'border:1px solid var(--border-subtle,#e2e5ea);background:var(--surface-card,#fff);color:var(--text-strong,#14161a);cursor:pointer;text-align:center;' +
         'display:flex;align-items:center;justify-content:center;gap:6px}' +
       '.gc-tipo-btn svg{flex:none}' +
-      '.gc-tipo-btn.ativo{background:#14161a;color:#fff;border-color:#14161a}' +
+      '.gc-tipo-btn.ativo{background:var(--action-primary,#14161a);color:var(--text-inverse,#fff);border-color:var(--border-focus,#14161a)}' +
       '.gc-campo label{display:block;font-size:12px;font-weight:600;margin:10px 0 4px}' +
-      '.gc-campo textarea{width:100%;min-height:64px;padding:9px 10px;border:1px solid #e2e5ea;border-radius:5px;resize:vertical}' +
-      '.gc-campo input[type=text]{width:100%;padding:8px 10px;border:1px solid #e2e5ea;border-radius:5px;font-size:12px;color:#6b7382}';
+      '.gc-campo textarea{width:100%;min-height:64px;padding:9px 10px;border:1px solid var(--border-subtle,#e2e5ea);border-radius:5px;resize:vertical}' +
+      '.gc-campo input[type=text]{width:100%;padding:8px 10px;border:1px solid var(--border-subtle,#e2e5ea);border-radius:5px;font-size:12px;color:var(--text-muted,#6b7382)}';
     document.head.appendChild(s);
   }
 
@@ -611,12 +611,12 @@
 
   async function carregarMeusPedidos(o, el) {
     var lista = el.querySelector('#gc-meus-lista');
-    lista.innerHTML = '<div style="font-size:12px;color:#6b7382;text-align:center;padding:16px 0">Carregando…</div>';
+    lista.innerHTML = '<div style="font-size:12px;color:var(--text-muted,#6b7382);text-align:center;padding:16px 0">Carregando…</div>';
     try {
       var resp = await rest(o, 'geral_pedidos_melhoria?select=*&usuario_email=eq.' + encodeURIComponent(o.usuario.email) + '&order=criado_em.desc', { headers: { Range: '0-49' } });
       var pedidos = resp && resp.ok ? await resp.json() : [];
       if (!Array.isArray(pedidos) || !pedidos.length) {
-        lista.innerHTML = '<div style="font-size:12px;color:#6b7382;text-align:center;padding:16px 0">Você ainda não mandou nenhum pedido.</div>';
+        lista.innerHTML = '<div style="font-size:12px;color:var(--text-muted,#6b7382);text-align:center;padding:16px 0">Você ainda não mandou nenhum pedido.</div>';
       } else {
         lista.innerHTML = pedidos.map(function (p) {
           return '<div class="gc-pedido-item">' +
@@ -633,7 +633,7 @@
       var badgeAba = el.querySelector('#gc-aba-meus .gc-fab-badge');
       if (badgeAba) badgeAba.remove();
     } catch (e) {
-      lista.innerHTML = '<div style="font-size:12px;color:#c11f25;text-align:center;padding:16px 0">Erro ao carregar: ' + esc(e.message) + '</div>';
+      lista.innerHTML = '<div style="font-size:12px;color:var(--text-accent,#c11f25);text-align:center;padding:16px 0">Erro ao carregar: ' + esc(e.message) + '</div>';
     }
   }
 
@@ -649,7 +649,7 @@
       '</div>' +
       '<div id="gc-modo-novo">' +
       '<h3 style="font-size:16px;margin-bottom:4px">Sugerir melhoria</h3>' +
-      '<p style="font-size:12px;color:#6b7382;margin-bottom:12px">Isso vai direto para o desenvolvedor, no Painel de Desenvolvimento.</p>' +
+      '<p style="font-size:12px;color:var(--text-muted,#6b7382);margin-bottom:12px">Isso vai direto para o desenvolvedor, no Painel de Desenvolvimento.</p>' +
       '<div class="gc-tipo-toggle">' +
         '<button type="button" class="gc-tipo-btn ativo" data-tipo="melhoria">' + ICONE_LAMPADA + ' Uma ideia de melhoria</button>' +
         '<button type="button" class="gc-tipo-btn" data-tipo="bug">' + ICONE_ALERTA + ' Algo não funcionou</button>' +
@@ -669,14 +669,14 @@
       '<div class="gc-campo"><label>Tela</label><input id="gc-tela" type="text" value="' + esc(telaCapturada) + '"></div>' +
       '<div id="gc-sug-msg" style="font-size:12px;margin-top:6px;min-height:16px"></div>' +
       '<div style="display:flex;gap:8px;margin-top:10px">' +
-      '<button id="gc-sug-cancelar" style="flex:1;padding:10px;background:#fff;color:#14161a;border:1px solid #e2e5ea;border-radius:5px;font-weight:600">Cancelar</button>' +
-      '<button id="gc-sug-enviar" style="flex:2;padding:10px;background:#14161a;color:#fff;border:none;border-radius:5px;font-weight:700">Enviar</button>' +
+      '<button id="gc-sug-cancelar" style="flex:1;padding:10px;background:var(--surface-card,#fff);color:var(--text-strong,#14161a);border:1px solid var(--border-subtle,#e2e5ea);border-radius:5px;font-weight:600">Cancelar</button>' +
+      '<button id="gc-sug-enviar" style="flex:2;padding:10px;background:var(--action-primary,#14161a);color:var(--text-inverse,#fff);border:none;border-radius:5px;font-weight:700">Enviar</button>' +
       '</div>' +
       '</div>' +
       '<div id="gc-modo-meus" class="gc-oculto">' +
       '<h3 style="font-size:16px;margin-bottom:10px">Meus pedidos</h3>' +
       '<div id="gc-meus-lista" style="max-height:340px;overflow-y:auto"></div>' +
-      '<button id="gc-meus-fechar" style="width:100%;margin-top:10px;padding:10px;background:#fff;color:#14161a;border:1px solid #e2e5ea;border-radius:5px;font-weight:600">Fechar</button>' +
+      '<button id="gc-meus-fechar" style="width:100%;margin-top:10px;padding:10px;background:var(--surface-card,#fff);color:var(--text-strong,#14161a);border:1px solid var(--border-subtle,#e2e5ea);border-radius:5px;font-weight:600">Fechar</button>' +
       '</div>' +
       '</div>');
 
@@ -712,14 +712,14 @@
         var esperado = el.querySelector('#gc-b-esperado').value.trim();
         var aconteceu = el.querySelector('#gc-b-aconteceu').value.trim();
         if (!tentando || !esperado || !aconteceu) {
-          msgEl.style.color = '#c11f25'; msgEl.textContent = 'Preencha os três campos.'; return;
+          msgEl.style.color = 'var(--text-accent,#c11f25)'; msgEl.textContent = 'Preencha os três campos.'; return;
         }
         mensagem = 'O que eu queria fazer: ' + tentando +
           '\nO que deveria acontecer: ' + esperado +
           '\nO que aconteceu: ' + aconteceu;
       } else {
         var diferente = el.querySelector('#gc-m-diferente').value.trim();
-        if (!diferente) { msgEl.style.color = '#c11f25'; msgEl.textContent = 'Escreva alguma coisa.'; return; }
+        if (!diferente) { msgEl.style.color = 'var(--text-accent,#c11f25)'; msgEl.textContent = 'Escreva alguma coisa.'; return; }
         mensagem = diferente;
       }
       var btnEnviar = this;
@@ -739,11 +739,11 @@
           }),
         });
         if (!resp || !resp.ok) throw new Error('HTTP ' + (resp ? resp.status : '?'));
-        msgEl.style.color = '#1a7f37';
+        msgEl.style.color = 'var(--status-ok-text,#1a7f37)';
         msgEl.textContent = 'Enviado — obrigado!';
         setTimeout(function () { el.remove(); }, 1200);
       } catch (e) {
-        msgEl.style.color = '#c11f25';
+        msgEl.style.color = 'var(--text-accent,#c11f25)';
         msgEl.textContent = 'Erro ao enviar: ' + e.message;
         btnEnviar.disabled = false;
         btnEnviar.style.opacity = '';
@@ -820,26 +820,26 @@
         'display:flex;align-items:center;gap:8px}' +
       '#gc-sino-wrap:hover .gc-fab-tooltip,#gc-sino-wrap:focus-within .gc-fab-tooltip{opacity:1;transform:translateX(0)}' +
       '#gc-sino{width:44px;height:44px;border-radius:50%;cursor:pointer;position:relative;flex:none;' +
-        'background:#fff;color:#14161a;border:1px solid #e2e5ea;display:flex;align-items:center;justify-content:center;' +
+        'background:var(--surface-card,#fff);color:var(--text-strong,#14161a);border:1px solid var(--border-subtle,#e2e5ea);display:flex;align-items:center;justify-content:center;' +
         'box-shadow:var(--shadow-raised,0 4px 16px rgba(20,22,26,.18))}' +
-      '#gc-sino.tem{color:#c11f25}' +
+      '#gc-sino.tem{color:var(--text-accent,#c11f25)}' +
       '#gc-sino.novo .gc-fab-badge{animation:gc-pulso 1.6s ease-out 3}' +
       '@keyframes gc-pulso{0%{box-shadow:0 0 0 0 rgba(193,31,37,.55)}100%{box-shadow:0 0 0 10px rgba(193,31,37,0)}}' +
       '#gc-sino-painel{position:fixed;right:16px;bottom:calc(120px + env(safe-area-inset-bottom));z-index:12;' +
-        'width:min(380px,calc(100vw - 32px));max-height:min(62vh,520px);overflow-y:auto;background:#fff;color:#14161a;' +
-        'border:1px solid #e2e5ea;border-radius:10px;box-shadow:0 12px 40px rgba(20,22,26,.25);font-family:inherit;font-size:13px}' +
+        'width:min(380px,calc(100vw - 32px));max-height:min(62vh,520px);overflow-y:auto;background:var(--surface-card,#fff);color:var(--text-strong,#14161a);' +
+        'border:1px solid var(--border-subtle,#e2e5ea);border-radius:10px;box-shadow:0 12px 40px rgba(20,22,26,.25);font-family:inherit;font-size:13px}' +
       '#gc-sino-painel .gc-sp-topo{display:flex;justify-content:space-between;align-items:center;padding:12px 14px 8px;' +
-        'position:sticky;top:0;background:#fff;border-bottom:1px solid #f0f1f3}' +
-      '#gc-sino-painel .gc-sp-sec{font-size:10.5px;font-weight:800;letter-spacing:.04em;color:#6b7382;padding:10px 14px 4px}' +
+        'position:sticky;top:0;background:var(--surface-card,#fff);border-bottom:1px solid var(--border-subtle,#e2e5ea)}' +
+      '#gc-sino-painel .gc-sp-sec{font-size:10.5px;font-weight:800;letter-spacing:.04em;color:var(--text-muted,#6b7382);padding:10px 14px 4px}' +
       '#gc-sino-painel .gc-sp-item{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:none;' +
-        'border:none;border-bottom:1px solid #f0f1f3;padding:10px 14px;cursor:pointer;font:inherit;color:inherit}' +
-      '#gc-sino-painel .gc-sp-item:hover,#gc-sino-painel .gc-sp-item:focus-visible{background:#f5f6f8}' +
-      '#gc-sino-painel .gc-sp-n{min-width:28px;height:22px;border-radius:999px;background:#f1f2f4;color:#14161a;' +
+        'border:none;border-bottom:1px solid var(--border-subtle,#e2e5ea);padding:10px 14px;cursor:pointer;font:inherit;color:inherit}' +
+      '#gc-sino-painel .gc-sp-item:hover,#gc-sino-painel .gc-sp-item:focus-visible{background:var(--surface-hover,#f5f6f8)}' +
+      '#gc-sino-painel .gc-sp-n{min-width:28px;height:22px;border-radius:999px;background:var(--surface-sunken,#f1f2f4);color:var(--text-strong,#14161a);' +
         'font-weight:800;font-size:12px;line-height:22px;text-align:center;padding:0 6px;flex:none}' +
-      '#gc-sino-painel .gc-sp-item.mim .gc-sp-n{background:#c11f25;color:#fff}' +
-      '#gc-sino-painel .gc-sp-sub{color:#6b7382;font-size:11.5px;margin-top:2px}' +
-      '#gc-sino-painel .gc-sp-novo{font-size:10px;font-weight:800;color:#c11f25;margin-left:6px}' +
-      '#gc-sino-painel .gc-sp-vazio{padding:22px 14px;text-align:center;color:#6b7382}' +
+      '#gc-sino-painel .gc-sp-item.mim .gc-sp-n{background:var(--action-accent,#c11f25);color:var(--text-inverse,#fff)}' +
+      '#gc-sino-painel .gc-sp-sub{color:var(--text-muted,#6b7382);font-size:11.5px;margin-top:2px}' +
+      '#gc-sino-painel .gc-sp-novo{font-size:10px;font-weight:800;color:var(--text-accent,#c11f25);margin-left:6px}' +
+      '#gc-sino-painel .gc-sp-vazio{padding:22px 14px;text-align:center;color:var(--text-muted,#6b7382)}' +
       // sinoEm: o sino entra no cabeçalho do app (sem flutuar) e o painel abre embaixo dele
       '#gc-sino-wrap.gc-no-topo{position:static;display:inline-flex}' +
       '#gc-sino-wrap.gc-no-topo #gc-sino{width:38px;height:38px;box-shadow:none}' +
@@ -910,7 +910,7 @@
     var mim = [], setor = [];
     meus.forEach(function (p, i) { (p.para_mim ? mim : setor).push({ p: p, i: i }); });
     var html = '<div class="gc-sp-topo"><b style="font-size:14px">Pendências</b>' +
-      '<button type="button" id="gc-sp-fechar" aria-label="Fechar" style="background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:#6b7382">×</button></div>';
+      '<button type="button" id="gc-sp-fechar" aria-label="Fechar" style="background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:var(--text-muted,#6b7382)">×</button></div>';
     if (!meus.length) {
       html += '<div class="gc-sp-vazio">Nada esperando você agora.</div>';
     } else {

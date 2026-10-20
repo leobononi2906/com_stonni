@@ -138,7 +138,7 @@ function renderHome() {
         ${deltaHTML}
       </div>
       <div style="display:flex;align-items:baseline;gap:var(--space-2)">
-        <span style="font-size:var(--fs-550);font-weight:700;font-family:var(--font-mono);color:var(--blue-mid)">${fmtK(g.val)}</span>
+        <span style="font-size:var(--fs-550);font-weight:700;font-family:var(--font-mono);color:var(--blue-mid-fg)">${fmtK(g.val)}</span>
         <span style="font-size:var(--fs-090);color:var(--text-muted)">${pct}%</span>
       </div>
     </div>`;
@@ -204,7 +204,7 @@ function renderHome() {
       <span style="font-size:var(--fs-075);font-weight:700;color:var(--text-muted);width:16px;text-align:right">${i + 1}</span>
       <span style="flex:1;font-size:var(--fs-100);color:var(--text-primary);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(c.nome)}</span>
       <div style="width:80px;flex-shrink:0"><div class="bar-track" style="height:5px"><div class="bar-fill" style="width:${pct}%"></div></div></div>
-      <span style="font-size:var(--fs-100);font-weight:700;color:var(--blue-mid);flex-shrink:0;width:60px;text-align:right">${fmtK(c.fat)}</span>
+      <span style="font-size:var(--fs-100);font-weight:700;color:var(--blue-mid-fg);flex-shrink:0;width:60px;text-align:right">${fmtK(c.fat)}</span>
     </div>`;
   }).join('') || '<p style="color:var(--text-muted);font-size:var(--fs-100)">Sem dados</p>';
 
@@ -332,9 +332,9 @@ function renderHome() {
   // ── 7. Últimos Pedidos ──────────────────────────────────
   const ultPedidos = d.slice(0, 10).map(r => `<tr>
     <td style="font-size:var(--fs-100);color:var(--text-secondary)">${fmtD(r.data_faturamento)}</td>
-    <td class="r" style="font-weight:700;color:var(--blue-mid);font-size:var(--fs-200)">${fmt(docFat(r))}</td>
+    <td class="r" style="font-weight:700;color:var(--blue-mid-fg);font-size:var(--fs-200)">${fmt(docFat(r))}</td>
     <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-100);font-weight:600;color:var(--text-primary)">${escH(r.nome_cliente || '')}</td>
-    <td style="font-size:var(--fs-100);font-weight:600;color:var(--green)">${sN(r.nome_vendedor)}</td>
+    <td style="font-size:var(--fs-100);font-weight:600;color:var(--green-fg)">${sN(r.nome_vendedor)}</td>
   </tr>`).join('');
 
   // ══════════════════════════════════════════════════════════

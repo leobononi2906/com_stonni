@@ -457,8 +457,8 @@ function renderVendedorIndividual(el, vidOverride) {
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-2-5);flex-wrap:wrap;margin-bottom:var(--space-3)">
         <div class="scard-title" style="margin-bottom:0">\u{1F3AF} Registro × Comprou — no período</div>
         <div style="font-size:var(--fs-100);color:var(--text-secondary)">
-          Cobertura <b style="color:var(--blue-mid)">${mCobertura}%</b> (${mFalados}/${myCarteira.length}) ·
-          Venda ativa <b style="color:${mPctAtiva>=50?'var(--green)':'var(--orange)'}">${mPctAtiva}%</b>
+          Cobertura <b style="color:var(--blue-mid-fg)">${mCobertura}%</b> (${mFalados}/${myCarteira.length}) ·
+          Venda ativa <b style="color:${mPctAtiva>=50?'var(--green-fg)':'var(--orange-fg)'}">${mPctAtiva}%</b>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:78px 1fr 1fr;gap:var(--space-2-5);align-items:stretch">
@@ -473,7 +473,7 @@ function renderVendedorIndividual(el, vidOverride) {
         ${_vquad('var(--red)','var(--red-bg)','\u{1F534} Carteira parada',mParada,'sem toque · '+fmtK(mFatParada))}
       </div>
       ${mParada>0 && paradaList.some(c=>(Number(c.faturamento_total)||0)>0) ? `<div style="margin-top:var(--space-3-5)">
-        <div style="font-size:var(--fs-090);font-weight:700;color:var(--red);margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="alert-triangle"></i> Carteira parada que já faturou — sem contato nem compra no período</div>
+        <div style="font-size:var(--fs-090);font-weight:700;color:var(--red-fg);margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="alert-triangle"></i> Carteira parada que já faturou — sem contato nem compra no período</div>
         ${paradaList.filter(c=>(Number(c.faturamento_total)||0)>0).slice(0,5).map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:var(--space-1-5) 0;border-bottom:1px solid var(--border)">
           <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary)">${sN(c.nome_cliente)}</span>
           <span class="mono" style="color:var(--text-secondary);flex-shrink:0;margin-left:var(--space-2);font-weight:600">${fmtK(Number(c.faturamento_total)||0)}${c.dias_sem_compra!=null?` · ${c.dias_sem_compra}d`:''}</span>
@@ -489,7 +489,7 @@ function renderVendedorIndividual(el, vidOverride) {
         <div class="hbox ht"><div class="n">${hAtencao}</div><div class="l">Aten\u00e7\u00e3o</div></div>
         <div class="hbox hr"><div class="n">${hRisco}</div><div class="l">Em Risco</div></div>
       </div>
-      ${semContato30 > 0 ? `<div style="margin-top:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--warning-50);border-radius:var(--radius-lg);font-size:12.5px;color:var(--text-secondary)">
+      ${semContato30 > 0 ? `<div style="margin-top:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--feedback-warning-bg);border-radius:var(--radius-lg);font-size:12.5px;color:var(--text-secondary)">
         \u26A0 <strong>${semContato30}</strong> clientes sem contato h\u00e1 mais de 30 dias
       </div>` : ''}
     </div>
@@ -557,7 +557,7 @@ function renderVendedorIndividual(el, vidOverride) {
               <div style="font-size:12.5px;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sN(c.nome_cliente)}</div>
               <div style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-0-5)">\u00dalt. compra: ${c.faturamento_total ? fmtK(c.faturamento_total) : '\u2014'}</div>
             </div>
-            <span style="font-size:var(--fs-090);font-weight:600;color:var(--danger-600);flex-shrink:0">${c.dias_sem_interacao} dias</span>
+            <span style="font-size:var(--fs-090);font-weight:600;color:var(--text-danger);flex-shrink:0">${c.dias_sem_interacao} dias</span>
             <span class="bdg ${bdgCls}" style="flex-shrink:0">${stLabel}</span>
           </div>`;
         }).join('')}
@@ -634,7 +634,7 @@ function _renderAtividadeDiaria(atividades, contatosUmbler, umblerPred) {
       <div class="bar-track" style="flex:1;height:10px"><div class="bar-fill" style="width:${barW}%;background:var(--blue-mid)"></div></div>
       <span style="font-size:var(--fs-075);color:var(--text-secondary);width:25px;text-align:right;font-weight:700">${total}</span>
       <span style="font-size:9px;color:var(--text-muted);width:80px;flex-shrink:0;text-align:right">${dd.tarefas?dd.tarefas+'T ':''}${dd.followups?dd.followups+'F ':''}${dd.ligacoes?dd.ligacoes+'L ':''}${umb?umb+'U':''}</span>
-      <span style="font-size:9px;color:var(--green);width:35px;flex-shrink:0;text-align:right">${dd.clientes.size?dd.clientes.size+' cli':''}</span>
+      <span style="font-size:9px;color:var(--green-fg);width:35px;flex-shrink:0;text-align:right">${dd.clientes.size?dd.clientes.size+' cli':''}</span>
     </div>`;
   }).join('');
 
@@ -644,8 +644,8 @@ function _renderAtividadeDiaria(atividades, contatosUmbler, umblerPred) {
     return `<div style="display:flex;align-items:center;gap:var(--space-2);padding:5px 0;border-bottom:1px solid var(--border)">
       <span style="font-size:var(--fs-090);font-weight:600;color:var(--text-primary);width:60px;flex-shrink:0">${sem}</span>
       <span style="font-size:var(--fs-075);color:var(--text-muted);width:35px;text-align:right">${s.notas} reg</span>
-      <span style="font-size:var(--fs-075);color:var(--green);width:35px;text-align:right">${s.resolvidas} \u2713</span>
-      <span style="font-size:var(--fs-075);color:var(--purple);width:35px;text-align:right">${s.umbler} umb</span>
+      <span style="font-size:var(--fs-075);color:var(--green-fg);width:35px;text-align:right">${s.resolvidas} \u2713</span>
+      <span style="font-size:var(--fs-075);color:var(--purple-fg);width:35px;text-align:right">${s.umbler} umb</span>
       <span style="font-size:var(--fs-075);color:var(--text-secondary);width:35px;text-align:right">${s.clientes.size} cli</span>
       <span style="font-size:var(--fs-075);color:var(--text-muted);width:50px;text-align:right">${mediaDia}/dia</span>
     </div>`;

@@ -36,7 +36,8 @@
 // login em 06/10/2026); quem ficou com o JS velho em cache receberia 401 nas fotos/medidas.
 // v19: aba nova "Regras de Faturamento" (regras-faturamento.js, script novo no
 // index.html) e o login com senha passa a abrir nela (08/10/2026).
-const CACHE_VERSION = 'stonni-v20-20261008';
+// v21: tema escuro (ds/stonni-dark.css + ds/stonni-tema.js no APP_SHELL; index.html muda) (20/10/2026).
+const CACHE_VERSION = 'stonni-v21-20261020';
 const APP_SHELL = [
   './',
   './index.html',
@@ -48,6 +49,8 @@ const APP_SHELL = [
   // pinta o app sem estilo nenhum — e nao da erro, so fica feio.
   './ds/stonni-ds.css?v=20260917',
   './ds/stonni-icones.css?v=20260915',
+  './ds/stonni-dark.css?v=20261020a',
+  './ds/stonni-tema.js?v=20261020a',
   './logo-mark-64.png?v=20260918',
 ];
 

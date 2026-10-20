@@ -12,12 +12,15 @@
 <!-- Design system Stonni (ferramentas internas) — tokens canonicos.
      O ?v= tem de ser IGUAL ao do SHELL do sw.js: caches.match casa a URL inteira. -->
 <link rel="stylesheet" href="ds/stonni-ds.css?v=20260917">
+<link rel="stylesheet" href="ds/stonni-dark.css?v=20261020a">
 <link rel="stylesheet" href="ds/stonni-icones.css?v=20260915">
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <!-- Hex literal de proposito: <meta> e manifest.json nao resolvem var().
      Este valor espelha --action-primary-bg (a cor da topbar mobile). -->
 <meta name="theme-color" content="#145EA8">
+<!-- Tema claro/escuro/sistema: SINCRONO, aplica data-theme antes da pintura. -->
+<script src="ds/stonni-tema.js?v=20261020a"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Stonni">
@@ -103,7 +106,28 @@
   --fs-075: 10px;     --fs-090: 11px;     --fs-450: 16px;
   --fs-550: 18px;     --fs-650: 22px;
   --radius-10: 10px;  --radius-14: 14px;
+  /* Tema escuro: versao "texto" dos aliases de cor (no claro = o proprio alias; no
+     escuro = mais clara, AA sobre o card). Usado em color:var(--x-fg). */
+  --green-fg:var(--green); --red-fg:var(--red); --orange-fg:var(--orange); --yellow-fg:var(--yellow);
+  --purple-fg:var(--purple); --purple-bd:var(--indigo-100);
+  --blue-mid-fg:var(--blue-mid); --blue-light-fg:var(--blue-light); --blue-dark-fg:var(--blue-dark);
+  --purple: var(--indigo-500);    --purple-bg: var(--indigo-50);
 }
+/* Tema escuro — ponte do app (a paleta base vem de ds/stonni-dark.css). */
+@media not print{
+:root[data-theme="dark"]{
+  --green-fg:#4cc38a; --red-fg:#ff8080; --orange-fg:#e8b25a; --yellow-fg:#e8b25a;
+  --purple-fg:#a99fe8; --blue-mid-fg:#6ba4e2; --blue-light-fg:#4cc8ec; --blue-dark-fg:#6ba4e2;
+  --green-bg:#0f2e20; --red-bg:#3a1618; --orange-bg:#3a280c; --yellow-bg:#3a280c;
+  --purple-bg:#241f55; --purple-bd:#3a3478; --blue-pale:#13284a;
+  --text-secondary:#b4bfcb;
+  --blue-veil:rgba(107,164,226,.14); --blue-veil-strong:rgba(107,164,226,.30);
+  --danger-veil:rgba(255,128,128,.14); --danger-veil-strong:rgba(255,128,128,.30);
+  --warning-veil:rgba(232,178,90,.14); --success-veil:rgba(76,195,138,.28);
+  --shadow-col-sticky:-6px 0 8px -6px rgba(0,0,0,.5);
+}
+}
+
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font-sans); background: var(--bg); color: var(--text-primary); font-size:var(--fs-300); }
@@ -137,7 +161,7 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
   font-size:var(--fs-650); font-weight: 800; color: var(--neutral-0); letter-spacing: -1px;
   margin-bottom:var(--space-3);
 }
-.login-logo h1 { font-size:var(--fs-650); font-weight: 700; color: var(--blue-dark); letter-spacing: -0.5px; }
+.login-logo h1 { font-size:var(--fs-650); font-weight: 700; color: var(--blue-dark-fg); letter-spacing: -0.5px; }
 .login-logo p { font-size:var(--fs-100); color: var(--text-muted); margin-top:var(--space-0-5); text-transform: uppercase; letter-spacing: 1px; }
 
 .form-group { margin-bottom:var(--space-4); }
@@ -148,7 +172,7 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
   font-family: var(--font-sans); font-size:var(--fs-300); color: var(--text-primary);
   background: var(--surface2); outline: none; transition: border-color 0.15s;
 }
-.form-group input:focus { border-color: var(--blue-mid); background: var(--neutral-0); }
+.form-group input:focus { border-color: var(--blue-mid); background: var(--surface-card); }
 
 .btn-login {
   width: 100%; height:44px; background: var(--blue-dark); color: var(--neutral-0);
@@ -157,7 +181,7 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
   margin-top:var(--space-2);
 }
 .btn-login:hover { background: var(--blue-mid); }
-.login-error { font-size:var(--fs-100); color: var(--red); text-align: center; margin-top:var(--space-2-5); min-height:16px; }
+.login-error { font-size:var(--fs-100); color: var(--red-fg); text-align: center; margin-top:var(--space-2-5); min-height:16px; }
 
 /* ============================================================
    APP SHELL
@@ -200,7 +224,7 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
   text-decoration: none;
 }
 .nav-item:hover { color: var(--text-on-nav); background: var(--surface-nav-hover); }
-.nav-item.active { color: var(--blue-light); background: var(--surface-nav-active); }
+.nav-item.active { color: var(--blue-light-fg); background: var(--surface-nav-active); }
 .nav-item.active::before {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0;
   width: 3px; background: var(--cyan-500); border-radius:0 2px 2px 0;
@@ -233,6 +257,10 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
   transition: all 0.15s;
 }
 .btn-logout:hover { background: var(--surface-nav-active); color: var(--text-on-nav); }
+.footer-acoes { display:flex; gap:var(--space-2); margin-top:var(--space-3); }
+.footer-acoes .btn-logout { margin-top:0; flex:1; width:auto; }
+.footer-acoes .bnn-tema-btn { width:var(--control-h-md); height:auto; background:var(--surface-nav-hover); border-color:var(--border-nav); color:var(--text-on-nav-muted); }
+.footer-acoes .bnn-tema-btn:hover { background:var(--surface-nav-active); color:var(--text-on-nav); }
 
 /* MAIN */
 .main {
@@ -265,10 +293,10 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
 }
 .card-label { font-size:var(--fs-090); font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom:var(--space-2); }
 .card-value { font-size:26px; font-weight: 700; font-family: var(--font-mono); letter-spacing: -0.5px; }
-.card-value.green { color: var(--green); }
-.card-value.red   { color: var(--red); }
-.card-value.blue  { color: var(--blue-mid); }
-.card-value.orange{ color: var(--orange); }
+.card-value.green { color: var(--green-fg); }
+.card-value.red   { color: var(--red-fg); }
+.card-value.blue  { color: var(--blue-mid-fg); }
+.card-value.orange{ color: var(--orange-fg); }
 .card-sub { font-size:var(--fs-100); color: var(--text-muted); margin-top:var(--space-1); }
 .cards-grid { display: grid; gap:var(--space-3-5); }
 .cards-grid-4 { grid-template-columns: repeat(4, 1fr); }
@@ -289,16 +317,16 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
 
 .badge { display: inline-flex; align-items: center; font-size: 10.5px; font-weight: 700; padding:var(--space-0-5) var(--space-2); border-radius:var(--radius-sm); letter-spacing: 0.5px; text-transform: uppercase; }
 .badge-rascunho  { background: var(--surface2);    color: var(--text-muted); }
-.badge-enviado   { background: var(--blue-pale);   color: var(--blue-mid); }
-.badge-aprovado  { background: var(--green-bg);    color: var(--green); }
-.badge-reprovado { background: var(--red-bg);      color: var(--red); }
-.badge-faturado  { background: var(--indigo-50);             color: var(--indigo-500); }
+.badge-enviado   { background: var(--blue-pale);   color: var(--blue-mid-fg); }
+.badge-aprovado  { background: var(--green-bg);    color: var(--green-fg); }
+.badge-reprovado { background: var(--red-bg);      color: var(--red-fg); }
+.badge-faturado  { background: var(--purple-bg);             color: var(--purple-fg); }
 .badge-cancelado { background: var(--surface2);    color: var(--text-muted); }
-  .badge-cotacao  { background: var(--indigo-50); color: var(--indigo-500); border: 1px solid var(--indigo-100); }
-  .badge-warning  { background: var(--warning-50); color: var(--warning-700); border: 1px solid var(--warning-100); }
-  .badge-faturado { background: var(--blue-50); color: var(--blue-600); border: 1px solid var(--blue-100); }
-.badge-esgotado  { background: var(--red-bg);      color: var(--red); }
-.badge-disponivel{ background: var(--green-bg);    color: var(--green); }
+  .badge-cotacao  { background: var(--purple-bg); color: var(--purple-fg); border: 1px solid var(--purple-bd); }
+  .badge-warning  { background: var(--feedback-warning-bg); color: var(--text-warning); border: 1px solid var(--feedback-warning-border); }
+  .badge-faturado { background: var(--surface-selected); color: var(--text-action); border: 1px solid var(--feedback-info-border); }
+.badge-esgotado  { background: var(--red-bg);      color: var(--red-fg); }
+.badge-disponivel{ background: var(--green-bg);    color: var(--green-fg); }
 
 .btn { height:34px; padding:0 var(--space-3-5); border: none; border-radius: var(--radius-lg); font-family: var(--font-sans); font-size:var(--fs-200); font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap:var(--space-1-5); transition: all 0.15s; }
 .btn-primary { background: var(--blue-dark); color: var(--neutral-0); }
@@ -325,17 +353,17 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
   background: var(--surface2); outline: none; transition: border-color 0.15s;
 }
 .form-field textarea { height: auto; padding:var(--space-2-5) var(--space-3); resize: vertical; }
-.form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--blue-mid); background: var(--neutral-0); }
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--blue-mid); background: var(--surface-card); }
 .form-row { display: grid; gap:var(--space-3-5); }
 .form-row-2 { grid-template-columns: 1fr 1fr; }
 .form-row-3 { grid-template-columns: 1fr 1fr 1fr; }
 
 /* Alerta financeiro */
 .alert { padding:var(--space-3) var(--space-4); border-radius: var(--radius-lg); font-size:var(--fs-200); margin-bottom:var(--space-3-5); display: flex; align-items: flex-start; gap:var(--space-2-5); }
-.alert-warning { background: var(--orange-bg); border: 1px solid var(--warning-100); color: var(--orange); }
-.alert-danger   { background: var(--red-bg);    border: 1px solid var(--danger-100); color: var(--red); }
-.alert-info     { background: var(--blue-pale); border: 1px solid var(--blue-200); color: var(--blue-mid); }
-.alert-success  { background: var(--green-bg);  border: 1px solid var(--success-100); color: var(--green); }
+.alert-warning { background: var(--orange-bg); border: 1px solid var(--feedback-warning-border); color: var(--orange-fg); }
+.alert-danger   { background: var(--red-bg);    border: 1px solid var(--feedback-danger-border); color: var(--red-fg); }
+.alert-info     { background: var(--blue-pale); border: 1px solid var(--feedback-info-border); color: var(--blue-mid-fg); }
+.alert-success  { background: var(--green-bg);  border: 1px solid var(--feedback-success-border); color: var(--green-fg); }
 .alert-icon { font-size:var(--fs-450); flex-shrink: 0; margin-top:1px; }
 
 /* Drawer */
@@ -349,7 +377,7 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
 .drawer-close { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size:var(--fs-600); line-height: 1; padding: 0; }
 .drawer-tabs { display: flex; border-bottom: 1px solid var(--border); padding:0 var(--space-6); flex-shrink: 0; }
 .drawer-tab { padding:var(--space-2-5) var(--space-4); font-size:var(--fs-200); font-weight: 500; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
-.drawer-tab.active { color: var(--blue-mid); border-bottom-color: var(--blue-mid); }
+.drawer-tab.active { color: var(--blue-mid-fg); border-bottom-color: var(--blue-mid); }
 .drawer-body { flex: 1; overflow-y: auto; padding:var(--space-6); }
 .drawer-footer { padding:var(--space-4) var(--space-6); border-top: 1px solid var(--border); display: flex; gap:var(--space-2-5); justify-content: flex-end; flex-shrink: 0; }
 
@@ -597,7 +625,11 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
           <div class="user-role" id="user-role">representante</div>
         </div>
       </div>
-      <button class="btn-logout" onclick="fazerLogout()">Sair da conta</button>
+      <div class="footer-acoes">
+        <button class="btn-logout" onclick="fazerLogout()">Sair da conta</button>
+        <span id="tema-slot"></span>
+      </div>
+      <script>BnnTema.botao(document.getElementById("tema-slot"))</script>
     </div>
   </aside>
 
@@ -1480,7 +1512,7 @@ function renderRepresentantes(el, params) {
      bononi-hub/ds/geral-acesso.js — subir o ?v= junto ao trocar o arquivo. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="ds/geral-acesso.js?v=2"></script>
-<script src="ds/geral-central.js?v=19"></script>
+<script src="ds/geral-central.js?v=20"></script>
 <script src="configuracoes.js"></script>
 <script src="catalogo-pdf.js"></script>
 <script src="catalogo.js"></script>

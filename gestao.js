@@ -64,7 +64,7 @@ function _renderListaPedidos(el, pedidos, isGestor) {
       <button id="gped-f-aguardando" class="btn btn-sm btn-outline" onclick="gPedSetFiltro('AGUARDANDO')">⏳ Aguardando <span style="opacity:.7">${_cnt(['AGUARDANDO'])}</span></button>
       <button id="gped-f-aprovado"   class="btn btn-sm btn-outline" onclick="gPedSetFiltro('APROVADO')"><i class="ic ic-sm" data-ic="check-circle"></i> Aprovados <span style="opacity:.7">${_cnt(['APROVADO'])}</span></button>
       <button id="gped-f-faturado"   class="btn btn-sm btn-outline" onclick="gPedSetFiltro('FATURADO')"><i class="ic ic-sm" data-ic="receipt"></i> Faturados <span style="opacity:.7">${_cnt(['FATURADO'])}</span></button>
-      <button id="gped-f-cancelado"  class="btn btn-sm btn-outline" onclick="gPedSetFiltro('CANCELADOS')" style="color:var(--red)"><i class="ic ic-sm" data-ic="alert-circle"></i> Cancelados <span style="opacity:.7">${_cnt(['REPROVADO','CANCELADO'])}</span></button>
+      <button id="gped-f-cancelado"  class="btn btn-sm btn-outline" onclick="gPedSetFiltro('CANCELADOS')" style="color:var(--red-fg)"><i class="ic ic-sm" data-ic="alert-circle"></i> Cancelados <span style="opacity:.7">${_cnt(['REPROVADO','CANCELADO'])}</span></button>
     </div>
 
     <!-- Cards KPI (só gestor) -->
@@ -135,7 +135,7 @@ window.gPedSetFiltro = function(filtro) {
     if (!btn) return;
     const ativo = f === filtro;
     btn.className = 'btn btn-sm ' + (ativo ? 'btn-primary' : 'btn-outline');
-    if (id === 'cancelado') btn.style.color = ativo ? '' : 'var(--red)';
+    if (id === 'cancelado') btn.style.color = ativo ? '' : 'var(--red-fg)';
   });
   gPedFiltrar();
 };
@@ -246,10 +246,10 @@ window.gPedAbrir = async function(id) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3-5);margin-top:var(--space-2-5)">
         <div>
           <div style="font-size:var(--fs-100);font-weight:600;margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="file-text"></i> Nota Fiscal (PDF)</div>
-          ${pedido.nf_url ? `<div style="font-size:var(--fs-090);color:var(--green);margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="check-circle"></i> Arquivo enviado</div>
+          ${pedido.nf_url ? `<div style="font-size:var(--fs-090);color:var(--green-fg);margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="check-circle"></i> Arquivo enviado</div>
             <div style="display:flex;gap:var(--space-1-5)">
               <a href="${pedido.nf_url}" target="_blank" class="btn btn-outline btn-sm">↓ Baixar</a>
-              <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="gPedExcluirDoc(${id},'nf')"><i class="ic ic-sm" data-ic="x"></i> Excluir</button>
+              <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red-fg)" onclick="gPedExcluirDoc(${id},'nf')"><i class="ic ic-sm" data-ic="x"></i> Excluir</button>
             </div>` : ''}
           <div style="margin-top:var(--space-2)">
             <input type="file" id="doc-nf-file" accept=".pdf,image/*" style="font-size:var(--fs-100);width:100%"
@@ -258,10 +258,10 @@ window.gPedAbrir = async function(id) {
         </div>
         <div>
           <div style="font-size:var(--fs-100);font-weight:600;margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="building"></i> Boleto (PDF)</div>
-          ${pedido.boleto_url ? `<div style="font-size:var(--fs-090);color:var(--green);margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="check-circle"></i> Arquivo enviado</div>
+          ${pedido.boleto_url ? `<div style="font-size:var(--fs-090);color:var(--green-fg);margin-bottom:var(--space-1-5)"><i class="ic ic-sm" data-ic="check-circle"></i> Arquivo enviado</div>
             <div style="display:flex;gap:var(--space-1-5)">
               <a href="${pedido.boleto_url}" target="_blank" class="btn btn-outline btn-sm">↓ Baixar</a>
-              <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red)" onclick="gPedExcluirDoc(${id},'boleto')"><i class="ic ic-sm" data-ic="x"></i> Excluir</button>
+              <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red-fg)" onclick="gPedExcluirDoc(${id},'boleto')"><i class="ic ic-sm" data-ic="x"></i> Excluir</button>
             </div>` : ''}
           <div style="margin-top:var(--space-2)">
             <input type="file" id="doc-boleto-file" accept=".pdf,image/*" style="font-size:var(--fs-100);width:100%"
@@ -279,7 +279,7 @@ window.gPedAbrir = async function(id) {
   // Download NF/Boleto (representante — só leitura)
   const downloadHtml = !isGestor && (pedido.nf_url || pedido.boleto_url) ? `
     <div style="background:var(--green-bg);border:1px solid var(--green);border-radius:var(--radius-lg);padding:var(--space-4);margin-top:var(--space-4)">
-      <div style="font-size:var(--fs-200);font-weight:600;color:var(--green);margin-bottom:var(--space-2-5)"><i class="ic ic-sm" data-ic="paperclip"></i> Documentos disponíveis</div>
+      <div style="font-size:var(--fs-200);font-weight:600;color:var(--green-fg);margin-bottom:var(--space-2-5)"><i class="ic ic-sm" data-ic="paperclip"></i> Documentos disponíveis</div>
       <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
         ${pedido.nf_url ? `<a href="${pedido.nf_url}" target="_blank" class="btn btn-success"><i class="ic ic-sm" data-ic="receipt"></i> Baixar NF ${pedido.nf_numero?'('+pedido.nf_numero+')':''}</a>` : ''}
         ${pedido.boleto_url ? `<a href="${pedido.boleto_url}" target="_blank" class="btn btn-outline"><i class="ic ic-sm" data-ic="file-text"></i> Baixar Boleto</a>` : ''}
@@ -312,7 +312,7 @@ window.gPedAbrir = async function(id) {
         <thead><tr><th>Produto</th><th class="right">Qtd</th><th class="right">Preço unit.</th><th class="right">Total</th></tr></thead>
         <tbody>${itensHtml}</tbody>
       </table></div>
-      <div style="text-align:right;font-size:var(--fs-450);font-weight:700;font-family:var(--font-mono);color:var(--blue-dark)">
+      <div style="text-align:right;font-size:var(--fs-450);font-weight:700;font-family:var(--font-mono);color:var(--blue-dark-fg)">
         Total: R$ ${(itens||[]).reduce((s,i)=>s+Number(i.preco_final||i.preco_unitario||0)*Number(i.quantidade||1),0).toLocaleString('pt-BR',{minimumFractionDigits:2})}
       </div>
       ${acoesCotacaoHtml}
@@ -479,11 +479,11 @@ window.gPedUploadDoc = async function(idPedido, tipo, input) {
     await supaPatch('ped_pedidos', `id=eq.${idPedido}`, { [campo]: url });
 
     msg.textContent = `${tipo === 'nf' ? 'NF' : 'Boleto'} enviado com sucesso!`;
-    msg.style.color = 'var(--green)';
+    msg.style.color = 'var(--green-fg)';
     setTimeout(() => gPedAbrir(idPedido), 1000);
   } catch(e) {
     msg.textContent = `Erro ao enviar: ${e.message}`;
-    msg.style.color = 'var(--red)';
+    msg.style.color = 'var(--red-fg)';
   }
 };
 

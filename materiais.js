@@ -70,7 +70,7 @@
       const chips = MAT_LINHAS.map(l => {
         const n = l.key ? MAT.items.filter(m => (m.linha_produto || '') === l.key).length : MAT.items.length;
         const on = MAT.linha === l.key;
-        return `<button onclick="matSetLinha('${l.key}')" style="display:inline-flex;align-items:center;gap:var(--space-1-5);padding:var(--space-1-5) var(--space-3);border-radius:999px;border:1.5px solid ${on ? 'var(--blue-mid)' : 'var(--border)'};background:${on ? 'var(--blue-pale)' : 'var(--surface)'};color:${on ? 'var(--blue-dark)' : 'var(--text-secondary)'};font-size:12.5px;font-weight:600;cursor:pointer">${l.icon} ${l.label} <span style="opacity:.7;font-weight:500">${n}</span></button>`;
+        return `<button onclick="matSetLinha('${l.key}')" style="display:inline-flex;align-items:center;gap:var(--space-1-5);padding:var(--space-1-5) var(--space-3);border-radius:999px;border:1.5px solid ${on ? 'var(--blue-mid)' : 'var(--border)'};background:${on ? 'var(--blue-pale)' : 'var(--surface)'};color:${on ? 'var(--blue-dark-fg)' : 'var(--text-secondary)'};font-size:12.5px;font-weight:600;cursor:pointer">${l.icon} ${l.label} <span style="opacity:.7;font-weight:500">${n}</span></button>`;
       }).join('');
 
       const cards = lista.length
@@ -109,13 +109,13 @@
       const id = ytId(m.url);
       thumb = id
         ? `<div style="position:relative;aspect-ratio:16/9;background:var(--neutral-950);border-radius:var(--radius-lg);overflow:hidden"><img src="https://img.youtube.com/vi/${id}/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover" loading="lazy"/><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="width:46px;height:46px;border-radius:50%;background:var(--surface-overlay);color:var(--neutral-0);display:flex;align-items:center;justify-content:center;font-size:var(--fs-550)">▶</span></div></div>`
-        : matThumbIcon('▶', 'VÍDEO', 'var(--danger-600)');
+        : matThumbIcon('▶', 'VÍDEO', 'var(--text-danger)');
     } else if (tipo === 'imagem') {
       thumb = `<div style="aspect-ratio:16/9;background:var(--surface2);border-radius:var(--radius-lg);overflow:hidden"><img src="${esc(m.url)}" style="width:100%;height:100%;object-fit:cover" loading="lazy"/></div>`;
     } else if (tipo === 'pdf') {
-      thumb = matThumbIcon('<i class="ic ic-sm" data-ic="file-text"></i>', 'PDF', 'var(--blue-500)');
+      thumb = matThumbIcon('<i class="ic ic-sm" data-ic="file-text"></i>', 'PDF', 'var(--text-action)');
     } else {
-      thumb = matThumbIcon('<i class="ic ic-sm" data-ic="external-link"></i>', 'LINK', 'var(--success-500)');
+      thumb = matThumbIcon('<i class="ic ic-sm" data-ic="external-link"></i>', 'LINK', 'var(--text-success)');
     }
     return `<div style="border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;background:var(--surface);transition:box-shadow .15s" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='none'">
       <div onclick="matAbrir(${m.id})" title="Abrir" style="cursor:pointer">${thumb}
@@ -221,7 +221,7 @@
     const produto = (document.getElementById('ia-produto') && document.getElementById('ia-produto').value) || undefined;
     const btn = document.getElementById('ia-btn');
     const box = document.getElementById('ia-resp');
-    if (!pergunta) { if (box) box.innerHTML = '<div style="font-size:var(--fs-100);color:var(--red)">Escreva uma pergunta.</div>'; return; }
+    if (!pergunta) { if (box) box.innerHTML = '<div style="font-size:var(--fs-100);color:var(--red-fg)">Escreva uma pergunta.</div>'; return; }
     btn.disabled = true; btn.textContent = 'Pensando...';
     box.innerHTML = '<div class="loading-overlay" style="padding:var(--space-5)"><div class="spinner"></div></div>';
     try {
@@ -253,7 +253,7 @@
     const vids = videos.length
       ? `<div style="margin-top:var(--space-3)"><div style="font-size:var(--fs-090);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:var(--space-1-5)">Vídeos relacionados</div>${videos.map(v => {
           const id = ytId(v);
-          return `<a href="${esc(v)}" target="_blank" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1-5) 0;font-size:12.5px;color:var(--blue-mid);text-decoration:none">▶ ${id ? 'youtu.be/' + id : esc(v)}</a>`;
+          return `<a href="${esc(v)}" target="_blank" style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1-5) 0;font-size:12.5px;color:var(--blue-mid-fg);text-decoration:none">▶ ${id ? 'youtu.be/' + id : esc(v)}</a>`;
         }).join('')}</div>`
       : '';
     return `<div style="border:1px solid var(--border);border-radius:var(--radius-10);padding:var(--space-3-5);background:var(--surface2)">
