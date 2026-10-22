@@ -743,7 +743,9 @@ let USUARIO = null; // { id, email, nome, perfil: 'representante'|'gestor'|'admi
 // recusa, quem não é gestor nem representante cai no `iniciarApp()` igual.
 // Como o Auth é compartilhado pelos 22 apps do grupo, na prática os 53
 // usuários entravam aqui (16/09/2026), inclusive compras e rede autorizada.
-const MODULOS_DESTE_APP = ['stonni', 'atacado'];
+// `stonni_fotos` (22/10/2026) abre só "Fotos do catálogo" — pedido do
+// marketing; não abre o portal (ver temPortal).
+const MODULOS_DESTE_APP = ['stonni', 'atacado', 'stonni_fotos'];
 const MSG_SEM_ACESSO = 'Sem acesso a este sistema. Contate o administrador.';
 
 // Recusar na porta não tira área de ninguém: sem um desses módulos o nav sai
@@ -905,7 +907,10 @@ function ehAdmin() { return !!(USUARIO && USUARIO.admin); }
 // que impede porta e nav de voltarem a discordar: área nova aqui só existe se
 // o módulo dela entrar em MODULOS_DESTE_APP, que é o que a porta confere.
 function ehInterno() { return liberaAlgumaArea(USUARIO && USUARIO.modulos, USUARIO && USUARIO.admin, ['atacado']); }
-function temPortal() { return liberaAlgumaArea(USUARIO && USUARIO.modulos, USUARIO && USUARIO.admin, MODULOS_DESTE_APP); }
+function temPortal() { return liberaAlgumaArea(USUARIO && USUARIO.modulos, USUARIO && USUARIO.admin, ['stonni', 'atacado']); }
+// Fotos do catálogo sem Configurações: admin já troca foto em Configurações →
+// Catálogo, então o item é só para quem tem o módulo e não é admin.
+function soFotosCatalogo() { return temMod('stonni_fotos') && !ehAdmin(); }
 // Mesma regra da RLS de site_leads (SELECT/UPDATE para authenticated com
 // user_metadata.admin=true ou modulos contendo 'comercial'/'atacado') — a
 // tela e o banco nunca podem discordar de quem vê lead.
@@ -950,6 +955,13 @@ function construirNav() {
     grupos.push({ grupo: 'OPERACIONAL', itens: [
       { id: 'it-crm',        icon: '<i class="ic ic-sm" data-ic="clipboard-list"></i>', label: 'CRM',        breadcrumb: 'Interno · CRM' },
       { id: 'it-prospeccao', icon: '<i class="ic ic-sm" data-ic="target"></i>', label: 'Prospecção', breadcrumb: 'Interno · Prospecção' },
+    ]});
+  }
+
+  // MARKETING — só as fotos do catálogo (módulo `stonni_fotos` do Hub).
+  if (soFotosCatalogo()) {
+    grupos.push({ grupo: 'MARKETING', itens: [
+      { id: 'fotos-catalogo', icon: '<i class="ic ic-sm" data-ic="camera"></i>', label: 'Fotos do catálogo', breadcrumb: 'Marketing · Fotos do catálogo' },
     ]});
   }
 
@@ -1070,6 +1082,7 @@ function renderPagina(id, params) {
     case 'crm':            renderCRM(el, params); break;
     case 'configuracoes':  renderConfiguracoes(el, params); break;
     case 'representantes': renderConfiguracoes(el, params); break;
+    case 'fotos-catalogo': renderFotosCatalogo(el, params); break;
     default: el.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="alert-triangle"></i></div><h3>Em construção</h3><p>Módulo "${id}" em desenvolvimento.</p></div>`;
   }
 }

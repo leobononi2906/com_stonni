@@ -1,6 +1,18 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-10-20
+> Atualizado: 2026-10-22
+
+## Dev-log 22/10/2026 — Marketing troca as fotos do catálogo sem ver preço nem Configurações
+
+Pedido do dono: dar ao pessoal do marketing (hierarquia "Marketing — conteúdo e campanhas": Guilherme e Kauan) permissão para alterar as fotos. Até aqui a foto só se trocava no drawer de produto de Configurações → Catálogo, e Configurações abre só para `admin`; liberar a aba inteira daria preço, IPI, ST, estoque e selo junto.
+
+- Módulo novo do Hub **`stonni_fotos`** (precedente: `vitrine_pedido_manual`). Entra em `MODULOS_DESTE_APP` (porta), mas `temPortal()` passou a conferir só `stonni`/`atacado`: quem tem só `stonni_fotos` não vê o portal.
+- Quem tem o módulo e não é admin (`soFotosCatalogo()`) ganha o grupo **MARKETING → Fotos do catálogo** (`renderFotosCatalogo` em `configuracoes.js`): grade com busca e filtro "Sem foto", e o select não traz preço nem estoque.
+- O clique abre o mesmo `cfgEditarProduto`, que para quem não é admin desenha só o bloco de fotos (apagar, escolher capa, foto manual) e um botão Fechar, sem Salvar, Excluir nem "Sincronizar com Bling" (este também mexe em medidas). Admin segue com o editor completo.
+- A grade usa a foto cheia (`fotos_exibir[0]`), não a `foto_exibir_miniatura`: 4 miniaturas antigas estavam quebradas, a mesma razão do `catFotoUrl`. Erro do PostgREST mostra a mensagem em vez de tela vazia. `sw.js` v22.
+- **Não é segurança:** `ped_catalogo_produtos` está sem RLS (policy `ALL authenticated`) e o bucket `catalogo-fotos` aceita gravação de qualquer logado. A trava é de tela, como o resto do app.
+- Conferido no app local com usuário simulado por cima do login e leitura de produção (gravação desligada no teste): menu certo para marketing, para quem tem só `stonni_fotos` e para admin; 95 produtos, 8 sem foto, nenhum "R$" na tela; drawer só com fotos; largura de celular sem rolagem lateral. Upload real não foi feito no teste.
+- Fica de fora: o campo "Gerenciar catálogo" (`ped_gestores.pode_catalogo`) segue sem uso no app; não foi usado porque liberar área é do Hub e gestor vê todos os pedidos.
 
 ## Dev-log 20/10/2026 — Tema escuro (claro / escuro / automático) no Portal e no CRM
 

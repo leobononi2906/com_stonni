@@ -37,7 +37,9 @@
 // v19: aba nova "Regras de Faturamento" (regras-faturamento.js, script novo no
 // index.html) e o login com senha passa a abrir nela (08/10/2026).
 // v21: tema escuro (ds/stonni-dark.css + ds/stonni-tema.js no APP_SHELL; index.html muda) (20/10/2026).
-const CACHE_VERSION = 'stonni-v21-20261020';
+// v22: tela "Fotos do catálogo" para o módulo stonni_fotos do Hub (marketing) —
+// index.html ganha item de menu e rota (22/10/2026).
+const CACHE_VERSION = 'stonni-v22-20261022';
 const APP_SHELL = [
   './',
   './index.html',

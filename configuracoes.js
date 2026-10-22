@@ -1249,8 +1249,7 @@ window.cfgEditarProduto = async function(id) {
   const autoriaHtml = autoriaPartes.length
     ? `<div style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-2-5)">${autoriaPartes.join(' · ')}</div>`
     : `<div style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-2-5)">Sem registro de autoria (produto cadastrado antes deste controle existir).</div>`;
-  abrirDrawer('Editar Produto', p.nome, `
-    ${autoriaHtml}
+  const fotosHtml = `
     <div style="margin-bottom:var(--space-1)">
       <div style="font-size:var(--fs-090);font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:var(--space-1-5)">
         Fotos automáticas (Bling ▸ ERP) — <span style="font-weight:400">no catálogo aparece: <b>${origemLabel}</b></span>
@@ -1283,7 +1282,18 @@ window.cfgEditarProduto = async function(id) {
         <button class="btn btn-outline btn-sm" onclick="document.getElementById('ep-foto-file').click()"><i class="ic ic-sm" data-ic="camera"></i> Adicionar foto manual</button>
         <span id="ep-foto-msg" style="font-size:var(--fs-090);color:var(--text-muted);margin-left:var(--space-2)">Fica guardada mesmo se o Bling/ERP chegar depois (aí eles aparecem por cima).</span>
       </div>
-    </div>
+    </div>`;
+  // Quem chega aqui sem ser admin veio de "Fotos do catálogo" (módulo
+  // stonni_fotos): só o bloco de fotos — sem preço, estoque, Salvar nem Excluir.
+  if (!ehAdmin()) {
+    abrirDrawer('Fotos do Produto', p.nome, autoriaHtml + fotosHtml, `
+      <button class="btn btn-primary" onclick="fecharDrawer();if(paginaAtual==='fotos-catalogo')irPara('fotos-catalogo')">Fechar</button>
+    `);
+    return;
+  }
+  abrirDrawer('Editar Produto', p.nome, `
+    ${autoriaHtml}
+    ${fotosHtml}
     <button class="btn btn-outline btn-sm" onclick="cfgSincronizarBling(${id},'${p.referencia}')" style="margin:var(--space-2-5) 0 var(--space-1);width:100%"><i class="ic ic-sm" data-ic="refresh-cw"></i> Sincronizar com Bling</button>
     <div style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-2-5)">Atualiza fotos + peso + dimensões</div>
     <div style="display:flex;gap:var(--space-4);margin-bottom:var(--space-3);flex-wrap:wrap">
@@ -1382,6 +1392,65 @@ window.cfgEditarProduto = async function(id) {
   // Listener confiável para esgotado — onchange inline não dispara corretamente em innerHTML
   const _ec = document.getElementById('ep-esgotado-check');
   if (_ec) _ec.addEventListener('change', function() { cfgToggleEsgotado(id, this.checked); });
+};
+
+// ============================================================
+//  FOTOS DO CATÁLOGO — tela do marketing (módulo `stonni_fotos` do Hub)
+// ============================================================
+// Lista só nome, referência e foto; o clique abre o cfgEditarProduto, que
+// para quem não é admin desenha só o bloco de fotos. Preço e estoque ficam
+// fora do select de propósito.
+async function renderFotosCatalogo(el) {
+  const produtos = await supa('ped_catalogo_produtos', 'order=nome&select=id,nome,referencia,aplicacao,grupo,ativo,fotos_exibir');
+  // Erro do PostgREST volta como objeto, não lista: sem esta trava a tela
+  // ficava vazia, com "undefined produto(s)", em vez de dizer que falhou.
+  if (!Array.isArray(produtos)) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="alert-triangle"></i></div><h3>Não foi possível carregar o catálogo</h3><p>${produtos?.message || 'Tente de novo em instantes.'}</p></div>`;
+    return;
+  }
+  window._fotosProdutos = produtos;
+  el.innerHTML = `
+    <div class="section-header" style="flex-wrap:wrap;gap:var(--space-2-5)">
+      <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;flex:1;min-width:0">
+        <input type="text" id="fc-busca" placeholder="Buscar por nome, referência ou aplicação..." class="cfg-input" style="flex:1;min-width:160px;max-width:320px" oninput="fcFiltrar()">
+        <select id="fc-filtro" class="cfg-input" style="width:150px;flex-shrink:0" onchange="fcFiltrar()">
+          <option value="">Todos</option>
+          <option value="sem-foto">Sem foto</option>
+          <option value="ativo">Ativos</option>
+        </select>
+      </div>
+      <span id="fc-total" style="font-size:var(--fs-100);color:var(--text-muted)"></span>
+    </div>
+    <div id="fc-grade" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--space-3);margin-top:var(--space-3-5)"></div>
+  `;
+  fcFiltrar();
+}
+
+window.fcFiltrar = function() {
+  const busca  = (document.getElementById('fc-busca')?.value || '').toLowerCase();
+  const filtro = document.getElementById('fc-filtro')?.value || '';
+  let lista = window._fotosProdutos || [];
+  if (busca)  lista = lista.filter(p => p.nome?.toLowerCase().includes(busca) || p.referencia?.toLowerCase().includes(busca) || p.aplicacao?.toLowerCase().includes(busca));
+  if (filtro === 'sem-foto') lista = lista.filter(p => !(p.fotos_exibir || []).length);
+  if (filtro === 'ativo')    lista = lista.filter(p => p.ativo);
+  const total = document.getElementById('fc-total');
+  if (total) total.textContent = `${lista.length} produto(s)`;
+  const grade = document.getElementById('fc-grade');
+  if (!grade) return;
+  if (!lista.length) { grade.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="camera"></i></div><h3>Nenhum produto</h3><p>Ajuste a busca ou o filtro.</p></div>`; return; }
+  grade.innerHTML = lista.map(p => {
+    // Foto cheia, como o catálogo (catFotoUrl): a miniatura pré-gerada fica velha/quebrada.
+    const foto = p.fotos_exibir?.[0] || null;
+    return `<div onclick="cfgEditarProduto(${p.id})" style="cursor:pointer;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface);${p.ativo ? '' : 'opacity:.6'}">
+      ${foto
+        ? `<img src="${foto}" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:contain;background:var(--surface-page);display:block">`
+        : `<div style="width:100%;aspect-ratio:1;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-1);color:var(--text-muted);font-size:var(--fs-090)"><i class="ic" data-ic="camera"></i>Sem foto</div>`}
+      <div style="padding:var(--space-2)">
+        <div style="font-weight:500;font-size:var(--fs-100);line-height:1.3">${p.nome}</div>
+        <div class="mono" style="font-size:var(--fs-090);color:var(--text-muted);margin-top:var(--space-0-5)">${p.referencia || '—'}${p.ativo ? '' : ' · inativo'}</div>
+      </div>
+    </div>`;
+  }).join('');
 };
 
 window.cfgSincronizarBling = async function(id, sku) {
