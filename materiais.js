@@ -60,22 +60,11 @@
         finally { MAT.loading = false; }
       }
 
-      const busca = MAT.busca.trim().toLowerCase();
-      const lista = MAT.items.filter(m => {
-        if (MAT.linha && (m.linha_produto || '') !== MAT.linha) return false;
-        if (!busca) return true;
-        return [m.titulo, m.descricao, m.modelo, m.categoria].some(c => String(c || '').toLowerCase().includes(busca));
-      });
-
       const chips = MAT_LINHAS.map(l => {
         const n = l.key ? MAT.items.filter(m => (m.linha_produto || '') === l.key).length : MAT.items.length;
         const on = MAT.linha === l.key;
         return `<button onclick="matSetLinha('${l.key}')" style="display:inline-flex;align-items:center;gap:var(--space-1-5);padding:var(--space-1-5) var(--space-3);border-radius:999px;border:1.5px solid ${on ? 'var(--blue-mid)' : 'var(--border)'};background:${on ? 'var(--blue-pale)' : 'var(--surface)'};color:${on ? 'var(--blue-dark-fg)' : 'var(--text-secondary)'};font-size:12.5px;font-weight:600;cursor:pointer">${l.icon} ${l.label} <span style="opacity:.7;font-weight:500">${n}</span></button>`;
       }).join('');
-
-      const cards = lista.length
-        ? `<div class="cat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-3-5)">${lista.map(matCard).join('')}</div>`
-        : `<div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="mail"></i></div><h3>Nenhum material</h3><p>Nada encontrado para o filtro atual.</p></div>`;
 
       el.innerHTML = `
         <div class="card" style="margin-bottom:var(--space-4)">
@@ -91,13 +80,25 @@
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:var(--space-2)">${chips}</div>
         </div>
-        <div class="card">${cards}</div>`;
+        <div class="card" id="mat-grid">${matGridHtml()}</div>`;
     } catch (err) {
       if (window.appLog) window.appLog('ERRO', 'Falha ao carregar materiais', { categoria: 'materiais', detalhe: { erro: err && err.message } });
       (el || document.getElementById('page-content')).innerHTML =
         '<div class="alert alert-danger"><span class="alert-icon"><i class="ic ic-sm" data-ic="alert-triangle"></i></span><div>Não foi possível carregar os materiais.' +
         (err && err.message ? '<br><small>' + esc(err.message) + '</small>' : '') + '</div></div>';
     }
+  }
+
+  function matGridHtml() {
+    const busca = MAT.busca.trim().toLowerCase();
+    const lista = MAT.items.filter(m => {
+      if (MAT.linha && (m.linha_produto || '') !== MAT.linha) return false;
+      if (!busca) return true;
+      return [m.titulo, m.descricao, m.modelo, m.categoria].some(c => String(c || '').toLowerCase().includes(busca));
+    });
+    return lista.length
+      ? `<div class="cat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-3-5)">${lista.map(matCard).join('')}</div>`
+      : `<div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="mail"></i></div><h3>Nenhum material</h3><p>Nada encontrado para o filtro atual.</p></div>`;
   }
 
   function matCard(m) {
@@ -148,7 +149,12 @@
   }
 
   function matSetLinha(l) { MAT.linha = l; renderMateriais(document.getElementById('page-content')); }
-  function matBusca(v) { MAT.busca = v; renderMateriais(document.getElementById('page-content')); }
+  function matBusca(v) {
+    MAT.busca = v;
+    // só a grade: refazer a tela recriaria o campo de busca e tiraria o foco a cada letra
+    const g = document.getElementById('mat-grid');
+    if (g) g.innerHTML = matGridHtml(); else renderMateriais(document.getElementById('page-content'));
+  }
 
   function matAbrir(id) {
     const m = MAT.items.find(x => Number(x.id) === Number(id));

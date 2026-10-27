@@ -67,22 +67,11 @@ async function renderMateriais() {
     MAT.loading = false;
   }
 
-  const busca = MAT.busca.trim().toLowerCase();
-  const lista = MAT.items.filter(m => {
-    if (MAT.linha && (m.linha_produto || '') !== MAT.linha) return false;
-    if (!busca) return true;
-    return [m.titulo, m.descricao, m.modelo, m.categoria].some(c => String(c || '').toLowerCase().includes(busca));
-  });
-
   const chips = MAT_LINHAS.map(l => {
     const n = l.key ? MAT.items.filter(m => (m.linha_produto || '') === l.key).length : MAT.items.length;
     const on = MAT.linha === l.key;
     return `<button onclick="matSetLinha('${l.key}')" style="display:inline-flex;align-items:center;gap:var(--space-1-5);padding:var(--space-1-5) var(--space-3);border-radius:var(--radius-pill);border:1.5px solid ${on ? 'var(--blue-mid)' : 'var(--border)'};background:${on ? 'var(--blue-pale)' : 'var(--surface)'};color:${on ? 'var(--blue-dark-fg)' : 'var(--text-secondary)'};font-size:12.5px;font-weight:600;cursor:pointer">${l.icon} ${l.label} <span style="opacity:.7;font-weight:500">${n}</span></button>`;
   }).join('');
-
-  const cards = lista.length
-    ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--space-4)">${lista.map(matCard).join('')}</div>`
-    : '<div class="empty-msg">Nenhum material encontrado.</div>';
 
   el.innerHTML = `
     <div class="scard">
@@ -99,7 +88,19 @@ async function renderMateriais() {
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:var(--space-2)">${chips}</div>
     </div>
-    <div class="scard">${cards}</div>`;
+    <div class="scard" id="mat-grid">${matGridHtml()}</div>`;
+}
+
+function matGridHtml() {
+  const busca = MAT.busca.trim().toLowerCase();
+  const lista = MAT.items.filter(m => {
+    if (MAT.linha && (m.linha_produto || '') !== MAT.linha) return false;
+    if (!busca) return true;
+    return [m.titulo, m.descricao, m.modelo, m.categoria].some(c => String(c || '').toLowerCase().includes(busca));
+  });
+  return lista.length
+    ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--space-4)">${lista.map(matCard).join('')}</div>`
+    : '<div class="empty-msg">Nenhum material encontrado.</div>';
 }
 
 function matCard(m) {
@@ -135,7 +136,12 @@ function matThumbIcon(icon, label, cor) {
 }
 
 function matSetLinha(l) { MAT.linha = l; renderMateriais(); }
-function matBusca(v) { MAT.busca = v; renderMateriais(); }
+function matBusca(v) {
+  MAT.busca = v;
+  // só a grade: refazer a tela recriaria o campo de busca e tiraria o foco a cada letra
+  const g = document.getElementById('mat-grid');
+  if (g) g.innerHTML = matGridHtml(); else renderMateriais();
+}
 
 function matAbrir(id) {
   const m = MAT.items.find(x => Number(x.id) === Number(id));

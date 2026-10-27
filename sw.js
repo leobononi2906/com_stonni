@@ -40,7 +40,8 @@
 // v22: tela "Fotos do catálogo" para o módulo stonni_fotos do Hub (marketing) —
 // index.html ganha item de menu e rota (22/10/2026).
 // v23: busca do catálogo e do "Novo produto" ignoram acento — "lítio" acha "LITIO" (27/10/2026).
-const CACHE_VERSION = 'stonni-v23-20261027';
+// v24: busca dos Materiais (Portal e CRM) não perde mais o foco a cada letra — só a grade é refeita (27/10/2026).
+const CACHE_VERSION = 'stonni-v24-20261027';
 const APP_SHELL = [
   './',
   './index.html',
