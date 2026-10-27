@@ -1,6 +1,10 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-10-22
+> Atualizado: 2026-10-27
+
+## Dev-log 27/10/2026 — Senha a cada 90 dias e sem repetir as últimas 5 (`geral-central.js` v21, `?v=` subido)
+
+Cópia verbatim do `bononi-hub/ds/geral-central.js`: a troca forçada agora pergunta ao banco se a senha venceu (RPC `geral_senha_status`) e grava pela `geral_trocar_senha`, que recusa as últimas 5 senhas e menos de 8 caracteres (migrations 0069/0070 do `bononi-hub`, aplicadas em 27/10). Antes lia `user_metadata.senha_alterada_em`, que ninguém tinha — nunca bloqueou ninguém. Ninguém vence antes de 25/01/2027. Provado no navegador no Hub (mesmo arquivo, RPC simulada); detalhe no dev-log do Hub de 27/10.
 
 ## Dev-log 22/10/2026 — Marketing troca as fotos do catálogo sem ver preço nem Configurações
 
