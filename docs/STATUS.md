@@ -2,6 +2,10 @@
 
 > Atualizado: 2026-10-27
 
+## Dev-log 27/10/2026 — Busca dos Materiais não perde mais o foco a cada letra (`4a72651`)
+
+Relato do Leo: em vários apps a busca aceitava uma letra e era preciso clicar de novo. No Portal (`materiais.js`) e no CRM (`crm/js/materiais.js`, tela gêmea), `matBusca` chamava `renderMateriais`, que refazia a tela inteira com o campo de busca dentro, então o `<input>` era recriado a cada tecla. Agora a grade fica num `#mat-grid` e a digitação refaz só ela (`matGridHtml()`), o mesmo conserto que o `stonni-assistencia` já tinha. Os chips de linha continuam refazendo a tela, porque são clique. `sw.js` v24 e `?v=20261027a` no `crm/index.html`. Conferido com `node --check`, sem teste no navegador, a pedido dele.
+
 ## Dev-log 27/10/2026 — Cotação de frete com o token do usuário
 
 `pedidos.js`: a chamada à `cotar-frete-index` (repo `bononi-frete`) manda `HEADERS['Authorization']` (token de quem está logado) em vez da chave anon fixa. A função passou a recusar a anon (qualquer um com a chave do bundle cotava nas 4 transportadoras e gravava `frt_cotacoes`); aceita usuário com `frete`, `stonni`, `atacado` ou `stonni_fotos` em `app_metadata`, admin global ou a chave de serviço. `sw.js` `stonni-v25-20261027`.
