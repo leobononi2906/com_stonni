@@ -1462,9 +1462,12 @@ window.cfgSincronizarBling = async function(id, sku) {
   const syncMedidas = document.getElementById('ep-sync-medidas')?.checked !== false;
   try {
     const skuLimpo = String(parseInt(sku));
+    // Guarda se a chamada deu certo: antes um 401/500 virava "Sem dados no Bling", igual a produto não cadastrado
+    const ler = p => p.then(r => r.json().catch(() => ({})).then(j => ({ ...j, _ok: r.ok, _status: r.status })))
+                      .catch(() => ({ _ok: false, _status: 0 }));
     const [rFotos, rDim] = await Promise.all([
-      syncFotos   ? blingProxyGet(`acao=fotos-cache&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})) : Promise.resolve({}),
-      syncMedidas ? blingProxyGet(`acao=dimensoes&sku=${skuLimpo}`).then(r=>r.json()).catch(()=>({})) : Promise.resolve({})
+      syncFotos   ? ler(blingProxyGet(`acao=fotos-cache&sku=${skuLimpo}`)) : Promise.resolve(null),
+      syncMedidas ? ler(blingProxyGet(`acao=dimensoes&sku=${skuLimpo}`))   : Promise.resolve(null)
     ]);
     const patch = {};
     const fotos = rFotos?.fotos || [];
@@ -1480,11 +1483,38 @@ window.cfgSincronizarBling = async function(id, sku) {
       const prod = prodRes?.[0];
       if (prod) await fetch(`${SUPA_URL}/rest/v1/frt_produtos_dimensoes`, { method: 'POST', headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates' }, body: JSON.stringify({ id_produto: prod.id_produto_erp, descricao: prod.nome, referencia: prod.referencia, peso_kg: rDim.peso_kg, altura_cm: rDim.altura_cm, largura_cm: rDim.largura_cm, comprimento_cm: rDim.comprimento_cm, ativo: true }) }).catch(()=>{});
     }
+    // Três casos que antes saíam todos como "Sem dados no Bling": erro, não achou, achou sem foto/medidas
+    const respostas = [rFotos, rDim].filter(Boolean);
+    const erro = respostas.find(r => !r._ok);
     const msgs = [];
     if (fotos.length) msgs.push(`${fotos.length} foto(s)`);
     if (rDim?.peso_kg) msgs.push('dimensões');
-    msg.textContent = msgs.length ? `Sincronizado: ${msgs.join(' · ')}` : 'Sem dados no Bling para este produto.';
-    msg.style.color = msgs.length ? 'var(--green-fg)' : 'var(--orange-fg)';
+    let texto, cor;
+    if (msgs.length) {
+      texto = `Sincronizado: ${msgs.join(' · ')}`;
+      if (rFotos?._ok && !fotos.length) texto += ' · sem foto no Bling';
+      if (rDim?._ok && !rDim.peso_kg)   texto += ' · sem medidas no Bling';
+      if (erro) texto += ' · parte falhou, tente de novo';
+      cor = 'var(--green-fg)';
+    } else if (erro) {
+      texto = erro._status === 401
+        ? 'Erro: acesso ao Bling recusado (login expirado ou sem permissão). Saia, entre de novo e tente outra vez.'
+        : `Erro ao consultar o Bling (${erro._status ? 'HTTP ' + erro._status : 'sem conexão'}${erro.erro ? ': ' + erro.erro : ''}). Tente de novo.`;
+      cor = 'var(--red-fg)';
+    } else if (respostas.length && respostas.every(r => r.encontrado === false)) {
+      texto = `SKU ${skuLimpo} não encontrado no Bling. Confira se o produto está cadastrado lá com esse código.`;
+      cor = 'var(--orange-fg)';
+    } else if (respostas.length) {
+      const nomeBling = respostas.find(r => r.nome)?.nome;
+      const falta = [rFotos && 'foto', rDim && 'medidas'].filter(Boolean).join(' nem ');
+      texto = `Achado no Bling${nomeBling ? ` (${nomeBling})` : ''}, mas sem ${falta} cadastrada(s) lá.`;
+      cor = 'var(--orange-fg)';
+    } else {
+      texto = 'Marque "Sincronizar fotos" ou "Sincronizar medidas".';
+      cor = 'var(--text-muted)';
+    }
+    msg.textContent = texto;
+    msg.style.color = cor;
   } catch(e) { msg.textContent = 'Erro ao sincronizar.'; msg.style.color = 'var(--red-fg)'; }
 };
 
