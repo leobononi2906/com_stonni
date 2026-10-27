@@ -2,6 +2,10 @@
 
 > Atualizado: 2026-10-27
 
+## Dev-log 27/10/2026 — Cotação de frete com o token do usuário
+
+`pedidos.js`: a chamada à `cotar-frete-index` (repo `bononi-frete`) manda `HEADERS['Authorization']` (token de quem está logado) em vez da chave anon fixa. A função passou a recusar a anon (qualquer um com a chave do bundle cotava nas 4 transportadoras e gravava `frt_cotacoes`); aceita usuário com `frete`, `stonni`, `atacado` ou `stonni_fotos` em `app_metadata`, admin global ou a chave de serviço. `sw.js` `stonni-v25-20261027`.
+
 ## Dev-log 27/10/2026 — Busca ignora acento ("lítio" acha "LITIO")
 
 Relato: "a bateria de lítio não está sendo puxada" no Portal. Causa: as baterias (SKU 19068 e 17078, empresa 8 com estoque) nunca entraram em `ped_catalogo_produtos`, e o "Novo produto" de Configurações buscava `nome=ilike.*lítio*`, que dá 0 linhas porque o SGA grava o nome sem acento (sem acento: 2 linhas, conferido em produção). A busca do catálogo do representante (`catFiltrar`) tinha a mesma falha. As duas tiram o acento agora (`normalize('NFD')`): `configuracoes.js` só no termo enviado ao PostgREST; `catalogo.js` (`catSemAcento`) nos dois lados, com nome, referência, aplicação e grupo. `sw.js` v23. Não foi testado na tela logada; a prova é a consulta REST com o termo sem acento. Depois, a pedido, as duas baterias foram incluídas pelo banco (ids 117 e 118, mesmos campos do "Novo produto", ativas, preço do `preco_aux2`): `docs/sql/2026-10-27_inclui_baterias_litio_catalogo.sql`. Entraram sem foto e sem medidas; a camada ERP vem pelo job de fotos do replicador e a do Bling pelo "Sincronizar com Bling".

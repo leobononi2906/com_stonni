@@ -928,7 +928,8 @@ window.pedCotarFrete = async function() {
 
   try {
     const r = await fetch(`${SUPA_URL}/functions/v1/cotar-frete-index`, {
-      method: 'POST', headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
+      // token de quem está logado (27/10/2026): a cotar-frete-index passou a recusar a chave anon
+      method: 'POST', headers: { 'apikey': SUPA_KEY, 'Authorization': HEADERS['Authorization'] || `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
     const data = await r.json();
