@@ -1031,8 +1031,10 @@ window.cfgBuscarERP = async function() {
   if (/^\d+$/.test(termo)) { await cfgSelecionarProdutoERP(parseInt(termo)); return; }
 
   // Texto → busca por nome (empresa 8 = Bononi SC, sem repetir por empresa)
+  // O SGA grava o nome sem acento ("LITIO"): tira o acento do termo, senão "lítio" não acha nada
+  const termoSemAcento = termo.normalize('NFD').replace(/[̀-ͯ]/g, '');
   res.innerHTML = '<div style="color:var(--text-muted);font-size:var(--fs-200)"><i class="ic ic-sm" data-ic="search"></i> Buscando por nome...</div>';
-  const rows = await supa('vw_fb_produtos_compras', `nome=ilike.*${encodeURIComponent(termo)}*&id_empresa=eq.8&select=id_produto,referencia,nome,grupo,preco_aux2,estoque_fisico&order=nome&limit=30`);
+  const rows = await supa('vw_fb_produtos_compras', `nome=ilike.*${encodeURIComponent(termoSemAcento)}*&id_empresa=eq.8&select=id_produto,referencia,nome,grupo,preco_aux2,estoque_fisico&order=nome&limit=30`);
   if (!rows?.length) {
     res.innerHTML = `<div class="alert alert-warning"><span class="alert-icon"><i class="ic ic-sm" data-ic="alert-triangle"></i></span>Nenhum produto encontrado com "<strong>${termo}</strong>". Tente outra palavra ou busque pelo código (SKU).</div>`;
     return;

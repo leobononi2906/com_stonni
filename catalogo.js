@@ -153,17 +153,20 @@ function catSeloHtml(p, extra = '') {
   return label ? `<div class="cat-card-badge-selo cat-selo-${p.selo} ${extra}">${label}</div>` : '';
 }
 
+// Minúsculo e sem acento: o nome vem do SGA sem acento ("LITIO"), a busca pode vir com ("lítio")
+const catSemAcento = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
 window.catFiltrar = function() {
-  const busca  = document.getElementById('cat-search')?.value.toLowerCase() || '';
+  const busca  = catSemAcento(document.getElementById('cat-search')?.value);
   const grupo  = document.getElementById('cat-grupo')?.value || '';
   const disp   = document.getElementById('cat-disp')?.value || '';
   let lista    = window._catProdutos || [];
 
   if (busca)  lista = lista.filter(p =>
-    p.nome?.toLowerCase().includes(busca) ||
-    p.referencia?.toLowerCase().includes(busca) ||
-    p.aplicacao?.toLowerCase().includes(busca) ||
-    p.grupo?.toLowerCase().includes(busca)
+    catSemAcento(p.nome).includes(busca) ||
+    catSemAcento(p.referencia).includes(busca) ||
+    catSemAcento(p.aplicacao).includes(busca) ||
+    catSemAcento(p.grupo).includes(busca)
   );
   if (grupo)        lista = lista.filter(p => p.id_grupo == grupo);
   const tagFiltro = document.getElementById('cat-tag')?.value||'';

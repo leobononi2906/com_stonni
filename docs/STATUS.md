@@ -2,6 +2,10 @@
 
 > Atualizado: 2026-10-27
 
+## Dev-log 27/10/2026 — Busca ignora acento ("lítio" acha "LITIO")
+
+Relato: "a bateria de lítio não está sendo puxada" no Portal. Causa: as baterias (SKU 19068 e 17078, empresa 8 com estoque) nunca entraram em `ped_catalogo_produtos`, e o "Novo produto" de Configurações buscava `nome=ilike.*lítio*`, que dá 0 linhas porque o SGA grava o nome sem acento (sem acento: 2 linhas, conferido em produção). A busca do catálogo do representante (`catFiltrar`) tinha a mesma falha. As duas tiram o acento agora (`normalize('NFD')`): `configuracoes.js` só no termo enviado ao PostgREST; `catalogo.js` (`catSemAcento`) nos dois lados, com nome, referência, aplicação e grupo. `sw.js` v23. As baterias seguem fora do catálogo até alguém incluí-las pelo "Novo produto". Não foi testado na tela logada; a prova é a consulta REST com o termo sem acento.
+
 ## Dev-log 27/10/2026 — Senha a cada 90 dias e sem repetir as últimas 5 (`geral-central.js` v21, `?v=` subido)
 
 Cópia verbatim do `bononi-hub/ds/geral-central.js`: a troca forçada agora pergunta ao banco se a senha venceu (RPC `geral_senha_status`) e grava pela `geral_trocar_senha`, que recusa as últimas 5 senhas e menos de 8 caracteres (migrations 0069/0070 do `bononi-hub`, aplicadas em 27/10). Antes lia `user_metadata.senha_alterada_em`, que ninguém tinha — nunca bloqueou ninguém. Ninguém vence antes de 25/01/2027. Provado no navegador no Hub (mesmo arquivo, RPC simulada); detalhe no dev-log do Hub de 27/10.
