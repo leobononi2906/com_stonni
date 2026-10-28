@@ -3,9 +3,10 @@
 //  Pedido do Leo: o representante manda o boleto pelo WhatsApp DELE,
 //  corrigindo o número se precisar. Nunca por e-mail.
 //   - Dados: Edge Function fin-boleto-email (bononi-dashboard), ações
-//     portal_boletos / whatsapp_preparar / outro_canal, com o token de quem
-//     está logado. A função só devolve boleto de cliente do atacado
-//     (atac_clientes) e, pelo Portal, só aceita o canal WhatsApp.
+//     portal_boletos / whatsapp_preparar / outro_canal / pdf / nota_pdf, com
+//     o token de quem está logado. A função só devolve boleto de cliente do
+//     atacado (atac_clientes) das vendas de quem está logado (vendedor da
+//     venda no SGA); o admin vê todos. Pelo Portal, só o canal WhatsApp.
 //   - "Sim, enviei" grava o envio na fila do Financeiro (o e-mail automático
 //     não manda de novo) e o telefone que deu certo vale para todos.
 //  Área ISOLADA: erro aqui não derruba o resto do app.
@@ -77,14 +78,15 @@
       if (filtro === 'avencer' && venc) continue;
       if (filtro === 'vencidos' && !venc) continue;
       if (q) {
-        const texto = `${b.cliente} ${b.num_doc} ${b.cidade}`.toLowerCase();
+        const texto = `${b.cliente} ${b.num_doc} ${b.cidade} ${b.vendedor || ''}`.toLowerCase();
         if (!texto.includes(q) && !(qDig.length >= 3 && String(b.documento).includes(qDig))) continue;
       }
       const chave = b.documento || 'sem-doc-' + b.codigo;
-      if (!grupos.has(chave)) grupos.set(chave, { documento: b.documento, cliente: b.cliente, cidade: b.cidade, uf: b.uf, boletos: [], total: 0 });
+      if (!grupos.has(chave)) grupos.set(chave, { documento: b.documento, cliente: b.cliente, cidade: b.cidade, uf: b.uf, boletos: [], total: 0, vendedores: [] });
       const g = grupos.get(chave);
       g.boletos.push(b);
       g.total += Number(b.valor || 0);
+      if (b.vendedor && !g.vendedores.includes(b.vendedor)) g.vendedores.push(b.vendedor);
     }
     return [...grupos.values()];
   }
@@ -97,7 +99,8 @@
   // ── Tela ──
 
   // marcados: nada vem marcado (cliente grande tem dezenas de parcelas); abertos: clientes com a lista toda à mostra.
-  const BOL = { lista: [], hoje: '', filtro: 'avencer', busca: '', marcados: new Set(), abertos: new Set(), mostrar: 40, carregado: false };
+  // todos: admin (vê os boletos de todos os vendedores); semVinculo: o login não está ligado a nenhum vendedor do SGA.
+  const BOL = { lista: [], hoje: '', filtro: 'avencer', busca: '', marcados: new Set(), abertos: new Set(), mostrar: 40, carregado: false, todos: false, semVinculo: false };
   const POR_CLIENTE = 5;
   const LOTE_MAX = 25; // o máximo que a fin-boleto-email aceita por vez
   const ENV = { codigos: [], preparo: null, telefone: '' };
@@ -129,6 +132,8 @@
         const r = await chamar({ acao: 'portal_boletos' });
         BOL.lista = r.boletos || [];
         BOL.hoje = r.hoje;
+        BOL.todos = !!r.todos;
+        BOL.semVinculo = !!r.sem_vinculo;
         BOL.carregado = true;
       }
       const filtroBtn = (f, rot) => `<button type="button" class="toggle-btn ${BOL.filtro === f ? 'active' : ''}" onclick="bolFiltro('${f}')">${rot}</button>`;
@@ -136,8 +141,8 @@
         <div class="card" style="margin-bottom:var(--space-4)">
           <div class="section-header" style="margin-bottom:var(--space-3)">
             <div>
-              <div class="section-title"><i class="ic ic-sm" data-ic="receipt"></i> Boletos do atacado</div>
-              <div style="font-size:var(--fs-100);color:var(--text-muted);margin-top:var(--space-0-5)">Encaminhe o boleto pelo seu WhatsApp. Confira o número antes de enviar.</div>
+              <div class="section-title"><i class="ic ic-sm" data-ic="receipt"></i> ${BOL.todos ? 'Boletos do atacado' : 'Boletos das suas vendas'}</div>
+              <div style="font-size:var(--fs-100);color:var(--text-muted);margin-top:var(--space-0-5)">${BOL.todos ? 'Todos os vendedores. ' : ''}Baixe o boleto e a nota, ou encaminhe pelo seu WhatsApp. Confira o número antes de enviar.</div>
             </div>
             <div class="toggle-group">${filtroBtn('avencer', 'A vencer')}${filtroBtn('vencidos', 'Vencidos')}${filtroBtn('todos', 'Todos')}</div>
           </div>
@@ -157,7 +162,10 @@
   function listaHtml() {
     const grupos = agrupar(BOL.lista, BOL.hoje, BOL.filtro, BOL.busca);
     if (!grupos.length) {
-      return `<div class="card"><div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="receipt"></i></div><h3>Nenhum boleto</h3><p>${BOL.lista.length ? 'Nada encontrado para o filtro atual.' : 'Nenhum boleto em aberto dos clientes do atacado.'}</p></div></div>`;
+      const motivo = BOL.lista.length ? 'Nada encontrado para o filtro atual.'
+        : BOL.semVinculo ? 'Seu usuário ainda não está ligado a um vendedor do SGA, então não há como saber quais vendas são suas. Peça ao administrador para fazer o vínculo.'
+        : BOL.todos ? 'Nenhum boleto em aberto dos clientes do atacado.' : 'Nenhum boleto em aberto das suas vendas.';
+      return `<div class="card"><div class="empty-state"><div class="empty-state-icon"><i class="ic ic-sm" data-ic="receipt"></i></div><h3>Nenhum boleto</h3><p>${motivo}</p></div></div>`;
     }
     const nBol = grupos.reduce((s, g) => s + g.boletos.length, 0);
     const mais = grupos.length > BOL.mostrar
@@ -180,6 +188,10 @@
             <div style="font-family:var(--font-mono);font-size:var(--fs-100)">${esc(b.num_doc)}</div>
             <div style="font-size:var(--fs-090);color:${s.vencido ? 'var(--red-fg)' : 'var(--text-muted)'}">${dataBR(b.data_venc)} · ${s.texto}</div>
             ${env ? `<div style="font-size:var(--fs-090);color:${env.ok ? 'var(--green-fg)' : 'var(--text-warning)'}"><i class="ic ic-sm" data-ic="${env.ok ? 'check-circle' : 'alert-triangle'}"></i> ${esc(env.texto)}</div>` : ''}
+            <div style="display:flex;flex-wrap:wrap;gap:var(--space-1-5);margin-top:var(--space-1)">
+              <button type="button" class="btn btn-outline btn-sm" onclick="bolBaixar(this, ${b.codigo}, 'pdf')" title="Baixar o PDF do boleto"><i class="ic ic-sm" data-ic="download"></i> Boleto</button>
+              ${b.tem_nota ? `<button type="button" class="btn btn-outline btn-sm" onclick="bolBaixar(this, ${b.codigo}, 'nota_pdf')" title="Baixar o PDF da nota fiscal"><i class="ic ic-sm" data-ic="download"></i> Nota</button>` : ''}
+            </div>
           </div>
           <div style="font-weight:700;white-space:nowrap">${brl(b.valor)}</div>
           <button class="btn btn-success btn-sm" onclick="bolEnviar('${b.codigo}')" title="Enviar este boleto pelo WhatsApp" style="flex-shrink:0"><i class="ic ic-sm" data-ic="smartphone"></i> Enviar</button>
@@ -198,6 +210,7 @@
           <div style="min-width:0;flex:1">
             <div style="font-weight:700">${esc(g.cliente)}</div>
             <div style="font-size:var(--fs-090);color:var(--text-muted)">${esc(fmtDoc(g.documento))}${g.cidade ? ` · ${esc(g.cidade)}/${esc(g.uf)}` : ''} · ${g.boletos.length} boleto${g.boletos.length === 1 ? '' : 's'} · ${brl(g.total)}</div>
+            ${BOL.todos && g.vendedores.length ? `<div style="font-size:var(--fs-090);color:var(--text-muted)">Vendedor: ${esc(g.vendedores.join(', '))}</div>` : ''}
           </div>
           <div style="text-align:right">${btnMarcados}</div>
         </div>
@@ -289,11 +302,48 @@
     }
   }
 
+  // ── Baixar PDF (boleto ou nota) ──
+
+  // Link assinado do storage (5 min); &download= faz o storage mandar como anexo, sem sair da tela.
+  function baixarArquivo(url, nome) {
+    const a = document.createElement('a');
+    a.href = url + (url.includes('?') ? '&' : '?') + 'download=' + encodeURIComponent(nome);
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  /** acao: 'pdf' (boleto) ou 'nota_pdf'. A função confere que o boleto é de uma venda de quem pede. */
+  async function bolBaixar(btn, codigo, acao) {
+    const rotulo = btn.innerHTML;
+    const linha = btn.parentElement;
+    const erroAntigo = linha.querySelector('.bol-baixar-erro');
+    if (erroAntigo) erroAntigo.remove();
+    btn.disabled = true;
+    btn.textContent = 'Baixando…';
+    try {
+      const r = await chamar({ acao, codigo });
+      if (acao === 'pdf') {
+        const b = BOL.lista.find(x => x.codigo === codigo);
+        baixarArquivo(r.url, `boleto-${String((b && b.num_doc) || codigo).replace(/[^\w-]+/g, '-')}.pdf`);
+      } else {
+        (r.notas || []).forEach(n => baixarArquivo(n.url, n.arquivo));
+      }
+    } catch (err) {
+      linha.insertAdjacentHTML('beforeend', `<span class="bol-baixar-erro" style="flex-basis:100%;font-size:var(--fs-090);color:var(--red-fg)">${esc(err.message)}</span>`);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = rotulo;
+    }
+  }
+
   // Pelo menu, sempre busca de novo (o Financeiro pode ter enviado algo nesse meio tempo).
   window.renderBoletos = function (el) { BOL.carregado = false; return renderBoletos(el); };
   window.bolEnviar = bolEnviar;
   window.bolAbrirWhats = bolAbrirWhats;
   window.bolEnviou = bolEnviou;
+  window.bolBaixar = bolBaixar;
   window.bolNaoEnviou = function () { document.getElementById('drawer-footer').innerHTML = rodapeAbrir(); };
   window.bolUsarTelefone = function (t) {
     document.getElementById('bol-tel').value = telefoneFormatado(t);

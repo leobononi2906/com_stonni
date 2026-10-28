@@ -71,4 +71,17 @@ t('agrupar: boleto de valor zero (SGA) fica de fora', () => {
   assert.deepStrictEqual(L.agrupar(lista, '2026-10-28', 'todos', '')[0].boletos.map(b => b.codigo), [3]);
 });
 
+t('agrupar: vendedores do cliente sem repetir e busca pelo vendedor (tela do admin)', () => {
+  const lista = [
+    { codigo: 1, documento: '11222333000144', cliente: 'Loja A', num_doc: 'VD-1', valor: 10, data_venc: '2026-11-20', vendedor: 'ANA JULIA' },
+    { codigo: 2, documento: '11222333000144', cliente: 'Loja A', num_doc: 'VD-2', valor: 10, data_venc: '2026-11-21', vendedor: 'ANA JULIA' },
+    { codigo: 3, documento: '11222333000144', cliente: 'Loja A', num_doc: 'VD-3', valor: 10, data_venc: '2026-11-22', vendedor: 'GUILHERME' },
+    { codigo: 4, documento: '99888777000166', cliente: 'Loja B', num_doc: 'VD-4', valor: 10, data_venc: '2026-11-22' },
+  ];
+  const g = L.agrupar(lista, '2026-10-28', 'todos', '');
+  assert.deepStrictEqual(g[0].vendedores, ['ANA JULIA', 'GUILHERME']);
+  assert.deepStrictEqual(g[1].vendedores, []);
+  assert.deepStrictEqual(L.agrupar(lista, '2026-10-28', 'todos', 'guilherme').map(x => x.boletos.map(b => b.codigo)), [[3]]);
+});
+
 console.log(`\n${n}/${n} ok`);

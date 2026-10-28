@@ -44,7 +44,7 @@
 // v26: Home do atacado ganha histórico de 12 meses e cards de mês anterior / ano anterior (28/10/2026).
 // v27: cadastro de gestor/representante não chama mais a admin-users.
 // v28: tela "Boletos" (boletos.js, script novo) — encaminhar boleto do atacado pelo WhatsApp.
-const CACHE_VERSION = 'stonni-v29-20261028'; // v29: aviso de celular do atacado desconectado no topo (pedido 24)
+const CACHE_VERSION = 'stonni-v30-20261028'; // v30: Boletos só das vendas do representante (admin vê todos) + baixar boleto e nota
 const APP_SHELL = [
   './',
   './index.html',

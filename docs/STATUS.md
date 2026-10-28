@@ -2,6 +2,16 @@
 
 > Atualizado: 2026-10-28
 
+## Dev-log 28/10/2026 — Boletos: cada representante só as vendas dele, admin vê todos, baixar boleto e nota
+
+Pedido do Leo, no lugar da decisão anterior ("todo o atacado"): o representante só vê, envia e baixa boleto das
+vendas dele (vendedor da venda no SGA); o admin do Hub vê todos, com o vendedor em cada cliente e busca pelo nome
+dele. Cada boleto ganhou **Boleto** e, quando há nota ligada, **Nota** (PDF por link assinado de 5 min, sem sair da
+tela). A trava fica na Edge Function `fin-boleto-email` do bononi-dashboard (ver o STATUS de lá); a tela só mostra o
+que vem. Login sem vínculo com vendedor do SGA vê a lista vazia com o motivo — hoje Pamella, Raça, Gabriel Roque e
+Kauan (o vínculo é o "Meu vendedor" do CRM ou o `id_vendedor_erp` do representante). Testes 8/8; tela conferida no
+preview com a função simulada (representante, admin, sem vínculo, recusa da nota, 375 px). `sw.js` v30.
+
 ## Dev-log 28/10/2026 — Tela "Boletos": o representante encaminha o boleto pelo WhatsApp dele
 
 Pedido do Leo: uma área no Portal para o representante mandar o boleto ao cliente e corrigir o número se precisar,
