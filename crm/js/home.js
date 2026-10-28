@@ -329,6 +329,32 @@ function renderHome() {
 
   const emptyMsg = '<p style="color:var(--text-muted);font-size:var(--fs-100);padding:var(--space-2) 0">Sem dados comparativos</p>';
 
+  // ── 1b. Histórico 12M do atacado + cards de comparação (pedido 20, 28/10/2026) ──
+  // S.hist12m = mês atual + 12 anteriores (data.js loadHist12m); fat null = mês sem dado.
+  const hist = S.hist12m || [];
+  const hAtual = hist[hist.length - 1], hMesAnt = hist[hist.length - 2], hAnoAnt = hist[0];
+  const _hVal = h => (h && h.fat != null) ? fmtK(h.fat) : '—';
+  const _hLbl = h => h ? _monthLabel(h.mes) : '';
+  const hist12 = hist.slice(-12);
+  const hComDado = hist12.filter(h => h.fat != null);
+  const hMax = Math.max(1, ...hComDado.map(h => h.fat));
+  const hTotal = hComDado.reduce((s, h) => s + h.fat, 0);
+  const hFechados = hComDado.filter(h => h !== hAtual);
+  const hMedia = hFechados.length ? hFechados.reduce((s, h) => s + h.fat, 0) / hFechados.length : 0;
+  const histHTML = hist12.map(h => {
+    const parcial = h === hAtual;
+    if (h.fat == null) return `<div class="bar-row">
+      <span class="bar-lbl">${_monthLabel(h.mes)}</span>
+      <span style="flex:1;font-size:var(--fs-075);color:var(--text-muted)">sem dado por vendedor/empresa</span>
+      <span class="bar-val">—</span>
+    </div>`;
+    return `<div class="bar-row">
+      <span class="bar-lbl">${_monthLabel(h.mes)}${parcial ? '*' : ''}</span>
+      <div class="bar-track" style="height:14px"><div class="bar-fill" style="height:14px;width:${((h.fat / hMax) * 100).toFixed(1)}%;${parcial ? 'opacity:.55' : ''}"></div></div>
+      <span class="bar-val">${fmtK(h.fat)}</span>
+    </div>`;
+  }).join('');
+
   // ── 7. Últimos Pedidos ──────────────────────────────────
   const ultPedidos = d.slice(0, 10).map(r => `<tr>
     <td style="font-size:var(--fs-100);color:var(--text-secondary)">${fmtD(r.data_faturamento)}</td>
@@ -344,9 +370,21 @@ function renderHome() {
     <!-- KPIs -->
     <div class="kgrid">
       ${kc('<i class="ic ic-sm" data-ic="dollar-sign"></i>', 'Faturamento', fmtK(fat), 'kc-b')}
+      ${kc('<i class="ic ic-sm" data-ic="calendar"></i>', `Mês anterior · ${_hLbl(hMesAnt)}`, _hVal(hMesAnt), 'kc-b')}
+      ${kc('<i class="ic ic-sm" data-ic="calendar"></i>', `Ano anterior · ${_hLbl(hAnoAnt)}`, _hVal(hAnoAnt), 'kc-b')}
       ${kc('<i class="ic ic-sm" data-ic="shopping-cart"></i>', 'Pedidos', ped, 'kc-p')}
       ${kc('<i class="ic ic-sm" data-ic="users"></i>', 'Clientes', cli, 'kc-g')}
       ${kc('<i class="ic ic-sm" data-ic="target"></i>', 'Ticket Medio', fmtK(ticket), 'kc-y')}
+    </div>
+
+    <!-- Histórico 12M do atacado -->
+    <div class="scard">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-2-5)">
+        <div class="scard-title" style="margin-bottom:0"><i class="ic ic-sm" data-ic="bar-chart"></i> Histórico de Faturamento do Atacado — 12 meses</div>
+        <div class="panel-cap">Total ${fmtK(hTotal)} · média mensal ${fmtK(hMedia)}</div>
+      </div>
+      ${histHTML || '<p style="color:var(--text-muted);font-size:var(--fs-100)">Sem dados</p>'}
+      ${hAtual ? `<div class="panel-cap" style="margin-top:var(--space-2)">* ${_monthLabel(hAtual.mes)} ainda em andamento. Não depende do período escolhido no topo; segue o filtro de vendedor e empresa.</div>` : ''}
     </div>
 
     <!-- Faturamento por Linha -->

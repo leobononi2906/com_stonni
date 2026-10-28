@@ -641,7 +641,42 @@ async function loadLinhas() {
   S.linhas=Array.isArray(d)?d:[];
 }
 
+// Histórico de faturamento do atacado: mês atual + 12 anteriores, por mês (Home → bloco 12M e
+// cards "mesmo mês do ano anterior" / "mês anterior"). Independe do filtro de período do topo;
+// respeita vendedor/empresa.
+// A réplica do ERP só está completa a partir de nov/25 (out/25 tem 35 das ~200 notas). Antes
+// disso o número vem da planilha histórica (com_historico_vendas), que não separa vendedor nem
+// empresa: com filtro de vendedor/empresa esses meses ficam null ("sem dado"), não R$ 0.
+const HIST_ERP_DESDE = '2025-11';
+async function loadHist12m() {
+  const p=n=>String(n).padStart(2,'0');
+  const now=new Date();
+  const meses=[];
+  for(let i=12;i>=0;i--){ const d=new Date(now.getFullYear(), now.getMonth()-i, 1); meses.push(`${d.getFullYear()}-${p(d.getMonth()+1)}`); }
+  const porMes=new Map(meses.map(m=>[m, m>=HIST_ERP_DESDE ? 0 : null]));
+  const ini=meses[0]>=HIST_ERP_DESDE ? meses[0] : HIST_ERP_DESDE;
+  let params=`select=id_doc,id_empresa,data_faturamento,faturamento_doc,faturamento_liquido&tipo_saida=eq.DISTRIBUICAO&data_faturamento=gte.${ini}-01`;
+  if(F.vendedorId) params+=`&id_vendedor=eq.${F.vendedorId}`;
+  if(F.empresaId)  params+=`&id_empresa=eq.${F.empresaId}`;
+  const pedidos=[sbQ('vw_comercial_docs_faturados',params)];
+  const temPlanilha=meses[0]<HIST_ERP_DESDE && !F.vendedorId && !F.empresaId;
+  if(temPlanilha) pedidos.push(sbQ('com_historico_vendas',`select=mes,faturamento&canal=eq.Distribui%C3%A7%C3%A3o&mes=gte.${meses[0]}-01&mes=lt.${HIST_ERP_DESDE}-01`));
+  const [docs, plan]=await Promise.all(pedidos);
+  const seen=new Set();
+  (Array.isArray(docs)?docs:[]).forEach(r=>{
+    const k=`${r.id_empresa}:${r.id_doc}`;
+    if(!r.id_doc||seen.has(k)) return; seen.add(k);
+    const mk=(r.data_faturamento||'').substring(0,7);
+    if(porMes.has(mk)&&porMes.get(mk)!==null) porMes.set(mk, porMes.get(mk)+docFat(r));
+  });
+  (Array.isArray(plan)?plan:[]).forEach(r=>{
+    const mk=(r.mes||'').substring(0,7);
+    if(porMes.has(mk)) porMes.set(mk, (porMes.get(mk)||0)+(Number(r.faturamento)||0));
+  });
+  S.hist12m=meses.map(m=>({ mes:m, fat:porMes.get(m) }));
+}
+
 // Refresh completo para Home e Vendedores (chamado por refreshDocs)
 async function refreshGestao() {
-  await Promise.all([loadItens(), loadItensPrev(), loadTrailing(), loadAtividades(), loadContatos(), loadTelCli()]);
+  await Promise.all([loadItens(), loadItensPrev(), loadTrailing(), loadAtividades(), loadContatos(), loadTelCli(), loadHist12m()]);
 }

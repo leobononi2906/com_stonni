@@ -41,7 +41,8 @@
 // index.html ganha item de menu e rota (22/10/2026).
 // v23: busca do catálogo e do "Novo produto" ignoram acento — "lítio" acha "LITIO" (27/10/2026).
 // v24: busca dos Materiais (Portal e CRM) não perde mais o foco a cada letra — só a grade é refeita (27/10/2026).
-const CACHE_VERSION = 'stonni-v25-20261027'; // v25: cotação de frete com o token do usuário
+// v26: Home do atacado ganha histórico de 12 meses e cards de mês anterior / ano anterior (28/10/2026).
+const CACHE_VERSION = 'stonni-v26-20261028'; // v26: histórico 12M na Home do atacado
 const APP_SHELL = [
   './',
   './index.html',

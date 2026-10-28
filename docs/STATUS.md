@@ -1,6 +1,10 @@
 # STATUS — App Unificado Stonni (Portal + CRM) · com_stonni
 
-> Atualizado: 2026-10-27
+> Atualizado: 2026-10-28
+
+## Dev-log 28/10/2026 — Home do atacado: histórico 12M e cards de mês anterior / ano anterior
+
+Pedido 20 do Leonardo. `crm/js/data.js` ganhou `loadHist12m()` (dentro de `refreshGestao`): faturamento de distribuição por mês, mês atual + 12 anteriores, da `vw_comercial_docs_faturados` (`docFat`, sem repetir `id_empresa:id_doc`), independente do período do topo e respeitando vendedor/empresa. A réplica do ERP só está completa desde nov/25 (out/25 tem 35 notas, R$ 683 mil × R$ 3,04 mi reais): antes disso vem da `com_historico_vendas` (canal Distribuição), que não separa vendedor nem empresa, então com esses filtros o mês fica "—", não R$ 0. `crm/js/home.js`: cards "Mês anterior" e "Ano anterior" ao lado do Faturamento e bloco "Histórico de Faturamento do Atacado — 12 meses" (barras, total, média dos meses fechados, mês corrente marcado como parcial). Conferido no preview com os números de produção e com `sbQ` simulado (filtro de vendedor, nota repetida). `?v=20261028a` e `sw.js` v26.
 
 ## Dev-log 27/10/2026 — Busca dos Materiais não perde mais o foco a cada letra (`4a72651`)
 
