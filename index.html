@@ -365,6 +365,9 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
 .alert-info     { background: var(--blue-pale); border: 1px solid var(--feedback-info-border); color: var(--blue-mid-fg); }
 .alert-success  { background: var(--green-bg);  border: 1px solid var(--feedback-success-border); color: var(--green-fg); }
 .alert-icon { font-size:var(--fs-450); flex-shrink: 0; margin-top:1px; }
+/* Aviso de celular do atacado sem atividade: fora do #page-content, que é trocado a cada tela */
+.aviso-celular { padding:var(--space-5) var(--space-6) 0; }
+.aviso-celular .alert { margin-bottom: 0; }
 
 /* Drawer */
 .drawer-overlay { position: fixed; inset: 0; background: var(--surface-overlay); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
@@ -418,6 +421,7 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
   .mobile-topbar { display: flex; }
   .topbar { display: none; }
   .content { padding:var(--space-3); }
+  .aviso-celular { padding:var(--space-3) var(--space-3) 0; }
 
   /* Grids */
   .cards-grid-4 { grid-template-columns: repeat(2, 1fr); gap:var(--space-2); }
@@ -533,6 +537,7 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--text-p
   .cards-grid-4, .cards-grid-3 { grid-template-columns: 1fr 1fr; }
   .cat-grid { grid-template-columns: 1fr 1fr !important; }
   .content { padding:var(--space-2); }
+  .aviso-celular { padding:var(--space-2) var(--space-2) 0; }
 }
 
 /* ============================================================
@@ -650,6 +655,14 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
         <div class="topbar-breadcrumb" id="topbar-breadcrumb">Stonni · Portal</div>
       </div>
       <div class="topbar-right" id="topbar-right"></div>
+    </div>
+
+    <!-- Celular do atacado desconectado (só equipe interna) — checarCelularesAtacado() -->
+    <div class="aviso-celular" id="aviso-celular" style="display:none">
+      <div class="alert alert-warning">
+        <span class="alert-icon"><i class="ic ic-sm" data-ic="smartphone"></i></span>
+        <div id="aviso-celular-txt"></div>
+      </div>
     </div>
 
     <!-- Conteúdo das páginas -->
@@ -882,6 +895,7 @@ async function fazerLogout() {
   } catch(e) {}
   USUARIO = null;
   HEADERS['Authorization'] = '';
+  document.getElementById('aviso-celular').style.display = 'none';
   document.getElementById('app').classList.remove('visible');
   document.getElementById('login-screen').classList.remove('hidden');
 }
@@ -1387,6 +1401,7 @@ function iniciarApp() {
   }
 
   renderNav();
+  checarCelularesAtacado();
 
   // Deep-link de pendência (?abrir=...) chegado por link externo (Hub/e-mail/
   // aba nova) — mesma função do aoAbrir acima, só que lendo a URL em vez do
@@ -1419,6 +1434,37 @@ function iniciarApp() {
   ABRIR_NO_LOGIN = null;
   if (paginaInicial) irPara(paginaInicial, paramsIniciais);
 }
+
+// ============================================================
+//  CELULAR DO ATACADO DESCONECTADO (pedido 24)
+//  Mesma fonte do aviso da tela inicial do Hub (vw_umbler_canal_alerta: número
+//  vigiado sem mensagem acima do limite, das 8h às 20h), filtrada aos canais
+//  "ATAC". Só para a equipe interna: representante externo não vê os números.
+// ============================================================
+async function checarCelularesAtacado() {
+  const box = document.getElementById('aviso-celular');
+  if (!USUARIO || !ehInterno()) { box.style.display = 'none'; return; }
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/vw_umbler_canal_alerta?select=nome_canal,horas_inativo,limite_horas&em_alerta=is.true&nome_canal=ilike.*ATAC*&order=horas_inativo.desc.nullsfirst`, { headers: HEADERS });
+    const canais = r.ok ? await r.json() : [];
+    if (!Array.isArray(canais) || !canais.length) { box.style.display = 'none'; return; }
+    const itens = canais.map(c => {
+      const h = Number(c.horas_inativo);
+      const quanto = (c.horas_inativo == null || isNaN(h)) ? 'há bastante tempo'
+        : (h < 1) ? `há ${Math.round(h * 60)} min`
+        : `há ${h.toFixed(1).replace('.', ',')}h`;
+      const nome = String(c.nome_canal || '').replace(/[&<>"']/g, ch => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
+      return `<b>${nome}</b> sem mensagens ${quanto}`;
+    });
+    document.getElementById('aviso-celular-txt').innerHTML =
+      `<strong>${canais.length > 1 ? 'Celulares do atacado podem estar desconectados' : 'Celular do atacado pode estar desconectado'}</strong><br>`
+      + itens.join('<br>')
+      + '<br><span style="font-size:var(--fs-100)">Confira se o aparelho está ligado, com internet e com o WhatsApp conectado.</span>';
+    box.style.display = '';
+  } catch (_e) { /* aviso é extra: falha de rede não atrapalha o app */ }
+}
+setInterval(checarCelularesAtacado, 10 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checarCelularesAtacado(); });
 
 // ============================================================
 //  AUTO LOGIN — usa sessão do Supabase Auth (compartilhada com Hub)
