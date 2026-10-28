@@ -795,11 +795,12 @@ window.hideLoading = hideLoading;
     <div class="modal-body">
       <p style="font-size:var(--fs-200);color:var(--text-primary);margin-bottom:var(--space-1)">Tem certeza que deseja descartar:</p>
       <p id="cd-nome" style="font-size:var(--fs-300);font-weight:700;color:var(--red-fg);margin-bottom:var(--space-3-5)"></p>
-      <p style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-2)">O cliente será removido da prospecção. Esta ação pode ser revertida pelo administrador.</p>
+      <p style="font-size:var(--fs-090);color:var(--text-muted);margin-bottom:var(--space-2)">O cliente sai da carteira e da prospecção. Se voltar a comprar, ele reaparece sozinho.</p>
       <div>
         <label style="font-size:var(--fs-100);font-weight:600;color:var(--text-secondary);display:block;margin-bottom:var(--space-1)">Motivo *</label>
         <select id="cd-motivo" style="width:100%;padding:var(--space-2) var(--space-2-5);background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-lg);color:var(--text-primary);font-size:var(--fs-200);box-sizing:border-box">
           <option value="">-- Selecione --</option>
+          <option value="Não é revenda">Não é revenda</option>
           <option value="Não tem interesse">Não tem interesse</option>
           <option value="Fora de área">Fora de área</option>
           <option value="Duplicado">Duplicado</option>
