@@ -377,7 +377,6 @@ async function renderLogAcoes(filtro='', nivel='') {
   }
   const corNivel = { INFO:'var(--blue-mid-fg)', WARN:'var(--orange-fg)', ERROR:'var(--red-fg)' };
   const bgNivel  = { INFO:'var(--surface-selected)', WARN:'var(--feedback-warning-bg)', ERROR:'var(--feedback-danger-bg)' };
-  const bgNivel  = { INFO:'var(--blue-50)', WARN:'var(--warning-50)', ERROR:'var(--danger-50)' };
 
   el.innerHTML = data.map(r => {
     let det = '';
