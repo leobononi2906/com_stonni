@@ -2,6 +2,27 @@
 
 > Atualizado: 2026-10-28
 
+## Dev-log 28/10/2026 — Tela "Boletos": o representante encaminha o boleto pelo WhatsApp dele
+
+Pedido do Leo: uma área no Portal para o representante mandar o boleto ao cliente e corrigir o número se precisar,
+**nunca por e-mail**. Decisões dele: vê os boletos de **todo o atacado** (não só os clientes dele), envio pelo
+**WhatsApp do próprio representante**, número corrigido **vale para todos** (Financeiro e Cobrança também).
+- **`boletos.js` (novo) + item "Boletos" no PRINCIPAL e rota em `index.html`:** boletos em aberto (vencidos há até 120
+  dias + a vencer) agrupados por cliente, filtro A vencer / Vencidos / Todos, busca por cliente, CNPJ, número ou
+  cidade (refaz só a lista, sem perder o foco), selo de como já foi entregue (e-mail / WhatsApp, quando e por quem).
+  "Enviar pelo WhatsApp" abre o painel com os números conhecidos (o que deu certo primeiro, depois cadastro do SGA e
+  telefones do CRM), o número editável e a mensagem editável; "Abrir WhatsApp" vai para `wa.me/55…` e pergunta
+  "Conseguiu enviar?"; **"Sim, enviei"** grava o envio na fila do Financeiro (o e-mail automático não manda de novo)
+  e o telefone em `fin_boleto_telefone`.
+- **Dados:** Edge Function `fin-boleto-email` do bononi-dashboard (ações `portal_boletos`, `whatsapp_preparar`,
+  `outro_canal`), com o token de quem está logado. É ela que trava: só boleto de cliente da `atac_clientes` e, pelo
+  Portal, só WhatsApp com telefone.
+- Linha digitável só aparece depois que o Financeiro ligar `BOLETO_ENVIO_LIBERADO`; até lá a mensagem leva o link do
+  Portal do Cliente. `sw.js` v28. Testes `node scripts/teste-boletos.js` 6/6.
+- **Provado:** tela montada no preview com a função simulada (lista, filtro, número inválido recusado, número trocado
+  vai no link, "Sim, enviei" manda `outro_canal` com `deu_certo`, celular 375 px sem rolagem lateral).
+  **Não provado:** função no ar (falta publicar) e um envio real com login de representante.
+
 ## Dev-log 28/10/2026 — Home do atacado: histórico 12M e cards de mês anterior / ano anterior
 
 Pedido 20 do Leonardo. `crm/js/data.js` ganhou `loadHist12m()` (dentro de `refreshGestao`): faturamento de distribuição por mês, mês atual + 12 anteriores, da `vw_comercial_docs_faturados` (`docFat`, sem repetir `id_empresa:id_doc`), independente do período do topo e respeitando vendedor/empresa. A réplica do ERP só está completa desde nov/25 (out/25 tem 35 notas, R$ 683 mil × R$ 3,04 mi reais): antes disso vem da `com_historico_vendas` (canal Distribuição), que não separa vendedor nem empresa, então com esses filtros o mês fica "—", não R$ 0. `crm/js/home.js`: cards "Mês anterior" e "Ano anterior" ao lado do Faturamento e bloco "Histórico de Faturamento do Atacado — 12 meses" (barras, total, média dos meses fechados, mês corrente marcado como parcial). Conferido no preview com os números de produção e com `sbQ` simulado (filtro de vendedor, nota repetida). `?v=20261028a` e `sw.js` v26.
