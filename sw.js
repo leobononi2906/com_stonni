@@ -42,7 +42,7 @@
 // v23: busca do catálogo e do "Novo produto" ignoram acento — "lítio" acha "LITIO" (27/10/2026).
 // v24: busca dos Materiais (Portal e CRM) não perde mais o foco a cada letra — só a grade é refeita (27/10/2026).
 // v26: Home do atacado ganha histórico de 12 meses e cards de mês anterior / ano anterior (28/10/2026).
-const CACHE_VERSION = 'stonni-v26-20261028'; // v26: histórico 12M na Home do atacado
+const CACHE_VERSION = 'stonni-v27-20261028'; // v27: cadastro de gestor/representante não chama mais a admin-users
 const APP_SHELL = [
   './',
   './index.html',
