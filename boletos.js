@@ -72,6 +72,7 @@
     const qDig = q.replace(/\D/g, '');
     const grupos = new Map();
     for (const b of boletos) {
+      if (!(Number(b.valor) > 0)) continue; // boleto zerado no SGA não tem o que pagar (nem linha digitável)
       const venc = String(b.data_venc).slice(0, 10) < hoje;
       if (filtro === 'avencer' && venc) continue;
       if (filtro === 'vencidos' && !venc) continue;
@@ -95,7 +96,10 @@
 
   // ── Tela ──
 
-  const BOL = { lista: [], hoje: '', filtro: 'avencer', busca: '', desmarcados: new Set(), mostrar: 40, carregado: false };
+  // marcados: nada vem marcado (cliente grande tem dezenas de parcelas); abertos: clientes com a lista toda à mostra.
+  const BOL = { lista: [], hoje: '', filtro: 'avencer', busca: '', marcados: new Set(), abertos: new Set(), mostrar: 40, carregado: false };
+  const POR_CLIENTE = 5;
+  const LOTE_MAX = 25; // o máximo que a fin-boleto-email aceita por vez
   const ENV = { codigos: [], preparo: null, telefone: '' };
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
@@ -163,36 +167,42 @@
   }
 
   function grupoHtml(g) {
-    const marcados = g.boletos.filter(b => !BOL.desmarcados.has(b.codigo)).length;
-    const linhas = g.boletos.map(b => {
+    const marcados = g.boletos.filter(b => BOL.marcados.has(b.codigo)).map(b => b.codigo);
+    const chave = g.documento || 'c' + g.boletos[0].codigo; // só dígitos/letras: vai dentro do onclick
+    const aberto = BOL.abertos.has(chave);
+    const visiveis = aberto ? g.boletos : g.boletos.slice(0, POR_CLIENTE);
+    const linhas = visiveis.map(b => {
       const s = situacao(b, BOL.hoje);
       const env = rotuloEnvio(b.envio);
-      return `<label style="display:flex;align-items:center;gap:var(--space-2-5);padding:var(--space-2) 0;border-top:1px solid var(--border);cursor:pointer">
-          <input type="checkbox" ${BOL.desmarcados.has(b.codigo) ? '' : 'checked'} onchange="bolMarcar(${b.codigo}, this.checked)" style="accent-color:var(--blue-dark);width:18px;height:18px;flex-shrink:0">
+      return `<div style="display:flex;align-items:center;gap:var(--space-2-5);padding:var(--space-2) 0;border-top:1px solid var(--border)">
+          <input type="checkbox" ${BOL.marcados.has(b.codigo) ? 'checked' : ''} onchange="bolMarcar(${b.codigo}, this.checked)" title="Marcar para enviar junto" style="accent-color:var(--blue-dark);width:18px;height:18px;flex-shrink:0;cursor:pointer">
           <div style="flex:1;min-width:0">
             <div style="font-family:var(--font-mono);font-size:var(--fs-100)">${esc(b.num_doc)}</div>
             <div style="font-size:var(--fs-090);color:${s.vencido ? 'var(--red-fg)' : 'var(--text-muted)'}">${dataBR(b.data_venc)} · ${s.texto}</div>
             ${env ? `<div style="font-size:var(--fs-090);color:${env.ok ? 'var(--green-fg)' : 'var(--text-warning)'}"><i class="ic ic-sm" data-ic="${env.ok ? 'check-circle' : 'alert-triangle'}"></i> ${esc(env.texto)}</div>` : ''}
           </div>
           <div style="font-weight:700;white-space:nowrap">${brl(b.valor)}</div>
-        </label>`;
+          <button class="btn btn-success btn-sm" onclick="bolEnviar('${b.codigo}')" title="Enviar este boleto pelo WhatsApp" style="flex-shrink:0"><i class="ic ic-sm" data-ic="smartphone"></i> Enviar</button>
+        </div>`;
     }).join('');
-    const codigos = g.boletos.map(b => b.codigo).join(',');
+    const resto = g.boletos.length - visiveis.length;
+    const verMais = resto > 0
+      ? `<button class="btn btn-outline btn-sm" style="margin-top:var(--space-2)" onclick="bolAbrirCliente('${chave}')">Ver mais ${resto} boleto${resto === 1 ? '' : 's'}</button>`
+      : (aberto && g.boletos.length > POR_CLIENTE ? `<button class="btn btn-outline btn-sm" style="margin-top:var(--space-2)" onclick="bolAbrirCliente('${chave}')">Mostrar menos</button>` : '');
+    const demais = marcados.length > LOTE_MAX;
+    const btnMarcados = marcados.length
+      ? `<button class="btn btn-success" ${demais ? 'disabled' : ''} onclick="bolEnviar('${marcados.join(',')}')"><i class="ic ic-sm" data-ic="smartphone"></i> Enviar marcados (${marcados.length})</button>
+         ${demais ? `<div style="font-size:var(--fs-090);color:var(--text-warning);margin-top:var(--space-1)">No máximo ${LOTE_MAX} por vez</div>` : ''}` : '';
     return `<div class="card" style="margin-bottom:var(--space-3)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-2)">
-          <div style="min-width:0">
+          <div style="min-width:0;flex:1">
             <div style="font-weight:700">${esc(g.cliente)}</div>
-            <div style="font-size:var(--fs-090);color:var(--text-muted)">${esc(fmtDoc(g.documento))}${g.cidade ? ` · ${esc(g.cidade)}/${esc(g.uf)}` : ''}</div>
+            <div style="font-size:var(--fs-090);color:var(--text-muted)">${esc(fmtDoc(g.documento))}${g.cidade ? ` · ${esc(g.cidade)}/${esc(g.uf)}` : ''} · ${g.boletos.length} boleto${g.boletos.length === 1 ? '' : 's'} · ${brl(g.total)}</div>
           </div>
-          <div style="text-align:right">
-            <div style="font-size:var(--fs-090);color:var(--text-muted)">Em aberto</div>
-            <div style="font-weight:700">${brl(g.total)}</div>
-          </div>
+          <div style="text-align:right">${btnMarcados}</div>
         </div>
         ${linhas}
-        <div style="display:flex;justify-content:flex-end;margin-top:var(--space-2-5)">
-          <button class="btn btn-success" ${marcados ? '' : 'disabled'} onclick="bolEnviar('${codigos}')"><i class="ic ic-sm" data-ic="smartphone"></i> Enviar pelo WhatsApp${marcados > 1 ? ` (${marcados})` : ''}</button>
-        </div>
+        ${verMais}
       </div>`;
   }
 
@@ -204,12 +214,8 @@
   // ── Envio ──
 
   async function bolEnviar(codigosDoCliente) {
-    const codigos = String(codigosDoCliente).split(',').map(Number).filter(c => !BOL.desmarcados.has(c));
-    if (!codigos.length) return;
-    if (codigos.length > 25) { // a função manda no máximo 25 por vez
-      alert(`São ${codigos.length} boletos marcados. Envie no máximo 25 por vez: desmarque alguns e mande o resto depois.`);
-      return;
-    }
+    const codigos = String(codigosDoCliente).split(',').map(Number).filter(Number.isInteger);
+    if (!codigos.length || codigos.length > LOTE_MAX) return;
     ENV.codigos = codigos; ENV.preparo = null; ENV.telefone = '';
     abrirDrawer('<i class="ic ic-sm" data-ic="smartphone"></i> Enviar pelo WhatsApp', '', '<div class="loading-overlay" style="position:static;min-height:120px"><div class="spinner"></div></div>');
     try {
@@ -274,6 +280,7 @@
       const agora = new Date().toISOString();
       const nome = USUARIO && USUARIO.nome;
       BOL.lista.forEach(b => { if (ENV.codigos.includes(b.codigo)) b.envio = { situacao: 'outro_canal', canal: 'whatsapp', em: agora, por: nome }; });
+      ENV.codigos.forEach(c => BOL.marcados.delete(c));
       fecharDrawer();
       redesenharLista();
     } catch (err) {
@@ -300,7 +307,11 @@
   window.bolBusca = function (v) { BOL.busca = v; BOL.mostrar = 40; redesenharLista(); };
   window.bolMais = function () { BOL.mostrar += 40; redesenharLista(); };
   window.bolMarcar = function (codigo, marcado) {
-    if (marcado) BOL.desmarcados.delete(codigo); else BOL.desmarcados.add(codigo);
+    if (marcado) BOL.marcados.add(codigo); else BOL.marcados.delete(codigo);
+    redesenharLista();
+  };
+  window.bolAbrirCliente = function (chave) {
+    if (BOL.abertos.has(chave)) BOL.abertos.delete(chave); else BOL.abertos.add(chave);
     redesenharLista();
   };
   window.bolRecarregar = function () { BOL.carregado = false; renderBoletos(); };

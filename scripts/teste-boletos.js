@@ -62,4 +62,13 @@ t('agrupar: filtro, busca por nome/CNPJ e total por cliente', () => {
   assert.deepStrictEqual(L.agrupar(lista, hoje, 'todos', 'londrina').map(g => g.cliente), ['Loja B']);
 });
 
+t('agrupar: boleto de valor zero (SGA) fica de fora', () => {
+  const lista = [
+    { codigo: 1, documento: '11222333000144', cliente: 'Loja A', num_doc: 'VD-1', valor: 0, data_venc: '2026-11-20' },
+    { codigo: 2, documento: '11222333000144', cliente: 'Loja A', num_doc: 'VD-2', valor: '0.00', data_venc: '2026-11-20' },
+    { codigo: 3, documento: '11222333000144', cliente: 'Loja A', num_doc: 'VD-3', valor: 10, data_venc: '2026-11-20' },
+  ];
+  assert.deepStrictEqual(L.agrupar(lista, '2026-10-28', 'todos', '')[0].boletos.map(b => b.codigo), [3]);
+});
+
 console.log(`\n${n}/${n} ok`);

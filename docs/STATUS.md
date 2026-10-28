@@ -21,7 +21,13 @@ Pedido do Leo: uma área no Portal para o representante mandar o boleto ao clien
   Portal do Cliente. `sw.js` v28. Testes `node scripts/teste-boletos.js` 6/6.
 - **Provado:** tela montada no preview com a função simulada (lista, filtro, número inválido recusado, número trocado
   vai no link, "Sim, enviei" manda `outro_canal` com `deu_certo`, celular 375 px sem rolagem lateral).
-  **Não provado:** função no ar (falta publicar) e um envio real com login de representante.
+  **Não provado:** um envio real com login de representante. No ar em 28/10 (`86561d9`; função `de4367b` publicada e
+  conferida por download).
+- **Ajuste no mesmo dia (print do Gustavo, "aonde está o enviar?"):** cliente grande (COPARTNER, dezenas de parcelas)
+  empurrava o único botão para o fim do cartão, com tudo marcado. Agora cada boleto tem o próprio **Enviar**, nada vem
+  marcado, "Enviar marcados (N)" aparece no topo do cliente (no máximo 25), o cartão mostra 5 boletos com "Ver mais"
+  e boleto de valor zero no SGA (R$ 0,00, sem linha digitável) sai da lista. Testes 7/7; conferido no preview
+  (desktop e 375 px).
 
 ## Dev-log 28/10/2026 — Home do atacado: histórico 12M e cards de mês anterior / ano anterior
 
