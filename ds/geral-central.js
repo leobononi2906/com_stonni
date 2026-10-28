@@ -1,7 +1,16 @@
 /* ============================================================
    geral-central.js — Sugestão, avisos, atualização cadastral,
-   expiração de senha, sino de pendências e caminho  |  v21 — 27/10/2026
+   expiração de senha, sino de pendências e caminho  |  v22 — 28/10/2026
    ============================================================
+   v22: O BOTÃO VIRA "AJUDA", COM ASSISTENTE DE IA. O modal ganha a aba
+   "Perguntar" (a primeira, aberta por padrão), antes de "Novo pedido" e
+   "Meus pedidos". O chat mora em geral-ajuda.js, buscado SOB DEMANDA da
+   mesma pasta deste arquivo e com o mesmo ?v= (VERSAO) — copie os DOIS
+   arquivos para o app; sem o geral-ajuda.js a aba avisa e o pedido de
+   melhoria segue igual. A IA (Edge Function geral-assistente, migration
+   0081) tira dúvida de uso e de produto e RASCUNHA o pedido: o botão
+   "Revisar e enviar como pedido" abre "Novo pedido" já preenchido, e o
+   POST leva via_ia=true (só nesse caso — pedido normal não manda a coluna).
    v21: SENHA VENCE DE VERDADE E NÃO SE REPETE. A data da última troca
    vem do banco (RPC geral_senha_status, migration 0069 do bononi-hub:
    trigger em auth.users guarda o hash de toda senha nova) e não mais de
@@ -147,7 +156,14 @@
 (function () {
   'use strict';
 
-  var VERSAO = '21';
+  var VERSAO = '22';
+  // v22: o geral-ajuda.js mora ao lado deste arquivo (ds/ ou public/ds/).
+  var BASE_DS = (function () {
+    try {
+      var src = document.currentScript && document.currentScript.src;
+      return src ? src.replace(/geral-central\.js(\?.*)?$/, '') : 'ds/';
+    } catch (e) { return 'ds/'; }
+  })();
 
   // v16: nada deste arquivo vai para o papel (romaneio, etiqueta, organograma).
   function garantirEstiloImpressao() {
@@ -637,8 +653,8 @@
     var wrap = document.createElement('div');
     wrap.className = 'gc-fab-wrap';
     wrap.innerHTML =
-      '<span class="gc-fab-tooltip">Sugerir melhoria</span>' +
-      '<button id="gc-fab-sugestao" type="button" aria-label="Sugerir melhoria">' + ICONE_FAB + '</button>';
+      '<span class="gc-fab-tooltip">Ajuda</span>' +
+      '<button id="gc-fab-sugestao" type="button" aria-label="Ajuda: perguntar ou sugerir melhoria">' + ICONE_FAB + '</button>';
     document.body.appendChild(wrap);
     wrap.querySelector('#gc-fab-sugestao').addEventListener('click', function () { abrirModalSugestao(o); });
     atualizarBadgeFab(o);
@@ -674,17 +690,37 @@
     }
   }
 
+  // v22: carrega o geral-ajuda.js uma vez, da mesma pasta e com o mesmo ?v=.
+  var _ajudaCarregando = null;
+  function carregarAjuda() {
+    if (window.GeralAjuda) return Promise.resolve(true);
+    if (_ajudaCarregando) return _ajudaCarregando;
+    _ajudaCarregando = new Promise(function (ok) {
+      var s = document.createElement('script');
+      s.src = BASE_DS + 'geral-ajuda.js?v=' + VERSAO;
+      s.onload = function () { ok(!!window.GeralAjuda); };
+      s.onerror = function () { _ajudaCarregando = null; ok(false); };
+      document.head.appendChild(s);
+    });
+    return _ajudaCarregando;
+  }
+
   async function abrirModalSugestao(o) {
     var telaCapturada = capturarTela();
     var naoVistos = await contarPedidosNaoVistos(o);
-    var el = overlay('gc-sugestao', '<div style="' + caixa() + '">' +
+    var viaIa = false;
+    var el = overlay('gc-sugestao', '<div style="' + caixa().replace('max-width:420px', 'max-width:540px') + '">' +
       '<div class="gc-modo-toggle">' +
-        '<button type="button" class="gc-modo-btn ativo" id="gc-aba-novo" data-modo="novo">Novo pedido</button>' +
+        '<button type="button" class="gc-modo-btn ativo" id="gc-aba-perguntar" data-modo="perguntar">Perguntar</button>' +
+        '<button type="button" class="gc-modo-btn" id="gc-aba-novo" data-modo="novo">Novo pedido</button>' +
         '<button type="button" class="gc-modo-btn" id="gc-aba-meus" data-modo="meus">Meus pedidos' +
           (naoVistos > 0 ? '<span class="gc-fab-badge">' + (naoVistos > 9 ? '9+' : naoVistos) + '</span>' : '') +
         '</button>' +
+        '<button type="button" id="gc-ajuda-fechar" aria-label="Fechar" style="flex:none;width:30px;border:none;background:transparent;' +
+          'color:var(--text-muted,#6b7382);font-size:18px;line-height:1;cursor:pointer">×</button>' +
       '</div>' +
-      '<div id="gc-modo-novo">' +
+      '<div id="gc-modo-perguntar"><div style="font-size:12px;color:var(--text-muted,#6b7382);text-align:center;padding:16px 0">Carregando…</div></div>' +
+      '<div id="gc-modo-novo" class="gc-oculto">' +
       '<h3 style="font-size:16px;margin-bottom:4px">Sugerir melhoria</h3>' +
       '<p style="font-size:12px;color:var(--text-muted,#6b7382);margin-bottom:12px">Isso vai direto para o desenvolvedor, no Painel de Desenvolvimento.</p>' +
       '<div class="gc-tipo-toggle">' +
@@ -718,24 +754,61 @@
       '</div>');
 
     var botoesModo = el.querySelectorAll('.gc-modo-btn');
-    botoesModo.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        botoesModo.forEach(function (b) { b.classList.toggle('ativo', b === btn); });
-        el.querySelector('#gc-modo-novo').classList.toggle('gc-oculto', btn.dataset.modo !== 'novo');
-        el.querySelector('#gc-modo-meus').classList.toggle('gc-oculto', btn.dataset.modo !== 'meus');
-        if (btn.dataset.modo === 'meus') carregarMeusPedidos(o, el);
+    function irPara(modo) {
+      botoesModo.forEach(function (b) { b.classList.toggle('ativo', b.dataset.modo === modo); });
+      ['perguntar', 'novo', 'meus'].forEach(function (m) {
+        el.querySelector('#gc-modo-' + m).classList.toggle('gc-oculto', m !== modo);
       });
+      if (modo === 'meus') carregarMeusPedidos(o, el);
+    }
+    botoesModo.forEach(function (btn) {
+      btn.addEventListener('click', function () { irPara(btn.dataset.modo); });
     });
     el.querySelector('#gc-meus-fechar').addEventListener('click', function () { el.remove(); });
+    el.querySelector('#gc-ajuda-fechar').addEventListener('click', function () { el.remove(); });
 
     var tipoAtual = 'melhoria';
     var botoesTipo = el.querySelectorAll('.gc-tipo-btn');
+    function escolherTipo(tipo) {
+      tipoAtual = tipo;
+      botoesTipo.forEach(function (b) { b.classList.toggle('ativo', b.dataset.tipo === tipo); });
+      el.querySelector('#gc-campos-melhoria').classList.toggle('gc-oculto', tipoAtual !== 'melhoria');
+      el.querySelector('#gc-campos-bug').classList.toggle('gc-oculto', tipoAtual !== 'bug');
+    }
     botoesTipo.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        tipoAtual = btn.dataset.tipo;
-        botoesTipo.forEach(function (b) { b.classList.toggle('ativo', b === btn); });
-        el.querySelector('#gc-campos-melhoria').classList.toggle('gc-oculto', tipoAtual !== 'melhoria');
-        el.querySelector('#gc-campos-bug').classList.toggle('gc-oculto', tipoAtual !== 'bug');
+      btn.addEventListener('click', function () { escolherTipo(btn.dataset.tipo); });
+    });
+
+    // v22: rascunho da IA → "Novo pedido" preenchido (a pessoa revisa e envia).
+    // null = só abre a aba (a IA está fora do ar ou no teto do mês).
+    function preencherPedido(r) {
+      irPara('novo');
+      if (!r) return;
+      viaIa = true;
+      escolherTipo(r.tipo === 'bug' ? 'bug' : 'melhoria');
+      if (r.tipo === 'bug') {
+        el.querySelector('#gc-b-tentando').value = r.o_que_queria || '';
+        el.querySelector('#gc-b-esperado').value = r.o_que_deveria || '';
+        el.querySelector('#gc-b-aconteceu').value = r.o_que_aconteceu || '';
+      } else {
+        el.querySelector('#gc-m-diferente').value = r.mensagem || '';
+      }
+      if (r.tela) el.querySelector('#gc-tela').value = r.tela;
+    }
+
+    var contPerguntar = el.querySelector('#gc-modo-perguntar');
+    carregarAjuda().then(function (ok) {
+      if (!document.body.contains(el)) return;
+      if (!ok) {
+        contPerguntar.innerHTML = '<div style="font-size:12px;color:var(--text-muted,#6b7382);text-align:center;padding:16px 0">' +
+          'A assistente ainda não está disponível neste app.</div>';
+        irPara('novo');
+        return;
+      }
+      window.GeralAjuda.montar(contPerguntar, o, {
+        appNome: NOME_APP[o.appId] || o.appId,
+        tela: telaCapturada,
+        preencherPedido: preencherPedido,
       });
     });
 
@@ -764,16 +837,18 @@
       btnEnviar.disabled = true;
       btnEnviar.style.opacity = '.6';
       try {
+        var corpoPedido = {
+          app_origem: o.appId,
+          usuario_email: o.usuario.email,
+          usuario_nome: o.usuario.nome || null,
+          tipo: tipoAtual,
+          tela: tela || null,
+          mensagem: mensagem,
+        };
+        if (viaIa) corpoPedido.via_ia = true; // v22: só quando veio do rascunho (coluna da 0081)
         var resp = await rest(o, 'geral_pedidos_melhoria', {
           method: 'POST',
-          body: JSON.stringify({
-            app_origem: o.appId,
-            usuario_email: o.usuario.email,
-            usuario_nome: o.usuario.nome || null,
-            tipo: tipoAtual,
-            tela: tela || null,
-            mensagem: mensagem,
-          }),
+          body: JSON.stringify(corpoPedido),
         });
         if (!resp || !resp.ok) throw new Error('HTTP ' + (resp ? resp.status : '?'));
         msgEl.style.color = 'var(--status-ok-text,#1a7f37)';
